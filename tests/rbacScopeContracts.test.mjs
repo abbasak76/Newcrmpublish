@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+const root = path.resolve(new URL('..', import.meta.url).pathname);
+const sourceFiles = [];
+function walk(dir) { for (const entry of fs.readdirSync(dir, { withFileTypes: true })) { const full = path.join(dir, entry.name); if (entry.isDirectory()) walk(full); else if (/\.(ts|tsx)$/.test(full)) sourceFiles.push(full); } }
+walk(path.join(root, 'src'));
+const allSource = sourceFiles.map(file => fs.readFileSync(file, 'utf8')).join('\n');
+assert.ok(!allSource.includes('usr_sales'), 'شناسهٔ فرضی usr_sales نباید به‌عنوان مالک/عامل استفاده شود');
+assert.ok(!allSource.includes('usr_admin'), 'شناسهٔ فرضی usr_admin نباید به‌عنوان مالک/عامل استفاده شود');
+const leads = fs.readFileSync(path.join(root, 'src/components/LeadsWorkspace.tsx'), 'utf8');
+assert.ok(leads.includes("canOn('leads', 'VIEW'"), 'فهرست سرنخ‌ها باید scope-based باشد');
+const opportunities = fs.readFileSync(path.join(root, 'src/components/NegotiationsWorkspace.tsx'), 'utf8');
+assert.ok(opportunities.includes("canOn('opportunities', 'VIEW'"), 'فهرست فرصت‌ها باید scope-based باشد');
+const quotes = fs.readFileSync(path.join(root, 'src/components/QuotesWorkspace.tsx'), 'utf8');
+assert.ok(quotes.includes("canOn('quotes', 'VIEW'"), 'فهرست پیش‌فاکتورها باید scope-based باشد');
+const wizard = fs.readFileSync(path.join(root, 'src/components/QuoteWizardModal.tsx'), 'utf8');
+assert.ok(wizard.includes("canOn('accounts', 'VIEW'"), 'انتخاب حساب در ویزارد باید scope-based باشد');
+const customer360 = fs.readFileSync(path.join(root, 'src/components/Customer360.tsx'), 'utf8');
+assert.ok(customer360.includes("canActOnRecord('quotes', 'VIEW'"), 'پیش‌فاکتورهای Customer360 باید scope-based باشند');
+assert.ok(allSource.includes('requireActiveUser'), 'عملیات ایجاد باید کاربر فعال واقعی را الزام کنند');
+console.log('PASS: 8 assertions (RBAC scope and identity contracts)');

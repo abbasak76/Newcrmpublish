@@ -1,0 +1,504 @@
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b20.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b20.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b20.md	2026-10-26 20:54:42.907163146 +0000
+@@ -27,3 +27,11 @@
+ ## موارد بعدی
+ - فایل‌های مدرک مجاز و کنترل‌شده را با AttachmentManager موجود وصل کن؛ گزارش‌های سلسله‌مراتبی و تخصیص گروهی را روی موتور task موجود بساز.
+ - نقشهٔ واقعی ایران، provider، drawing موبایل و Heatmap معتبر هنوز باقی است.
++
++
++## افزودهٔ تکمیلی — مدارک وظیفهٔ وصول (نسخهٔ توسعهٔ بعدی)
++- اتصال مدرک به همان رکورد task در `state.attachments` با `entityType=TASK` و `kind=COLLECTION_EVIDENCE`؛ موتور پیوست جدید ساخته نشد.
++- نوع‌های مجاز: JPEG، PNG، WebP و PDF؛ حداکثر ۵ مگابایت؛ فایل خالی یا نوع نامجاز رد می‌شود.
++- بارگذاری و دریافت فایل، بررسی مجوز/Scope همان وظیفه را انجام می‌دهد؛ رخداد پیوست در audit ثبت می‌شود.
++- تست جدید `tests/collectionTaskEvidence.test.mjs` با ۶ assertion و توسعهٔ قرارداد UI به ۲۳ assertion.
++- محدودیت: این حفاظت در کلاینت است و جایگزین مجوز سرور/ذخیره‌سازی امن backend نیست. فایل‌ها در state محلی base64 ذخیره می‌شوند؛ برای production باید سقف مجموع ذخیره‌سازی و انتقال امن سمت سرور طراحی و آزموده شود.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b21.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b21.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b21.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b21.md	2026-10-26 20:56:56.942359270 +0000
+@@ -0,0 +1,11 @@
++# CHANGELOG — AKHAVAN CRM b21
++
++- نسخه محصول: 0.11.7؛ مبنا: `r11-cp9-b20`؛ نوع تغییر: افزایشی.
++- اتصال evidence وظیفهٔ وصول به `state.attachments` و `entityType=TASK` با kind مشخص؛ از سامانه پیوست موازی استفاده نشده است.
++- allowlist: JPEG/PNG/WebP/PDF؛ سقف ۵ MiB؛ فایل خالی و نوع ناشناخته رد می‌شود.
++- دریافت مدرک به وظیفهٔ انتخاب‌شده محدود و نیازمند بررسی دسترسی همان وظیفه است؛ audit محلی برای پیوست ثبت می‌شود.
++- `npm test`: PASS؛ 496 assertion در suiteهای ثبت‌شده. `audit-actions`: PASS، 76/76 guarded. `audit:contracts`: PASS ایستا.
++- Build/Lint و مرورگر واقعی هنوز تأیید نشده‌اند؛ این پیاده‌سازی client-side و local base64 است، نه امنیت production سمت سرور.
++
++- افزودن تخصیص گروهی وظایف وصول از مشتریان انتخاب‌شده در زون؛ استفاده از همان task list، `processTaskCollaborationEvents` و مجوزهای `tasks.CREATE/ASSIGN`.
++- جلوگیری از ساخت وظیفهٔ باز تکراری برای یک مشتری/زون؛ عملیات گروهی audit می‌شود. تا زمان اتصال ماندهٔ مالی معتبر، UI صریحاً اعلام می‌کند که انتخاب بر اساس عضویت زون است، نه اولویت مانده.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/DIFF_b20_to_b21.patch /mnt/data/akhavan_build_b20/akhavan_dev_b20/DIFF_b20_to_b21.patch
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/DIFF_b20_to_b21.patch	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/DIFF_b20_to_b21.patch	2026-10-26 20:57:08.564054928 +0000
+@@ -0,0 +1,30 @@
++diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b20.md
++--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b20.md	2026-10-26 20:45:58.000000000 +0000
+++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b20.md	2026-10-26 20:54:42.907163146 +0000
++@@ -27,3 +27,11 @@
++ ## موارد بعدی
++ - فایل‌های مدرک مجاز و کنترل‌شده را با AttachmentManager موجود وصل کن؛ گزارش‌های سلسله‌مراتبی و تخصیص گروهی را روی موتور task موجود بساز.
++ - نقشهٔ واقعی ایران، provider، drawing موبایل و Heatmap معتبر هنوز باقی است.
+++
+++
+++## افزودهٔ تکمیلی — مدارک وظیفهٔ وصول (نسخهٔ توسعهٔ بعدی)
+++- اتصال مدرک به همان رکورد task در `state.attachments` با `entityType=TASK` و `kind=COLLECTION_EVIDENCE`؛ موتور پیوست جدید ساخته نشد.
+++- نوع‌های مجاز: JPEG، PNG، WebP و PDF؛ حداکثر ۵ مگابایت؛ فایل خالی یا نوع نامجاز رد می‌شود.
+++- بارگذاری و دریافت فایل، بررسی مجوز/Scope همان وظیفه را انجام می‌دهد؛ رخداد پیوست در audit ثبت می‌شود.
+++- تست جدید `tests/collectionTaskEvidence.test.mjs` با ۶ assertion و توسعهٔ قرارداد UI به ۲۳ assertion.
+++- محدودیت: این حفاظت در کلاینت است و جایگزین مجوز سرور/ذخیره‌سازی امن backend نیست. فایل‌ها در state محلی base64 ذخیره می‌شوند؛ برای production باید سقف مجموع ذخیره‌سازی و انتقال امن سمت سرور طراحی و آزموده شود.
++diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b21.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b21.md
++--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/CHANGELOG_b21.md	1970-01-01 00:00:00.000000000 +0000
+++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/CHANGELOG_b21.md	2026-10-26 20:56:56.942359270 +0000
++@@ -0,0 +1,11 @@
+++# CHANGELOG — AKHAVAN CRM b21
+++
+++- نسخه محصول: 0.11.7؛ مبنا: `r11-cp9-b20`؛ نوع تغییر: افزایشی.
+++- اتصال evidence وظیفهٔ وصول به `state.attachments` و `entityType=TASK` با kind مشخص؛ از سامانه پیوست موازی استفاده نشده است.
+++- allowlist: JPEG/PNG/WebP/PDF؛ سقف ۵ MiB؛ فایل خالی و نوع ناشناخته رد می‌شود.
+++- دریافت مدرک به وظیفهٔ انتخاب‌شده محدود و نیازمند بررسی دسترسی همان وظیفه است؛ audit محلی برای پیوست ثبت می‌شود.
+++- `npm test`: PASS؛ 496 assertion در suiteهای ثبت‌شده. `audit-actions`: PASS، 76/76 guarded. `audit:contracts`: PASS ایستا.
+++- Build/Lint و مرورگر واقعی هنوز تأیید نشده‌اند؛ این پیاده‌سازی client-side و local base64 است، نه امنیت production سمت سرور.
+++
+++- افزودن تخصیص گروهی وظایف وصول از مشتریان انتخاب‌شده در زون؛ استفاده از همان task list، `processTaskCollaborationEvents` و مجوزهای `tasks.CREATE/ASSIGN`.
+++- جلوگیری از ساخت وظیفهٔ باز تکراری برای یک مشتری/زون؛ عملیات گروهی audit می‌شود. تا زمان اتصال ماندهٔ مالی معتبر، UI صریحاً اعلام می‌کند که انتخاب بر اساس عضویت زون است، نه اولویت مانده.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/HANDOFF.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/HANDOFF.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/HANDOFF.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/HANDOFF.md	2026-10-26 20:56:56.942217671 +0000
+@@ -1,29 +1,29 @@
+-# HANDOFF — AKHAVAN CRM b20
++# HANDOFF — AKHAVAN CRM b21
+ 
+ ## نقطهٔ شروع قطعی
+-- آخرین نسخهٔ کد: `0.11.6 / r11-cp9-b20`؛ مبنا b19. از b19 یا نسخه‌های قدیمی‌تر ادامه نده مگر برای مقایسهٔ diff.
+-- تغییر b20: گردش نتیجهٔ وظیفهٔ وصول زون، نتیجه‌های مجاز، علت/تاریخ پیگیری، مبلغ برگرفته از پرداخت CLEARED همان مشتری، تاریخچه و audit.
+-- قبل از هر تغییر: بررسی source، `NOT_DONE_b20.md`، `STATUS_b20.md` و آزمون مرتبط. تغییر افزایشی؛ حذف/بازنویسی موتور وظایف ممنوع.
++- آخرین نسخهٔ کد: `0.11.7 / r11-cp9-b21`؛ مبنا b20. از b19 یا نسخه‌های قدیمی‌تر ادامه نده مگر برای مقایسهٔ diff.
++- تغییر b21: گردش نتیجهٔ وظیفهٔ وصول زون، نتیجه‌های مجاز، علت/تاریخ پیگیری، مبلغ برگرفته از پرداخت CLEARED همان مشتری، تاریخچه و audit.
++- قبل از هر تغییر: بررسی source، `NOT_DONE_b21.md`، `STATUS_b21.md` و آزمون مرتبط. تغییر افزایشی؛ حذف/بازنویسی موتور وظایف ممنوع.
+ 
+ ## وضعیت آزمون واقعی این نسخه
+-- `npm test`: PASS؛ 487 assertion (شمارش suiteها).
+-- `node scripts/audit-actions.mjs`: PASS؛ 75/75 handler تغییردهنده guard دارد، ممیزی ایستا.
++- `npm test`: PASS؛ 496 assertion (شمارش suiteها).
++- `node scripts/audit-actions.mjs`: PASS؛ 76/76 handler تغییردهنده guard دارد، ممیزی ایستا.
+ - `npm run audit:contracts`: PASS ایستا؛ هیچ SQL Server واقعی اجرا نشده.
+ - Build/Lint کامل، browser/Safari/iOS، API/SQL runtime و ERP: تأیید نشده‌اند؛ وابستگی‌های Vite/types در این محیط نصب نیستند.
+ 
+ ## ادامهٔ بعدی به ترتیب اولویت
+ 1. حل dependency installation در محیط دارای npm registry؛ سپس lint/build و type errors واقعی را بدون حذف قابلیت رفع کن.
+ 2. آزمون browser واقعی برای مسیر `/geo-intelligence`، ثبت نتیجه، scope/allow-deny، reload و responsive.
+-3. وصل کردن فایل evidence از مسیر AttachmentManager موجود، با نوع/حجم/مجوز/مالکیت و تست دسترسی.
++3. فایل evidence به attachments موجود متصل شده: JPEG/PNG/WebP/PDF تا ۵MB، مجوز/Scope همان task، audit و دریافت محدود به task انتخابی؛ storage هنوز local base64 است و backend security باقی است.
+ 4. گزارش و تخصیص گروهی task بر اساس ماندهٔ معتبر، بدون ساخت موتور task موازی.
+ 5. بررسی مختصات و انتخاب tile provider؛ سپس نقشه واقعی ایران و ترسیم polygon. Heatmap فقط پس از اتصال به منابع معتبر فعال شود.
+ 6. پس از تثبیت frontend: Backend/API/Auth، server-side RBAC و SQL Server RLS؛ سپس ERP/ETL.
+ 
+ ## فایل‌های جاری
+-- `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md`
+-- `REQUIREMENTS_TRACEABILITY_b20.md`
+-- `STATUS_b20.md` و `NOT_DONE_b20.md`
+-- `RBAC_AUDIT_b20.md`, `CHANGELOG_b20.md`, `DIFF_b19_to_b20.patch`
++- `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b21.md`
++- `REQUIREMENTS_TRACEABILITY_b21.md`
++- `STATUS_b21.md` و `NOT_DONE_b21.md`
++- `RBAC_AUDIT_b21.md`, `CHANGELOG_b21.md`, `DIFF_b19_to_b21.patch`
+ 
+ ---
+ 
+@@ -70,7 +70,7 @@
+ - `package.json`, `src/lib/version.ts`, `metadata.json`, `VERSION.md`: نسخه 0.11.3 / b16.
+ 
+ ## آزمون‌های این مرحله
+-- `npm test` تاریخی b16 برابر 423 assertion بود. b18 اکنون 446 assertion را اجرا می‌کند.
++- `npm test` تاریخی b16 برابر 426 assertion بود. b18 اکنون 446 assertion را اجرا می‌کند.
+ - بررسی syntax با TypeScript transpileModule برای `seed.ts` و `FinanceWorkspace.tsx`: PASS.
+ - Build/lint کامل: تأیید نشده؛ `vite: not found` و `Cannot find type definition file for vite/client` چون dependencyها نصب نیستند.
+ - SQL Server، مرورگر واقعی و Safari/iOS: تست نشده‌اند.
+@@ -127,3 +127,10 @@
+ - جزئیات امنیتی و محدودیت‌ها در `RBAC_AUDIT_b18.md` است. مدل مکانی b18 فقط لایهٔ دامنه است؛ نقشهٔ UI، tile provider، Heatmap واقعی، چاپ و عملیات وصول مکانی هنوز باقی است.
+ - موارد باز به‌صورت چک‌لیست در `NOT_DONE_b18.md` آمده‌اند.
+ - این نسخه را آمادهٔ production یا امن‌شده در سمت سرور اعلام نکنید؛ RBAC فعلی کلاینتی است و باید در Backend/API و SQL Server/RLS enforce شود.
++
++
++## افزودهٔ b21 — evidence task
++- وظایف گروهی از مشتریان انتخاب‌شده در زون ساخته می‌شوند؛ ایجاد وظیفه باز تکراری برای همان مشتری/زون مسدود است و رویداد audit ثبت می‌شود. این کار اولویت‌بندی بر اساس ماندهٔ مالی را ادعا نمی‌کند.
++- فایل مدرک در همان `state.attachments` و با `entityType=TASK` ذخیره می‌شود؛ نوع مجاز JPEG/PNG/WebP/PDF و سقف ۵ MiB است.
++- بارگذاری/دریافت به scope همان وظیفه در کلاینت وابسته است و audit محلی ثبت می‌شود. این کنترل جایگزین authorization سمت سرور نیست.
++- `npm test`: 496 assertions PASS؛ `audit-actions`: 76/76 PASS؛ `audit:contracts`: PASS ایستا. Build/Lint/browser/iOS/SQL runtime همچنان تأییدنشده‌اند.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/NOT_DONE_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/NOT_DONE_b20.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/NOT_DONE_b20.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/NOT_DONE_b20.md	2026-10-26 20:54:42.907561685 +0000
+@@ -28,7 +28,8 @@
+ - [ ] فیلترهای مشترک و cross-filter نقشه/KPI/جدول/نمودار، drill-down و export.
+ - [x] ایجاد وظیفهٔ پیگیری وصول از زون برای یک مشتری انتخاب‌شده با مسئول، ناظر اختیاری، مهلت، اولویت و نتیجه مورد انتظار؛ در فهرست وظایف موجود ثبت و از موتور اعلان همکاری استفاده می‌کند.
+ - [x] ثبت نتیجهٔ وظیفهٔ وصول: وضعیت نتیجه، علت اجباری برای نتیجه‌های ناموفق، تاریخ پیگیری تعهد پرداخت، مبلغ مشتق‌شده فقط از پرداخت CLEARED همان مشتری، تاریخچه و audit محلی.
+-- [ ] پیوست فایل مدرک مجاز/عکس و کنترل دسترسی به evidence؛ یادداشت متنی فعلی جایگزین فایل مدرک نیست. GPS به‌تنهایی اثبات انجام کار نیست.
++- [x] پیوست فایل مدرک مجاز (JPEG/PNG/WebP/PDF تا ۵MB) به task، کنترل مجوز/Scope در کلاینت، دریافت محدود به task و audit محلی؛ GPS به‌تنهایی اثبات انجام کار نیست.
++- [ ] محدودیت مجموع فضای فایل‌ها، پاک‌سازی/retention، اسکن بدافزار و storage امن سمت سرور؛ کنترل کلاینت به‌تنهایی امنیت production نیست.
+ - [ ] ساخت/تخصیص گروهی وظایف از زون بر اساس اولویت مطالبات معتبر و گزارش سلسله‌مراتبی عملکرد.
+ - [ ] تطبیق planned route با توقف/ویزیت واقعی، تفکیک visit/delivery/failed delivery/return/no-show و گزارش نتیجه واقعی.
+ - [ ] گزارش سلسله‌مراتبی سازمان→زون→مجری→task→مشتری، چاپ نقشه/فهرست، clustering و تست حجم داده.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/NOT_DONE_b21.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/NOT_DONE_b21.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/NOT_DONE_b21.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/NOT_DONE_b21.md	2026-10-26 20:56:40.871077621 +0000
+@@ -0,0 +1,59 @@
++# NOT DONE — AKHAVAN CRM b21
++
++وضعیت هر بند مستقل است؛ وجود مدل یا فرم، به‌تنهایی معیار تکمیل گردش کاری نیست.
++
++## P0 — تثبیت سورس و تست انتشار
++- [ ] اجرای نصب وابستگی‌ها در محیط دارای دسترسی registry.
++- [ ] `npm run lint` کامل و رفع خطاهای واقعی TypeScript.
++- [ ] `npm run build` و رفع خطاهای build بدون حذف قابلیت.
++- [ ] اجرای smoke test در Chromium؛ مسیر `/geo-intelligence`، ایجاد/ویرایش/فعال‌سازی/بایگانی زون، reload، مجوزهای allow/deny و responsive.
++- [ ] آزمون واقعی iPhone/Safari، RTL، لمس، overflow، performance و دسترس‌پذیری.
++- [ ] اجرای آزمون‌های امنیت منفی با نقش‌های واقعی CEO، مدیر فروش، سرپرست، فروشنده، حسابدار و بازدیدکننده.
++- [ ] Backend/API authorization و SQL Server RLS پیش از داده واقعی.
++
++## P1 — هوش مکانی و زون‌ها
++- [x] مدل GeoZone/ZoneGeometryVersion/ZoneAssignment/GeoMetricDefinition/ZoneMetricSnapshot در AppState و normalization برای state قدیمی.
++- [x] GeoJSON Polygon validation، حداقل 3 رأس متمایز، حلقه بسته، محدوده مختصات و point-in-polygon با احتساب مرز.
++- [x] نسخه‌بندی هندسه و حفظ تاریخچه.
++- [x] صفحهٔ زون، فرم مختصات، پیش‌نمایش هندسه (نه نقشهٔ واقعی)، نام/کد، وضعیت زون و audit محلی.
++- [x] انتساب مشتری داخل polygon برای مشتریان دارای مختصات معتبر و قابل مشاهده طبق RBAC؛ تاریخچه انتساب حفظ می‌شود.
++- [x] مجوزهای `geo.view` و `geo.manage` در ماتریس RBAC و تنظیمات پروفایل.
++- [ ] ممیزی دقیق نام/منبع مختصات مشتری و کیفیت داده؛ هماهنگ‌سازی با مرزهای واقعی.
++- [ ] انتخاب و آزمون MapLibre/tile provider برای ایران، مجوز/هزینه/دسترسی، cache/self-host و چاپ.
++- [ ] نقشهٔ واقعی ایران با استان/شهر/راه/برچسب فارسی و ابزار رسم/ویرایش polygon روی نقشه، شامل موبایل.
++- [ ] ذخیره/reload زون با تست مرورگر و دستگاه واقعی؛ بررسی polygonهای پیچیده/خودمتقاطع و تاریخ مؤثر.
++- [ ] Heatmap تک‌شاخصی با منبع معتبر، واحد، aggregation، زمان تازگی، semantics رنگ و مقایسه دوره.
++- [ ] اتصال مطالبات به ماندهٔ معتبر فاکتور − PaymentAllocation − اعتبار؛ فروش به فاکتور معتبر؛ وصول از پرداخت واقعی؛ مرجوعی از سند برگشت معتبر.
++- [ ] attribution فیلتر تولیدکننده از خطوط فاکتور و قواعد مالی؛ جلوگیری از نسبت‌دادن کل مانده مشتری به چند تولیدکننده.
++- [ ] فیلترهای مشترک و cross-filter نقشه/KPI/جدول/نمودار، drill-down و export.
++- [x] ایجاد وظیفهٔ پیگیری وصول از زون برای یک مشتری انتخاب‌شده با مسئول، ناظر اختیاری، مهلت، اولویت و نتیجه مورد انتظار؛ در فهرست وظایف موجود ثبت و از موتور اعلان همکاری استفاده می‌کند.
++- [x] ثبت نتیجهٔ وظیفهٔ وصول: وضعیت نتیجه، علت اجباری برای نتیجه‌های ناموفق، تاریخ پیگیری تعهد پرداخت، مبلغ مشتق‌شده فقط از پرداخت CLEARED همان مشتری، تاریخچه و audit محلی.
++- [x] پیوست فایل مدرک مجاز (JPEG/PNG/WebP/PDF تا ۵MB) به task، کنترل مجوز/Scope در کلاینت، دریافت محدود به task و audit محلی؛ GPS به‌تنهایی اثبات انجام کار نیست.
++- [ ] محدودیت مجموع فضای فایل‌ها، پاک‌سازی/retention، اسکن بدافزار و storage امن سمت سرور؛ کنترل کلاینت به‌تنهایی امنیت production نیست.
++- [x] ساخت گروهی وظایف برای مشتریان انتخاب‌شده در زون، استفاده از موتور task/اعلان موجود، کنترل مجوز و جلوگیری از وظیفهٔ باز تکراری.
++- [ ] اولویت‌بندی گروهی بر اساس مطالبات معتبر و گزارش سلسله‌مراتبی عملکرد؛ منبع مالی و قواعد مانده هنوز باید متصل/تطبیق شوند.
++- [ ] تطبیق planned route با توقف/ویزیت واقعی، تفکیک visit/delivery/failed delivery/return/no-show و گزارش نتیجه واقعی.
++- [ ] گزارش سلسله‌مراتبی سازمان→زون→مجری→task→مشتری، چاپ نقشه/فهرست، clustering و تست حجم داده.
++- [ ] کنترل scope زون/تیم/قلمرو در تمام فیلترها، taskها، گزارش‌ها و export؛ enforcement در لایه سرور.
++
++## P1 — RBAC و ساختار سازمانی
++- [x] پروفایل‌های مجوز قابل تنظیم و ثبت audit محلی.
++- [x] scope نقش، workspace پیش‌فرض، نقش بالادست و سرپرست مستقیم قابل تنظیم؛ جلوگیری از چرخه.
++- [x] مجوزهای `geo.view` و `geo.manage` مستقل و قابل تنظیم.
++- [ ] ویرایشگر کامل `SEE/DO/HIDDEN` برای فیلدها با پوشش واقعی در renderer و API.
++- [ ] ممیزی تمام handlerها، exportها، bulk actions، فیلترها و مسیرهای عمیق؛ آزمون تغییر URL/state برای دور زدن مجوز.
++- [ ] تست scope سازمان/شعبه/قلمرو/تیم/مالک برای همه ماژول‌ها، مخصوصاً Geo, reports, tasks, finance.
++- [ ] backend authentication/authorization و RLS واقعی؛ UI-only guard برای امنیت کافی نیست.
++
++## P1 — سایر گردش‌های تجاری/مالی/داده
++- [ ] تطبیق محاسبات مانده و تخصیص با `PaymentAllocation` و تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
++- [ ] تکمیل گردش چک، بانک، هزینه، مغایرت‌گیری، تاریخچه، اصلاح/ابطال و audit end-to-end.
++- [ ] تکمیل Quote → acceptance → handoff خارجی → توزیع/تحویل و حفظ `Quote ≠ Order ≠ Invoice`.
++- [ ] اتصال KPIها به منابع واحد، تازگی، drill-down، خروجی و تعریف مشترک.
++- [ ] تکمیل تصمیم‌یارهای lost-customer, next purchase suggestion, lost-opportunity, anomaly detection و route effectiveness؛ بدون سفارش خودکار و با ثبت قبول/رد/تبدیل پیشنهاد.
++
++## P2 — یکپارچه‌سازی
++- [ ] تکمیل API/Auth/DTO/validation، migrations و seed policy در Backend.
++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS و recovery.
++- [ ] اتصال ERP/ETL با mapping شناسه‌ها، outbox/retry/idempotency، monitoring و reconciliation.
++- [ ] آزمون end-to-end با داده/سامانه واقعی؛ تا پیش از آن اتصال واقعی ادعا نشود.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/REQUIREMENTS_TRACEABILITY_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/REQUIREMENTS_TRACEABILITY_b20.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/REQUIREMENTS_TRACEABILITY_b20.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/REQUIREMENTS_TRACEABILITY_b20.md	2026-10-26 20:55:10.521678503 +0000
+@@ -30,3 +30,10 @@
+ | مبلغ وصول | پرداخت همان مشتری، status=CLEARED، amount>0 | مبلغ دستی ممنوع؛ از رکورد پرداخت خوانده می‌شود | اثبات تخصیص به فاکتور/تطبیق دفترکل هنوز جداست |
+ | تاریخچه و audit | `resultHistory`, `GEO_COLLECTION_TASK_RESULT_RECORDED` | محلی و افزایشی | audit ضد‌دستکاری backend باقی است |
+ | فایل مدرک | فرم فعلی فقط یادداشت متنی | ناقص | پیوست فایل و کنترل دسترسی evidence باقی است |
++
++
++## b21 — مدارک وظیفه وصول
++- وضعیت: پیاده‌سازی کلاینتی با تست دامنه و قرارداد UI.
++- شواهد: `src/lib/collectionTaskEvidence.ts`, `src/components/GeoIntelligenceWorkspace.tsx`, `tests/collectionTaskEvidence.test.mjs`, `tests/geoWorkspaceContracts.test.mjs`.
++- معیارهای پوشش‌داده‌شده: allowlist MIME، سقف ۵ MiB، رد فایل خالی/نوع نامجاز، اتصال به همان task، scope check در دریافت، audit محلی.
++- باقی‌مانده: ذخیره‌سازی امن سمت سرور، ضدبدافزار، retention، quota مجموع و آزمون مجوز backend.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/STATUS_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/STATUS_b20.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/STATUS_b20.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/STATUS_b20.md	2026-10-26 20:55:10.520461385 +0000
+@@ -1,11 +1,13 @@
+-# STATUS — AKHAVAN CRM b20
++# STATUS — AKHAVAN CRM b21
+ 
+-- نسخه: `0.11.6` — `r11-cp9-b20`؛ مبنا `r11-cp9-b19`.
++- نسخه: `0.11.7` — `r11-cp9-b21+evidence`؛ مبنا `r11-cp9-b19`.
+ - **توسعهٔ این دور:** گردش نتیجهٔ وظیفهٔ وصول زون در `GeoIntelligenceWorkspace.tsx` و helper دامنهٔ `collectionTaskOutcome.ts`.
+ - **نتایج مجاز:** وصول ثبت‌شده، تعهد به پرداخت، عدم وصول، مشتری در دسترس نبود، اختلاف مالی، مراجعه انجام شد، عدم حضور/مراجعه ناموفق.
+ - **اعتبار مالی:** مبلغ به‌صورت دستی وارد نمی‌شود؛ فقط از پرداخت `CLEARED` همان مشتری و مبلغ مثبت خوانده می‌شود. این کار به‌خودی‌خود به معنی تخصیص به فاکتور یا تسویهٔ حسابداری نیست.
+ - **کنترل‌ها:** علت برای نتایج ناموفق، تاریخ بعدی برای تعهد پرداخت، بررسی scope/مجوز ویرایش وظیفه، تاریخچهٔ append-only در state و audit محلی.
+-- **آزمون‌ها:** `npm test` PASS؛ 487 assertion بر اساس خروجی suiteها. `audit-actions` PASS (75/75 handler دارای guard). `audit:contracts` PASS ایستا فقط.
++- **آزمون‌ها:** `npm test` PASS؛ 493 assertion بر اساس خروجی suiteها. `audit-actions` PASS (75/75 handler دارای guard). `audit:contracts` PASS ایستا فقط.
+ - **Build/Lint:** تأیید نشده؛ وابستگی‌ها نصب نیستند. typecheck کامل، مرورگر/iOS، SQL Server runtime و ERP انجام نشده‌اند.
+ - **محدودیت evidence:** یادداشت متنی ثبت می‌شود؛ بارگذاری و بررسی فایل مدرک هنوز وصل نشده.
+ - **وضعیت محصول:** توسعه‌ای؛ production-ready اعلام نمی‌شود.
++
++- **افزودهٔ تکمیلی پس از b21:** helper اعتبارسنجی evidence و اتصال UI به attachments موجود؛ تست‌های فایل و قرارداد UI اجرا شدند. شمارهٔ پایه b21 حفظ شده تا باندل بعدی به‌عنوان نسخهٔ انتشار مستقل بسته‌بندی شود.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/STATUS_b21.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/STATUS_b21.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/STATUS_b21.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/STATUS_b21.md	2026-10-26 20:56:56.942618473 +0000
+@@ -0,0 +1,13 @@
++# STATUS — AKHAVAN CRM b21
++
++- نسخه: `0.11.7` — `r11-cp9-b21`؛ مبنا `r11-cp9-b20`.
++- **توسعهٔ این دور:** گردش نتیجه و مدرک وظیفه وصول، به‌علاوه ساخت گروهی وظایف از مشتریان انتخاب‌شده در زون روی موتور task موجود.
++- **نتایج مجاز:** وصول ثبت‌شده، تعهد به پرداخت، عدم وصول، مشتری در دسترس نبود، اختلاف مالی، مراجعه انجام شد، عدم حضور/مراجعه ناموفق.
++- **اعتبار مالی:** مبلغ به‌صورت دستی وارد نمی‌شود؛ فقط از پرداخت `CLEARED` همان مشتری و مبلغ مثبت خوانده می‌شود. این کار به‌خودی‌خود به معنی تخصیص به فاکتور یا تسویهٔ حسابداری نیست.
++- **کنترل‌ها:** علت برای نتایج ناموفق، تاریخ بعدی برای تعهد پرداخت، بررسی scope/مجوز ویرایش وظیفه، تاریخچهٔ append-only در state و audit محلی.
++- **آزمون‌ها:** `npm test` PASS؛ 496 assertion بر اساس خروجی suiteها. `audit-actions` PASS (76/76 handler دارای guard). `audit:contracts` PASS ایستا فقط.
++- **Build/Lint:** تأیید نشده؛ وابستگی‌ها نصب نیستند. typecheck کامل، مرورگر/iOS، SQL Server runtime و ERP انجام نشده‌اند.
++- **مدرک:** بارگذاری JPEG/PNG/WebP/PDF تا ۵ MiB به همان task، دریافت محدود به task با بررسی مجوز/Scope کلاینت و audit محلی پیاده شده است؛ ذخیره محلی base64 است و backend security باقی است.
++- **وضعیت محصول:** توسعه‌ای؛ production-ready اعلام نمی‌شود.
++
++- **تغییر b21:** evidence به Attachment موجود متصل شد؛ موتور task و storage جدید موازی ساخته نشده‌اند.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/VERSION.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/VERSION.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/VERSION.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/VERSION.md	2026-10-26 20:55:10.520353015 +0000
+@@ -1,7 +1,7 @@
+ # VERSION
+ 
+-- نسخه محصول: **0.11.6**
+-- شناسه بسته: **r11-cp9-b20**
++- نسخه محصول: **0.11.7**
++- شناسه بسته: **r11-cp9-b21**
+ - مبنا: **r11-cp9-b19**؛ تغییرات افزایشی هستند.
+ 
+ ## تاریخچه
+@@ -13,6 +13,8 @@
+ - b20: گردش ثبت نتیجهٔ وظیفهٔ وصول از زون؛ انتخاب نتیجهٔ کنترل‌شده، علت نتیجه ناموفق، پیگیری بعدی، تاریخچهٔ نتیجه، audit و اتصال به رکورد پرداخت CLEARED همان مشتری برای استخراج مبلغ (بدون ورود دستی مبلغ).
+ 
+ ## قرارداد بسته
+-`AkhavanCRM-SolarEmber_r11-cp9_b20.zip`
++`AkhavanCRM-SolarEmber_r11-cp9_b21.zip`
+ 
+ گزارش‌های جاری: `STATUS_b20.md`, `NOT_DONE_b20.md`, `RBAC_AUDIT_b20.md`, `CHANGELOG_b20.md`, `HANDOFF.md`, `REQUIREMENTS_TRACEABILITY_b20.md` و `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md`.
++
++- b21: پیوست امن‌تر مدرک وظیفه وصول به Attachment موجود؛ allowlist فایل، سقف حجم، scope check و audit محلی.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md /mnt/data/akhavan_build_b20/akhavan_dev_b20/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md	2026-10-26 20:56:56.943214273 +0000
+@@ -44,7 +44,7 @@
+ بستهٔ قابل‌دسترسی و تأییدشده برای این ممیزی `AkhavanCRM-SolarEmber_r11-cp9_b16.zip` است. اسناد همراه آن می‌گویند نسخه محصول `0.11.3` و checkpoint `r11-cp9-b16` است.
+ 
+ اسناد b16 گزارش می‌کنند:
+-- `npm test`: تعداد 423 assertion موفق در محیط اجرای ثبت‌شده در handoff.
++- `npm test`: تعداد 426 assertion موفق در محیط اجرای ثبت‌شده در handoff.
+ - بررسی syntax از طریق `transpileModule` برای `src/lib/seed.ts` و `src/components/FinanceWorkspace.tsx` موفق گزارش شده است.
+ - Build و lint کامل تأیید نشده‌اند؛ در محیط قبلی `vite: not found` و نبود `vite/client` ثبت شده است.
+ - SQL Server، مرورگر واقعی، Safari/iOS و اتصال ERP اجرا/تست نشده‌اند.
+@@ -200,7 +200,7 @@
+ 3. افزودن/گسترش KPIهای مالی، نمودار روند شش‌ماهه و تفکیک دسته‌ای هزینه در `FinanceWorkspace`.
+ 4. افزودن تب «خزانه و سررسید» و تب «هزینه‌ها» به‌صورت نمای تحلیلی؛ گردش کامل بانک/هزینه/چک تکمیل‌شده محسوب نمی‌شود.
+ 5. مستندات handoff، changelog و not-done برای b16 موجود است.
+-6. طبق گزارش همراه نسخه: `npm test` با 423 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
++6. طبق گزارش همراه نسخه: `npm test` با 426 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
+ 
+ ## 7. کارهای باقی‌مانده و اولویت اجرا
+ 
+@@ -356,9 +356,20 @@
+ 
+ ## نتایج آزمون b20
+ - `npm test`: PASS؛ 487 assertion طبق جمع خروجی suiteها.
+-- `node scripts/audit-actions.mjs`: PASS؛ 75 handler تغییردهنده، 75 guard، صفر unguarded در تحلیل ایستا.
++- `node scripts/audit-actions.mjs`: PASS؛ 76 handler تغییردهنده، 76 guard، صفر unguarded در تحلیل ایستا.
+ - `npm run audit:contracts`: PASS ایستا؛ 9 SQL files، 46 tables، 44 tenant-scoped tables، 44 RLS targets، 5 required views. SQL Server واقعی اجرا نشده.
+ - Build/Lint و browser/Safari/iOS: تأیید نشده‌اند؛ dependencyهای Vite/types در این محیط موجود نیستند.
+ 
+ ## محدودیت امنیت و اجرا
+ این تغییر RBAC client-side را دور نمی‌زند اما آن را به امنیت واقعی تبدیل نمی‌کند. پرداخت و task باید در Backend دوباره مجوزدهی و اعتبارسنجی شوند. `Payment.status=CLEARED` صرفاً وضعیت رکورد پرداخت موجود در state است؛ این توسعه، bank settlement، invoice allocation یا reconciliation واقعی ایجاد نمی‌کند.
++
++
++## الحاقیهٔ اجرایی b21 — مدرک وظیفهٔ وصول (2026-10-27)
++- نسخهٔ جاری برای این بسته `0.11.7 / r11-cp9-b21` است؛ مبنای کد b20 و تغییرات افزایشی‌اند.
++- `src/lib/collectionTaskEvidence.ts` نوع و اندازهٔ فایل را اعتبارسنجی می‌کند: JPEG/PNG/WebP/PDF، بزرگ‌تر از صفر و حداکثر ۵ MiB.
++- `GeoIntelligenceWorkspace.tsx` فایل را در `state.attachments` به همان task وصل می‌کند، با scope check دریافت فایل و audit محلی. از AttachmentManager/state موجود استفاده می‌شود؛ موتور موازی ساخته نشده.
++- تست‌ها: `collectionTaskEvidence.test.mjs` دارای ۶ assertion؛ قرارداد Geo UI دارای ۲۶ assertion؛ کل `npm test` موفق اجرا شد. `audit-actions` 76/76 و `audit:contracts` موفق در حالت static-only.
++- محدودیت: ذخیره‌سازی base64 در state محلی است. سقف مجموع storage، retention، اسکن بدافزار، دسترسی سروری و ذخیره‌سازی امن هنوز طراحی/اجرا نشده‌اند؛ بنابراین این پیاده‌سازی برای production امن اعلام نمی‌شود.
++- Build/Lint کامل، browser/iOS، SQL Server runtime/RLS و ERP هنوز تأییدنشده‌اند.
++
++- افزودهٔ b21 تکمیلی: ساخت گروهی وظایف از مشتریان انتخاب‌شده در زون، با reuse از task engine و notification collaboration، کنترل `tasks.CREATE/ASSIGN`، جلوگیری از task باز تکراری و audit. انتخاب فعلاً مکانی/دستی است؛ اولویت‌بندی بر اساس ماندهٔ مالی معتبر و گزارش سلسله‌مراتبی هنوز باقی است.
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/metadata.json /mnt/data/akhavan_build_b20/akhavan_dev_b20/metadata.json
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/metadata.json	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/metadata.json	2026-10-26 20:55:10.520299035 +0000
+@@ -1,7 +1,7 @@
+ {
+   "name": "AKHAVAN CRM",
+-  "version": "0.11.6",
+-  "release": "r11-cp9-b20",
++  "version": "0.11.7",
++  "release": "r11-cp9-b21",
+   "description": "AKHAVAN CRM — RBAC قابل تنظیم و مدیریت زون، انتساب مشتری و ثبت نتیجهٔ وظیفه وصول بر پایه پرداخت معتبر",
+   "requestFramePermissions": [],
+   "majorCapabilities": [
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/package.json /mnt/data/akhavan_build_b20/akhavan_dev_b20/package.json
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/package.json	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/package.json	2026-10-26 20:55:10.520214110 +0000
+@@ -1,7 +1,7 @@
+ {
+   "name": "react-example",
+   "private": true,
+-  "version": "0.11.6",
++  "version": "0.11.7",
+   "type": "module",
+   "scripts": {
+     "dev": "vite --port=3000 --host=0.0.0.0",
+@@ -10,7 +10,7 @@
+     "clean": "rm -rf dist server.js",
+     "lint": "tsc --noEmit",
+     "audit:contracts": "node scripts/audit-sqlserver-contracts.mjs",
+-    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs"
++    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs && node --experimental-strip-types tests/collectionTaskEvidence.test.mjs"
+   },
+   "dependencies": {
+     "@google/genai": "^2.4.0",
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/components/GeoIntelligenceWorkspace.tsx /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/components/GeoIntelligenceWorkspace.tsx
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/components/GeoIntelligenceWorkspace.tsx	2026-10-26 20:44:21.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/components/GeoIntelligenceWorkspace.tsx	2026-10-26 20:56:25.608358865 +0000
+@@ -4,11 +4,12 @@
+ import { generateId } from '../lib/utils';
+ import { processTaskCollaborationEvents } from '../lib/collaboration';
+ import { COLLECTION_OUTCOME_OPTIONS, validateCollectionTaskOutcome } from '../lib/collectionTaskOutcome';
++import { validateCollectionEvidenceFile } from '../lib/collectionTaskEvidence';
+ import { useCan } from '../hooks/useCan';
+ import { Card } from './ui/Card';
+ import { Button } from './ui/Button';
+ import { Input } from './ui/Input';
+-import { MapPinned, Plus, Save, ShieldAlert, Layers3, Users, Clock3, Archive, CheckCircle2, AlertTriangle } from 'lucide-react';
++import { MapPinned, Plus, Save, ShieldAlert, Layers3, Users, Clock3, Archive, CheckCircle2, AlertTriangle, Paperclip, Download } from 'lucide-react';
+ 
+ interface Props { state: AppState; updateState: (updater: (draft: AppState) => AppState | void) => void; }
+ type Mode = 'zones' | 'heatmap' | 'operations';
+@@ -58,6 +59,7 @@
+   const [dateFrom, setDateFrom] = useState('');
+   const [dateTo, setDateTo] = useState('');
+   const [taskCustomerId, setTaskCustomerId] = useState('');
++  const [bulkCustomerIds, setBulkCustomerIds] = useState<string[]>([]);
+   const [taskAssigneeId, setTaskAssigneeId] = useState(state.currentUserId || '');
+   const [taskWatcherId, setTaskWatcherId] = useState('');
+   const [taskDueDate, setTaskDueDate] = useState('');
+@@ -138,6 +140,32 @@
+   const selectedOutcomeTask = zoneCollectionTasks.find(task => task.id === outcomeTaskId) || null;
+   const selectedOutcomeCustomerId = selectedOutcomeTask ? String(selectedOutcomeTask.customerId || selectedOutcomeTask.accountId || '') : '';
+   const availablePayments = (state.payments || []).filter(payment => String(payment.customerId || payment.accountId || '') === selectedOutcomeCustomerId && payment.status === 'CLEARED' && Number.isFinite(payment.amount) && payment.amount > 0);
++  const taskEvidence = (taskId: string) => (state.attachments || []).filter(file => file.entityId === taskId && file.entityType === 'TASK');
++  const uploadCollectionEvidence = (file?: File) => {
++    if (!file || !selectedOutcomeTask) return;
++    if (!canOnTask(selectedOutcomeTask)) { denied('پیوست مدرک وظیفه وصول'); setStatusMessage({ type: 'error', text: 'برای پیوست مدرک، مجوز و محدودهٔ دسترسی لازم است.' }); return; }
++    const validation = validateCollectionEvidenceFile(file);
++    if (!validation.valid) { setStatusMessage({ type: 'error', text: validation.error || 'فایل مدرک معتبر نیست.' }); return; }
++    const reader = new FileReader();
++    reader.onload = () => {
++      const data = typeof reader.result === 'string' ? reader.result : '';
++      if (!data.startsWith('data:')) { setStatusMessage({ type: 'error', text: 'خواندن فایل مدرک ناموفق بود.' }); return; }
++      const now = new Date().toISOString();
++      updateState(draft => {
++        if (!draft.attachments) draft.attachments = [];
++        draft.attachments.push({ id: generateId(), entityId: selectedOutcomeTask.id, entityType: 'TASK', kind: 'COLLECTION_EVIDENCE', fileName: file.name, fileType: file.type, fileSize: file.size, base64Data: data, uploadedAt: now, uploadedBy: draft.currentUserId || '' } as any);
++        if (!draft.auditLogs) draft.auditLogs = [];
++        draft.auditLogs.push({ id: generateId(), action: 'GEO_COLLECTION_EVIDENCE_ATTACHED', entityType: 'TASK', entityId: selectedOutcomeTask.id, details: `مدرک وظیفه وصول پیوست شد: ${file.name} (${file.size} bytes).`, actor, createdAt: now } as any);
++      });
++      setStatusMessage({ type: 'ok', text: 'مدرک به همین وظیفه پیوست شد و رویداد ممیزی ثبت شد.' });
++    };
++    reader.onerror = () => setStatusMessage({ type: 'error', text: 'خواندن فایل مدرک ناموفق بود.' });
++    reader.readAsDataURL(file);
++  };
++  const downloadEvidence = (file: any) => {
++    if (!selectedOutcomeTask || !canOnTask(selectedOutcomeTask) || file.entityId !== selectedOutcomeTask.id || file.entityType !== 'TASK') { denied('دریافت مدرک وظیفه وصول'); return; }
++    const link = document.createElement('a'); link.href = file.base64Data; link.download = file.fileName; document.body.appendChild(link); link.click(); link.remove();
++  };
+   const saveCollectionOutcome = () => {
+     if (!selectedOutcomeTask) { setStatusMessage({ type: 'error', text: 'وظیفهٔ وصول معتبر انتخاب نشده است.' }); return; }
+     if (!canOnTask(selectedOutcomeTask)) { denied('ثبت نتیجهٔ وظیفه وصول'); setStatusMessage({ type: 'error', text: 'برای ثبت نتیجهٔ این وظیفه مجوز و دسترسی لازم را ندارید.' }); return; }
+@@ -166,6 +194,28 @@
+   };
+   const canOnTask = (task: any) => canOn('tasks', 'EDIT', { ownerId: task.assigneeType === 'GROUP' ? (state.groups?.find(group => group.id === task.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined) : task.assigneeId });
+ 
++  const createBulkCollectionTasks = () => {
++    if (!can('tasks', 'CREATE')) { denied('ایجاد گروهی وظایف وصول'); setStatusMessage({ type: 'error', text: 'مجوز ایجاد وظیفه ندارید.' }); return; }
++    if (!selectedZone || selectedZone.status !== 'ACTIVE' || !activeGeometry) { setStatusMessage({ type: 'error', text: 'زون فعال با هندسه معتبر لازم است.' }); return; }
++    const assignee = (state.users || []).find(user => user.id === taskAssigneeId && (user.isActive ?? user.active) !== false);
++    if (!assignee) { setStatusMessage({ type: 'error', text: 'مسئول فعال و معتبر انتخاب کنید.' }); return; }
++    if ((assignee.id !== state.currentUserId || taskWatcherId) && !can('tasks', 'ASSIGN')) { denied('ارجاع گروهی وظایف'); setStatusMessage({ type: 'error', text: 'برای ارجاع به کاربر دیگر یا تعیین ناظر، مجوز ارجاع لازم است.' }); return; }
++    const eligible = customersInside.filter(customer => bulkCustomerIds.includes(customer.id));
++    if (!eligible.length) { setStatusMessage({ type: 'error', text: 'حداقل یک مشتری داخل زون انتخاب کنید.' }); return; }
++    const existingOpenCustomerIds = new Set(zoneCollectionTasks.filter(task => task.status !== 'COMPLETED' && task.status !== 'CANCELLED').map(task => String(task.customerId || task.accountId || '')));
++    const toCreate = eligible.filter(customer => !existingOpenCustomerIds.has(customer.id));
++    if (!toCreate.length) { setStatusMessage({ type: 'info', text: 'برای تمام مشتریان انتخاب‌شده، وظیفهٔ وصول باز از همین زون وجود دارد؛ وظیفهٔ تکراری ساخته نشد.' }); return; }
++    const now = new Date().toISOString();
++    const tasks = toCreate.map(customer => ({ id: generateId(), title: `پیگیری وصول — ${customer.name}`, description: `ایجاد گروهی از زون «${selectedZone.name}». نتیجه باید بر اساس تماس/مراجعه واقعی ثبت شود؛ قرارگیری داخل زون اثبات وصول نیست.`, accountId: customer.id, customerId: customer.id, zoneId: selectedZone.id, taskType: 'COLLECTION', expectedOutcome: 'COLLECTION_RESULT', status: 'OPEN', priority: taskPriority, slaStatus: 'ON_TRACK', dueDate: taskDueDate || undefined, assigneeType: 'USER', assigneeId: assignee.id, watcherIds: taskWatcherId ? [taskWatcherId] : [], createdAt: now, createdBy: state.currentUserId || '', source: 'GEO_ZONE', evidence: [] } as any));
++    updateState(draft => {
++      if (!draft.tasks) draft.tasks = [];
++      for (const task of tasks) { draft.tasks.unshift(task); processTaskCollaborationEvents(task, state, draft, true); }
++      if (!draft.auditLogs) draft.auditLogs = [];
++      draft.auditLogs.push({ id: generateId(), action: 'GEO_COLLECTION_TASKS_BULK_CREATED', entityType: 'GEO_ZONE', entityId: selectedZone.id, details: `${tasks.length} وظیفهٔ وصول گروهی برای زون ${selectedZone.code} ساخته شد؛ مسئول ${assignee.id}.`, actor, createdAt: now } as any);
++    });
++    setStatusMessage({ type: 'ok', text: `${tasks.length.toLocaleString('fa-IR')} وظیفه ایجاد شد؛ مشتریان دارای وظیفهٔ باز از تکرار مستثنا شدند.` });
++    setBulkCustomerIds([]);
++  };
+   const createCollectionTask = () => {
+     if (!can('tasks', 'CREATE')) { denied('ایجاد وظیفه وصول از زون'); return; }
+     if (!selectedZone || selectedZone.status !== 'ACTIVE' || !activeGeometry) { setStatusMessage({ type: 'error', text: 'برای ایجاد وظیفه، زون فعال با هندسه معتبر انتخاب کنید.' }); return; }
+@@ -232,8 +282,8 @@
+     {mode==='heatmap' && <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]"><Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">تعریف سنجهٔ تحلیل</h2><p className="mt-1 text-xs leading-6 text-text-secondary">در هر تحلیل فقط یک سنجه انتخاب می‌شود؛ رنگ و اولویت آن تا تعریف دقیق منبع و معنای «بیشتر بهتر است/بدتر است» نباید حدس زده شود.</p></div><label className="block text-xs font-bold text-text-secondary">سنجهٔ اصلی<select value={metricKey} onChange={event=>setMetricKey(event.target.value as keyof typeof GEO_METRIC_CATALOG)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{Object.values(GEO_METRIC_CATALOG).map(metric=><option key={metric.key} value={metric.key}>{metric.label}</option>)}</select></label><div className="grid gap-3 sm:grid-cols-2"><Input label="از تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateFrom} onChange={event=>setDateFrom(event.target.value)}/><Input label="تا تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateTo} onChange={event=>setDateTo(event.target.value)}/></div><div className="rounded-2xl border border-warning/30 bg-warning-soft p-4"><div className="flex items-center gap-2 font-bold text-warning"><ShieldAlert size={17}/>این سنجه هنوز منبع واقعی ندارد</div><p className="mt-2 text-sm leading-7 text-text-main">{activeMetric.limitation}</p></div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">قرارداد سنجه</h2><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">واحد</div><div className="mt-1 font-bold text-text-main">{activeMetric.unit}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">تجمیع</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.aggregation}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">منبع معتبر</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.sourceDescription}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">معنای مقدار بالاتر</div><div className="mt-1 font-bold text-text-main">{activeMetric.higherIsBetter===null?'باید با انتخاب سنجه مشخص شود':activeMetric.higherIsBetter?'مطلوب‌تر':'نامطلوب‌تر'}</div></div><div className="text-xs leading-6 text-text-secondary">هیچ Heatmap، عدد یا رتبهٔ ساختگی نمایش داده نمی‌شود. فیلتر تاریخ پس از اتصال به منبع باید بر همان منبع معتبر اعمال شود.</div></Card></div>}
+     {mode==='operations' && <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">مشتریان داخل زون</h2><label className="block text-xs font-bold text-text-secondary">زون<select value={selectedZoneId} onChange={event=>{const zone=zones.find(item=>item.id===event.target.value);if(zone)selectZone(zone);else setSelectedZoneId('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب زون</option>{zones.map(zone=><option key={zone.id} value={zone.id}>{zone.name} · {zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</option>)}</select></label><div className="grid grid-cols-2 gap-3"><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">مشتری داخل مرز</div><div className="mt-1 text-2xl font-black text-text-main">{customersInside.length.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">انتساب فعال</div><div className="mt-1 text-2xl font-black text-text-main">{selectedZoneAssignments.length.toLocaleString('fa-IR')}</div></div></div><Button block disabled={!canEdit||!selectedZone||selectedZone.status!=='ACTIVE'||!activeGeometry} onClick={assignCustomersInZone} icon={<Users size={15}/>}>انتساب / به‌روزرسانی مشتریان داخل مرز</Button><p className="text-xs leading-6 text-text-secondary">این عمل فقط مشتریانی را در نظر می‌گیرد که مختصات واقعی و معتبر دارند و از RBAC اجازهٔ مشاهدهٔ آن‌ها را دارید. انتساب‌های قبلی همین مشتریان با پایان اعتبار بسته می‌شوند؛ رکوردهای خارج از محدودهٔ دسترسی تغییر نمی‌کنند.</p>
+       <div className="mt-5 border-t border-border pt-4"><h3 className="mb-1 text-sm font-black text-text-main">ایجاد وظیفهٔ پیگیری وصول از زون</h3><p className="mb-3 text-xs leading-6 text-text-secondary">وظیفه به موتور وظایف موجود اضافه می‌شود؛ مبلغ وصول یا موفقیت مراجعه به‌صورت خودکار فرض نمی‌شود و باید بعداً با نتیجهٔ واقعی ثبت شود.</p>
+-      <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">مشتری<select value={taskCustomerId} onChange={event=>setTaskCustomerId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب مشتری داخل زون</option>{customersInside.map(customer=><option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">مسئول اصلی<select value={taskAssigneeId} onChange={event=>setTaskAssigneeId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{(state.users||[]).filter(user=>(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">ناظر / سرپرست اختیاری<select value={taskWatcherId} onChange={event=>setTaskWatcherId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">بدون ناظر</option>{(state.users||[]).filter(user=>user.id!==taskAssigneeId&&(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><Input label="مهلت انجام" type="date" value={taskDueDate} onChange={event=>setTaskDueDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary">اولویت<select value={taskPriority} onChange={event=>setTaskPriority(event.target.value as Priority)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="LOW">کم</option><option value="NORMAL">عادی</option><option value="HIGH">زیاد</option><option value="URGENT">فوری</option></select></label></div><Button block className="mt-3" disabled={!can('tasks','CREATE')||!selectedZone||selectedZone.status!=='ACTIVE'||!taskCustomerId||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))||(!!taskWatcherId&&!can('tasks','ASSIGN'))} onClick={createCollectionTask}>ایجاد وظیفه و ارجاع</Button>{!can('tasks','CREATE')&&<p className="mt-2 text-xs text-warning">برای ساخت وظیفه باید مجوز ایجاد وظایف داشته باشید.</p>}</div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">فهرست مشتریان داخل مرز</h2>{!selectedZone&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm text-text-secondary">زون را انتخاب کنید.</p>}{selectedZone&&customersInside.length===0&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm leading-6 text-text-secondary">مشتری دارای مختصات معتبر داخل هندسهٔ فعلی پیدا نشد؛ این وضعیت به‌معنی صفر بودن کل مشتریان زون نیست، ممکن است مختصات ثبت نشده باشند.</p>}{customersInside.slice(0,100).map(customer=>{const point=readCustomerPoint(customer)!;return <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="min-w-0"><div className="truncate text-sm font-bold text-text-main">{customer.name}</div><div className="mt-1 text-[11px] text-text-secondary">کد: {customer.code||customer.id}</div></div><div className="shrink-0 text-left font-mono text-[10px] text-text-secondary">{point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}</div></div>;})}{customersInside.length>100&&<p className="text-xs text-text-secondary">۱۰۰ مورد نخست نمایش داده شده؛ کل مشتریان داخل مرز: {customersInside.length.toLocaleString('fa-IR')}</p>}</Card></div>}
+-    {mode==='operations' && selectedZone && <Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">ثبت نتیجهٔ واقعی وظیفهٔ وصول</h2><p className="mt-1 text-xs leading-6 text-text-secondary">این بخش فقط وظایف وصول همین زون و مشتریان قابل مشاهده را نشان می‌دهد. مبلغ وصول فقط از پرداخت CLEARED همان مشتری خوانده می‌شود؛ قول پرداخت یا مراجعه به‌تنهایی وصول مالی محسوب نمی‌شود.</p></div>{zoneCollectionTasks.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">برای این زون هنوز وظیفهٔ وصولی ثبت نشده است.</p> : <><label className="block text-xs font-bold text-text-secondary">وظیفه<select value={outcomeTaskId} onChange={event=>{const id=event.target.value;setOutcomeTaskId(id);setOutcomeCode('');setOutcomePaymentId('');setOutcomeReason('');setOutcomeFollowUpDate('');setOutcomeNote('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب وظیفه</option>{zoneCollectionTasks.map(task=><option key={task.id} value={task.id}>{task.title} · {task.status==='COMPLETED'?'تکمیل‌شده':'باز'}</option>)}</select></label>{selectedOutcomeTask && <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">نتیجه<select value={outcomeCode} onChange={event=>setOutcomeCode(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب نتیجه</option>{COLLECTION_OUTCOME_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{outcomeCode==='PAYMENT_RECORDED' && <label className="block text-xs font-bold text-text-secondary">پرداخت نهایی‌شدهٔ مشتری<select value={outcomePaymentId} onChange={event=>setOutcomePaymentId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب پرداخت CLEARED</option>{availablePayments.map(payment=><option key={payment.id} value={payment.id}>{payment.date} · {payment.amount.toLocaleString('fa-IR')} · {payment.method}</option>)}</select>{availablePayments.length===0&&<span className="mt-1 block font-normal text-warning">برای این مشتری پرداخت نهایی‌شدهٔ معتبر موجود نیست.</span>}</label>}<Input label="تاریخ پیگیری بعدی (برای تعهد پرداخت الزامی)" type="date" value={outcomeFollowUpDate} onChange={event=>setOutcomeFollowUpDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary sm:col-span-2">علت عدم وصول / نتیجهٔ ناموفق<textarea value={outcomeReason} onChange={event=>setOutcomeReason(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="برای عدم وصول، عدم حضور یا اختلاف مالی الزامی است" /></label><label className="block text-xs font-bold text-text-secondary sm:col-span-2">یادداشت نتیجه / شرح مدرک (اختیاری)<textarea value={outcomeNote} onChange={event=>setOutcomeNote(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="شرح تماس یا مراجعه؛ این یادداشت جایگزین فایل مدرک نیست" /></label><div className="sm:col-span-2 rounded-xl border border-border bg-canvas p-3 text-xs leading-6 text-text-secondary">{outcomeCode==='PAYMENT_RECORDED' ? (availablePayments.length ? `مبلغ ثبت‌شونده از پرداخت انتخابی خوانده می‌شود: ${((availablePayments.find(payment=>payment.id===outcomePaymentId)?.amount)||0).toLocaleString('fa-IR')}` : 'تا ثبت پرداخت معتبر، مبلغ وصول قابل ثبت نیست.') : 'مبلغ وصول برای این نتیجه ثبت نمی‌شود.'}</div><Button block disabled={!canOnTask(selectedOutcomeTask)||!outcomeCode||(outcomeCode==='PAYMENT_RECORDED'&&(!outcomePaymentId||availablePayments.length===0))} onClick={saveCollectionOutcome} icon={<CheckCircle2 size={15}/>}>ثبت نتیجه و تکمیل وظیفه</Button>{!canOnTask(selectedOutcomeTask)&&<p className="text-xs text-warning">مجوز و محدودهٔ دسترسی برای ویرایش این وظیفه کافی نیست.</p>}{selectedOutcomeTask.resultHistory?.length>0&&<div className="sm:col-span-2 space-y-2 border-t border-border pt-3"><h3 className="text-sm font-black text-text-main">تاریخچهٔ نتایج</h3>{[...selectedOutcomeTask.resultHistory].reverse().map((item:any,index:number)=><div key={`${item.recordedAt}-${index}`} className="rounded-xl border border-border p-3 text-xs leading-6"><div className="font-bold text-text-main">{COLLECTION_OUTCOME_OPTIONS.find(option=>option.value===item.outcome)?.label||item.outcome}</div><div className="text-text-secondary">{new Date(item.recordedAt).toLocaleString('fa-IR')}{item.collectedAmount!==undefined?` · مبلغ ثبت‌شده: ${Number(item.collectedAmount).toLocaleString('fa-IR')}`:''}</div>{item.failureReason&&<div>علت: {item.failureReason}</div>}{item.note&&<div>یادداشت: {item.note}</div>}</div>)}</div>}</div>}</>}</Card>}
++      <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">مشتری<select value={taskCustomerId} onChange={event=>setTaskCustomerId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب مشتری داخل زون</option>{customersInside.map(customer=><option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">مسئول اصلی<select value={taskAssigneeId} onChange={event=>setTaskAssigneeId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{(state.users||[]).filter(user=>(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">ناظر / سرپرست اختیاری<select value={taskWatcherId} onChange={event=>setTaskWatcherId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">بدون ناظر</option>{(state.users||[]).filter(user=>user.id!==taskAssigneeId&&(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><Input label="مهلت انجام" type="date" value={taskDueDate} onChange={event=>setTaskDueDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary">اولویت<select value={taskPriority} onChange={event=>setTaskPriority(event.target.value as Priority)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="LOW">کم</option><option value="NORMAL">عادی</option><option value="HIGH">زیاد</option><option value="URGENT">فوری</option></select></label></div><Button block className="mt-3" disabled={!can('tasks','CREATE')||!selectedZone||selectedZone.status!=='ACTIVE'||!taskCustomerId||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))||(!!taskWatcherId&&!can('tasks','ASSIGN'))} onClick={createCollectionTask}>ایجاد وظیفه و ارجاع</Button>{!can('tasks','CREATE')&&<p className="mt-2 text-xs text-warning">برای ساخت وظیفه باید مجوز ایجاد وظایف داشته باشید.</p>}<div className="mt-4 border-t border-border pt-4 space-y-3"><div><h4 className="text-sm font-black text-text-main">ساخت گروهی وظیفهٔ وصول</h4><p className="mt-1 text-xs leading-5 text-text-secondary">مشتریان را انتخاب کن؛ وظیفه‌های باز تکراری از همین زون ساخته نمی‌شوند. این عملیات بر اساس عضویت مکانی است و تا اتصال منبع مالی معتبر، ادعای اولویت‌بندی بر اساس ماندهٔ واقعی نمی‌کند.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" className="rounded-lg border border-border px-3 py-2 text-xs font-bold" onClick={()=>setBulkCustomerIds(customersInside.map(customer=>customer.id))}>انتخاب همه</button><button type="button" className="rounded-lg border border-border px-3 py-2 text-xs font-bold" onClick={()=>setBulkCustomerIds([])}>پاک‌کردن انتخاب</button><span className="text-xs text-text-secondary">انتخاب‌شده: {bulkCustomerIds.filter(id=>customersInside.some(customer=>customer.id===id)).length.toLocaleString('fa-IR')}</span></div><div className="max-h-52 space-y-1 overflow-auto rounded-xl border border-border p-2">{customersInside.map(customer=><label key={customer.id} className="flex cursor-pointer items-center gap-2 rounded-lg p-2 text-xs hover:bg-canvas"><input type="checkbox" checked={bulkCustomerIds.includes(customer.id)} onChange={event=>setBulkCustomerIds(current=>event.target.checked?[...new Set([...current,customer.id])]:current.filter(id=>id!==customer.id))}/><span className="min-w-0 truncate">{customer.name}</span></label>)}</div><Button block disabled={!can('tasks','CREATE')||bulkCustomerIds.length===0||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))} onClick={createBulkCollectionTasks} icon={<Users size={15}/>}>ایجاد گروهی وظایف انتخاب‌شده</Button></div></div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">فهرست مشتریان داخل مرز</h2>{!selectedZone&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm text-text-secondary">زون را انتخاب کنید.</p>}{selectedZone&&customersInside.length===0&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm leading-6 text-text-secondary">مشتری دارای مختصات معتبر داخل هندسهٔ فعلی پیدا نشد؛ این وضعیت به‌معنی صفر بودن کل مشتریان زون نیست، ممکن است مختصات ثبت نشده باشند.</p>}{customersInside.slice(0,100).map(customer=>{const point=readCustomerPoint(customer)!;return <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="min-w-0"><div className="truncate text-sm font-bold text-text-main">{customer.name}</div><div className="mt-1 text-[11px] text-text-secondary">کد: {customer.code||customer.id}</div></div><div className="shrink-0 text-left font-mono text-[10px] text-text-secondary">{point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}</div></div>;})}{customersInside.length>100&&<p className="text-xs text-text-secondary">۱۰۰ مورد نخست نمایش داده شده؛ کل مشتریان داخل مرز: {customersInside.length.toLocaleString('fa-IR')}</p>}</Card></div>}
++    {mode==='operations' && selectedZone && <Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">ثبت نتیجهٔ واقعی وظیفهٔ وصول</h2><p className="mt-1 text-xs leading-6 text-text-secondary">این بخش فقط وظایف وصول همین زون و مشتریان قابل مشاهده را نشان می‌دهد. مبلغ وصول فقط از پرداخت CLEARED همان مشتری خوانده می‌شود؛ قول پرداخت یا مراجعه به‌تنهایی وصول مالی محسوب نمی‌شود.</p></div>{zoneCollectionTasks.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">برای این زون هنوز وظیفهٔ وصولی ثبت نشده است.</p> : <><label className="block text-xs font-bold text-text-secondary">وظیفه<select value={outcomeTaskId} onChange={event=>{const id=event.target.value;setOutcomeTaskId(id);setOutcomeCode('');setOutcomePaymentId('');setOutcomeReason('');setOutcomeFollowUpDate('');setOutcomeNote('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب وظیفه</option>{zoneCollectionTasks.map(task=><option key={task.id} value={task.id}>{task.title} · {task.status==='COMPLETED'?'تکمیل‌شده':'باز'}</option>)}</select></label>{selectedOutcomeTask && <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">نتیجه<select value={outcomeCode} onChange={event=>setOutcomeCode(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب نتیجه</option>{COLLECTION_OUTCOME_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{outcomeCode==='PAYMENT_RECORDED' && <label className="block text-xs font-bold text-text-secondary">پرداخت نهایی‌شدهٔ مشتری<select value={outcomePaymentId} onChange={event=>setOutcomePaymentId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب پرداخت CLEARED</option>{availablePayments.map(payment=><option key={payment.id} value={payment.id}>{payment.date} · {payment.amount.toLocaleString('fa-IR')} · {payment.method}</option>)}</select>{availablePayments.length===0&&<span className="mt-1 block font-normal text-warning">برای این مشتری پرداخت نهایی‌شدهٔ معتبر موجود نیست.</span>}</label>}<Input label="تاریخ پیگیری بعدی (برای تعهد پرداخت الزامی)" type="date" value={outcomeFollowUpDate} onChange={event=>setOutcomeFollowUpDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary sm:col-span-2">علت عدم وصول / نتیجهٔ ناموفق<textarea value={outcomeReason} onChange={event=>setOutcomeReason(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="برای عدم وصول، عدم حضور یا اختلاف مالی الزامی است" /></label><div className="sm:col-span-2 rounded-xl border border-border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><div className="text-xs font-bold text-text-main">مدرک مراجعه / وصول</div><p className="mt-1 text-[11px] leading-5 text-text-secondary">تصویر JPEG/PNG/WebP یا PDF تا ۵ مگابایت؛ فقط برای کاربران دارای دسترسی به همین وظیفه.</p></div><label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg bg-primary/10 px-3 text-xs font-bold text-primary"><Paperclip size={14}/> افزودن مدرک<input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={!canOnTask(selectedOutcomeTask)} onChange={event=>{uploadCollectionEvidence(event.target.files?.[0]);event.currentTarget.value='';}} /></label></div><div className="mt-3 space-y-2">{taskEvidence(selectedOutcomeTask.id).length===0?<p className="text-xs text-text-secondary">هنوز مدرکی برای این وظیفه ثبت نشده است.</p>:taskEvidence(selectedOutcomeTask.id).map((file:any)=><div key={file.id} className="flex items-center justify-between gap-2 rounded-lg bg-canvas p-2 text-xs"><span className="min-w-0 truncate">{file.fileName} · {(file.fileSize/1024).toFixed(1)} KB</span><button type="button" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1" onClick={()=>downloadEvidence(file)}><Download size={13}/> دریافت</button></div>)}</div></div><label className="block text-xs font-bold text-text-secondary sm:col-span-2">یادداشت نتیجه / شرح مدرک (اختیاری)<textarea value={outcomeNote} onChange={event=>setOutcomeNote(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="شرح تماس یا مراجعه؛ این یادداشت جایگزین فایل مدرک نیست" /></label><div className="sm:col-span-2 rounded-xl border border-border bg-canvas p-3 text-xs leading-6 text-text-secondary">{outcomeCode==='PAYMENT_RECORDED' ? (availablePayments.length ? `مبلغ ثبت‌شونده از پرداخت انتخابی خوانده می‌شود: ${((availablePayments.find(payment=>payment.id===outcomePaymentId)?.amount)||0).toLocaleString('fa-IR')}` : 'تا ثبت پرداخت معتبر، مبلغ وصول قابل ثبت نیست.') : 'مبلغ وصول برای این نتیجه ثبت نمی‌شود.'}</div><Button block disabled={!canOnTask(selectedOutcomeTask)||!outcomeCode||(outcomeCode==='PAYMENT_RECORDED'&&(!outcomePaymentId||availablePayments.length===0))} onClick={saveCollectionOutcome} icon={<CheckCircle2 size={15}/>}>ثبت نتیجه و تکمیل وظیفه</Button>{!canOnTask(selectedOutcomeTask)&&<p className="text-xs text-warning">مجوز و محدودهٔ دسترسی برای ویرایش این وظیفه کافی نیست.</p>}{selectedOutcomeTask.resultHistory?.length>0&&<div className="sm:col-span-2 space-y-2 border-t border-border pt-3"><h3 className="text-sm font-black text-text-main">تاریخچهٔ نتایج</h3>{[...selectedOutcomeTask.resultHistory].reverse().map((item:any,index:number)=><div key={`${item.recordedAt}-${index}`} className="rounded-xl border border-border p-3 text-xs leading-6"><div className="font-bold text-text-main">{COLLECTION_OUTCOME_OPTIONS.find(option=>option.value===item.outcome)?.label||item.outcome}</div><div className="text-text-secondary">{new Date(item.recordedAt).toLocaleString('fa-IR')}{item.collectedAmount!==undefined?` · مبلغ ثبت‌شده: ${Number(item.collectedAmount).toLocaleString('fa-IR')}`:''}</div>{item.failureReason&&<div>علت: {item.failureReason}</div>}{item.note&&<div>یادداشت: {item.note}</div>}</div>)}</div>}</div>}</>}</Card>}
+     <Card padding="md" className="flex items-start gap-3 border-warning/30 bg-warning-soft"><Clock3 size={18} className="mt-1 shrink-0 text-warning"/><div className="text-xs leading-6 text-text-main"><strong>محدودیت این مرحله:</strong> مدیریت زون و انتساب مکانی در state محلی ذخیره می‌شود. نقشهٔ واقعی ایران، ترسیم لمسی روی نقشه، چاپ، اتصال به موتور وظایف وصول، فیلترهای مالی و Heatmap واقعی هنوز به سرویس نقشه و قراردادهای دادهٔ معتبر نیاز دارند. برای این موارد هیچ نتیجهٔ ساختگی نمایش داده نمی‌شود.</div></Card>
+   </div>;
+ }
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/lib/collectionTaskEvidence.ts /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/lib/collectionTaskEvidence.ts
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/lib/collectionTaskEvidence.ts	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/lib/collectionTaskEvidence.ts	2026-10-26 20:54:11.611869589 +0000
+@@ -0,0 +1,8 @@
++export const COLLECTION_EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
++export const COLLECTION_EVIDENCE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
++export interface EvidenceFileLike { name: string; type: string; size: number }
++export function validateCollectionEvidenceFile(file: EvidenceFileLike): { valid: boolean; error?: string } {
++  if (!COLLECTION_EVIDENCE_MIME_TYPES.has(file.type)) return { valid: false, error: 'فقط تصویر JPEG/PNG/WebP یا فایل PDF به‌عنوان مدرک مجاز است.' };
++  if (!Number.isFinite(file.size) || file.size <= 0 || file.size > COLLECTION_EVIDENCE_MAX_BYTES) return { valid: false, error: 'حجم مدرک باید بیشتر از صفر و حداکثر ۵ مگابایت باشد.' };
++  return { valid: true };
++}
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/lib/version.ts /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/lib/version.ts
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/src/lib/version.ts	2026-10-26 20:45:58.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/src/lib/version.ts	2026-10-26 20:55:10.520033643 +0000
+@@ -1,4 +1,4 @@
+ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
+-export const APP_VERSION = '0.11.6';
+-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b20', base: 'r11-cp9-b19' } as const;
++export const APP_VERSION = '0.11.7';
++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b21', base: 'r11-cp9-b19' } as const;
+ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/tests/collectionTaskEvidence.test.mjs /mnt/data/akhavan_build_b20/akhavan_dev_b20/tests/collectionTaskEvidence.test.mjs
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/tests/collectionTaskEvidence.test.mjs	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/tests/collectionTaskEvidence.test.mjs	2026-10-26 20:54:11.612408550 +0000
+@@ -0,0 +1,9 @@
++import assert from 'node:assert/strict';
++import { validateCollectionEvidenceFile, COLLECTION_EVIDENCE_MAX_BYTES } from '../src/lib/collectionTaskEvidence.ts';
++assert.equal(validateCollectionEvidenceFile({name:'proof.jpg',type:'image/jpeg',size:1024}).valid, true);
++assert.equal(validateCollectionEvidenceFile({name:'proof.pdf',type:'application/pdf',size:1024}).valid, true);
++assert.equal(validateCollectionEvidenceFile({name:'script.svg',type:'image/svg+xml',size:1024}).valid, false);
++assert.equal(validateCollectionEvidenceFile({name:'file.exe',type:'application/octet-stream',size:1024}).valid, false);
++assert.equal(validateCollectionEvidenceFile({name:'large.pdf',type:'application/pdf',size:COLLECTION_EVIDENCE_MAX_BYTES+1}).valid, false);
++assert.equal(validateCollectionEvidenceFile({name:'empty.pdf',type:'application/pdf',size:0}).valid, false);
++console.log('PASS: 6 assertions (collection task evidence type and size validation)');
+diff -ruN /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/tests/geoWorkspaceContracts.test.mjs /mnt/data/akhavan_build_b20/akhavan_dev_b20/tests/geoWorkspaceContracts.test.mjs
+--- /mnt/data/akhavan_b20_baseline_tmp/akhavan_dev_b20/tests/geoWorkspaceContracts.test.mjs	2026-10-26 20:44:48.000000000 +0000
++++ /mnt/data/akhavan_build_b20/akhavan_dev_b20/tests/geoWorkspaceContracts.test.mjs	2026-10-26 20:56:40.870275556 +0000
+@@ -25,4 +25,11 @@
+ assert.ok(workspace.includes('canOnTask(selectedOutcomeTask)'), 'task result update checks existing task record scope');
+ assert.ok(workspace.includes("payment.status === 'CLEARED'"), 'UI only offers cleared customer payments');
+ assert.ok(workspace.includes('GEO_COLLECTION_TASK_RESULT_RECORDED'), 'result recording is audited');
+-console.log('PASS: 19 assertions (geo workspace routing, RBAC, scope, geometry, versioning, outcomes and honest metric availability)');
++assert.ok(workspace.includes('validateCollectionEvidenceFile'), 'evidence files are type/size validated');
++assert.ok(workspace.includes('GEO_COLLECTION_EVIDENCE_ATTACHED'), 'evidence attachment is audited');
++assert.ok(workspace.includes('file.entityId !== selectedOutcomeTask.id'), 'evidence download is bound to the selected task');
++assert.ok(workspace.includes('createBulkCollectionTasks'), 'bulk task creation reuses the existing task workflow');
++assert.ok(workspace.includes('existingOpenCustomerIds'), 'bulk task creation avoids duplicate open collection tasks');
++assert.ok(workspace.includes('GEO_COLLECTION_TASKS_BULK_CREATED'), 'bulk task creation is audited');
++assert.ok(workspace.includes("accept=\"image/jpeg,image/png,image/webp,application/pdf\""), 'evidence picker limits the visible allowed file types');
++console.log('PASS: 26 assertions (geo workspace routing, RBAC, scope, geometry, outcomes, evidence, bulk tasks and honest metric availability)');

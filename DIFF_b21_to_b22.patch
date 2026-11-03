@@ -1,0 +1,918 @@
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/CHANGELOG_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/CHANGELOG_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/CHANGELOG_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/CHANGELOG_b22.md	2026-10-26 21:56:42.168154935 +0000
+@@ -0,0 +1,10 @@
++# CHANGELOG — AKHAVAN CRM b22
++
++- نسخه محصول: `0.11.8`؛ بسته: `r11-cp9-b22`؛ مبنا: `r11-cp9-b21`؛ تغییرات افزایشی.
++- گزارش عملکرد وصول زون به همان workspace عملیات اضافه شد؛ شامل کل وظایف، باز، تکمیل‌شده، معوق، مبلغ وصول معتبر و تفکیک مسئول.
++- مبلغ گزارش از رکوردهای پرداخت `CLEARED` بازخوانی می‌شود؛ مبلغ ذخیره‌شده روی task به‌عنوان منبع مالی مورد اعتماد استفاده نمی‌شود. پرداخت‌های تکراری بین چند وظیفه فقط یک‌بار در جمع کل حساب می‌شوند و انتساب گزارش به مسئول، بر اساس جدیدترین نتیجهٔ ثبت‌شده انجام می‌شود.
++- خروجی CSV با UTF-8 BOM برای Excel و خنثی‌سازی سلول‌های بالقوهٔ فرمول‌محور اضافه شد.
++- فهرست وظایف گزارش از مشتریان قابل مشاهده و مجوز مشاهدهٔ رکورد task محدود می‌شود.
++- رفع خطای واقعی در workspace: دریافت `rbac` از `useCan` به‌صورت صریح؛ استفادهٔ قبلی از شناسهٔ `rbac` بدون destructure قابل اتکا نبود و اکنون به‌صورت قرارداد ایستا آزموده می‌شود.
++- تست جدید `geoCollectionReporting.test.mjs`: 13 assertion؛ قرارداد workspace مکانی: 32 assertion. کل مجموعه تست‌ها پس از تغییر دوباره اجرا شد.
++- محدودیت باقی‌مانده: گزارش از state محلی فعلی ساخته می‌شود؛ منبع مالی تطبیق‌شده، API، backend authorization/RLS و گزارش سازمانی چندزون هنوز پیاده نشده‌اند. Build/Lint کامل نیز به علت نبود `vite` و `vite/client` در محیط فعلی مسدود است.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/HANDOFF.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/HANDOFF.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/HANDOFF.md	2026-10-26 20:57:24.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/HANDOFF.md	2026-10-26 21:57:38.218740339 +0000
+@@ -134,3 +134,11 @@
+ - فایل مدرک در همان `state.attachments` و با `entityType=TASK` ذخیره می‌شود؛ نوع مجاز JPEG/PNG/WebP/PDF و سقف ۵ MiB است.
+ - بارگذاری/دریافت به scope همان وظیفه در کلاینت وابسته است و audit محلی ثبت می‌شود. این کنترل جایگزین authorization سمت سرور نیست.
+ - `npm test`: 500 assertions PASS؛ `audit-actions`: 76/76 PASS؛ `audit:contracts`: PASS ایستا. Build/Lint/browser/iOS/SQL runtime همچنان تأییدنشده‌اند.
++
++
++## Current handoff — b22
++- Current package: `r11-cp9-b22` / app version `0.11.8`; based on b21.
++- New report: zone collection metrics, assignee breakdown, outcomes and CSV export; payment values re-derived from CLEARED records and deduplicated.
++- New tests: `tests/geoCollectionReporting.test.mjs`; workspace contracts expanded to 32 assertions.
++- Do not claim Build/Lint passed: `tsc --noEmit` is blocked by missing `vite/client`; run install/build/lint in a network-enabled environment next.
++- Next: install dependencies, full TypeCheck/build/lint and browser smoke; then backend authorization/RLS and authoritative finance allocation before presenting official reports.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/NOT_DONE_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/NOT_DONE_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/NOT_DONE_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/NOT_DONE_b22.md	2026-10-26 21:56:42.169834648 +0000
+@@ -0,0 +1,66 @@
++# NOT DONE — AKHAVAN CRM b22
++
++وضعیت هر بند مستقل است؛ وجود مدل یا فرم، به‌تنهایی معیار تکمیل گردش کاری نیست.
++
++## P0 — تثبیت سورس و تست انتشار
++- [ ] اجرای نصب وابستگی‌ها در محیط دارای دسترسی registry.
++- [ ] `npm run lint` کامل و رفع خطاهای واقعی TypeScript.
++- [ ] `npm run build` و رفع خطاهای build بدون حذف قابلیت.
++- [ ] اجرای smoke test در Chromium؛ مسیر `/geo-intelligence`، ایجاد/ویرایش/فعال‌سازی/بایگانی زون، reload، مجوزهای allow/deny و responsive.
++- [ ] آزمون واقعی iPhone/Safari، RTL، لمس، overflow، performance و دسترس‌پذیری.
++- [ ] اجرای آزمون‌های امنیت منفی با نقش‌های واقعی CEO، مدیر فروش، سرپرست، فروشنده، حسابدار و بازدیدکننده.
++- [ ] Backend/API authorization و SQL Server RLS پیش از داده واقعی.
++
++## P1 — هوش مکانی و زون‌ها
++- [x] مدل GeoZone/ZoneGeometryVersion/ZoneAssignment/GeoMetricDefinition/ZoneMetricSnapshot در AppState و normalization برای state قدیمی.
++- [x] GeoJSON Polygon validation، حداقل 3 رأس متمایز، حلقه بسته، محدوده مختصات و point-in-polygon با احتساب مرز.
++- [x] نسخه‌بندی هندسه و حفظ تاریخچه.
++- [x] صفحهٔ زون، فرم مختصات، پیش‌نمایش هندسه (نه نقشهٔ واقعی)، نام/کد، وضعیت زون و audit محلی.
++- [x] انتساب مشتری داخل polygon برای مشتریان دارای مختصات معتبر و قابل مشاهده طبق RBAC؛ تاریخچه انتساب حفظ می‌شود.
++- [x] مجوزهای `geo.view` و `geo.manage` در ماتریس RBAC و تنظیمات پروفایل.
++- [ ] ممیزی دقیق نام/منبع مختصات مشتری و کیفیت داده؛ هماهنگ‌سازی با مرزهای واقعی.
++- [ ] انتخاب و آزمون MapLibre/tile provider برای ایران، مجوز/هزینه/دسترسی، cache/self-host و چاپ.
++- [ ] نقشهٔ واقعی ایران با استان/شهر/راه/برچسب فارسی و ابزار رسم/ویرایش polygon روی نقشه، شامل موبایل.
++- [ ] ذخیره/reload زون با تست مرورگر و دستگاه واقعی؛ بررسی polygonهای پیچیده/خودمتقاطع و تاریخ مؤثر.
++- [ ] Heatmap تک‌شاخصی با منبع معتبر، واحد، aggregation، زمان تازگی، semantics رنگ و مقایسه دوره.
++- [ ] اتصال مطالبات به ماندهٔ معتبر فاکتور − PaymentAllocation − اعتبار؛ فروش به فاکتور معتبر؛ وصول از پرداخت واقعی؛ مرجوعی از سند برگشت معتبر.
++- [ ] attribution فیلتر تولیدکننده از خطوط فاکتور و قواعد مالی؛ جلوگیری از نسبت‌دادن کل مانده مشتری به چند تولیدکننده.
++- [ ] فیلترهای مشترک و cross-filter نقشه/KPI/جدول/نمودار، drill-down و export.
++- [x] ایجاد وظیفهٔ پیگیری وصول از زون برای یک مشتری انتخاب‌شده با مسئول، ناظر اختیاری، مهلت، اولویت و نتیجه مورد انتظار؛ در فهرست وظایف موجود ثبت و از موتور اعلان همکاری استفاده می‌کند.
++- [x] ثبت نتیجهٔ وظیفهٔ وصول: وضعیت نتیجه، علت اجباری برای نتیجه‌های ناموفق، تاریخ پیگیری تعهد پرداخت، مبلغ مشتق‌شده فقط از پرداخت CLEARED همان مشتری، تاریخچه و audit محلی.
++- [x] پیوست فایل مدرک مجاز (JPEG/PNG/WebP/PDF تا ۵MB) به task، کنترل مجوز/Scope در کلاینت، دریافت محدود به task و audit محلی؛ GPS به‌تنهایی اثبات انجام کار نیست.
++- [ ] محدودیت مجموع فضای فایل‌ها، پاک‌سازی/retention، اسکن بدافزار و storage امن سمت سرور؛ کنترل کلاینت به‌تنهایی امنیت production نیست.
++- [x] ساخت گروهی وظایف برای مشتریان انتخاب‌شده در زون، استفاده از موتور task/اعلان موجود، کنترل مجوز و جلوگیری از وظیفهٔ باز تکراری.
++- [ ] اولویت‌بندی گروهی بر اساس مطالبات معتبر و گزارش سلسله‌مراتبی عملکرد؛ منبع مالی و قواعد مانده هنوز باید متصل/تطبیق شوند.
++- [ ] تطبیق planned route با توقف/ویزیت واقعی، تفکیک visit/delivery/failed delivery/return/no-show و گزارش نتیجه واقعی.
++- [ ] گزارش سلسله‌مراتبی سازمان→زون→مجری→task→مشتری، چاپ نقشه/فهرست، clustering و تست حجم داده.
++- [ ] کنترل scope زون/تیم/قلمرو در تمام فیلترها، taskها، گزارش‌ها و export؛ enforcement در لایه سرور.
++
++## P1 — RBAC و ساختار سازمانی
++- [x] پروفایل‌های مجوز قابل تنظیم و ثبت audit محلی.
++- [x] scope نقش، workspace پیش‌فرض، نقش بالادست و سرپرست مستقیم قابل تنظیم؛ جلوگیری از چرخه.
++- [x] مجوزهای `geo.view` و `geo.manage` مستقل و قابل تنظیم.
++- [ ] ویرایشگر کامل `SEE/DO/HIDDEN` برای فیلدها با پوشش واقعی در renderer و API.
++- [ ] ممیزی تمام handlerها، exportها، bulk actions، فیلترها و مسیرهای عمیق؛ آزمون تغییر URL/state برای دور زدن مجوز.
++- [ ] تست scope سازمان/شعبه/قلمرو/تیم/مالک برای همه ماژول‌ها، مخصوصاً Geo, reports, tasks, finance.
++- [ ] backend authentication/authorization و RLS واقعی؛ UI-only guard برای امنیت کافی نیست.
++
++## P1 — سایر گردش‌های تجاری/مالی/داده
++- [ ] تطبیق محاسبات مانده و تخصیص با `PaymentAllocation` و تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
++- [ ] تکمیل گردش چک، بانک، هزینه، مغایرت‌گیری، تاریخچه، اصلاح/ابطال و audit end-to-end.
++- [ ] تکمیل Quote → acceptance → handoff خارجی → توزیع/تحویل و حفظ `Quote ≠ Order ≠ Invoice`.
++- [ ] اتصال KPIها به منابع واحد، تازگی، drill-down، خروجی و تعریف مشترک.
++- [ ] تکمیل تصمیم‌یارهای lost-customer, next purchase suggestion, lost-opportunity, anomaly detection و route effectiveness؛ بدون سفارش خودکار و با ثبت قبول/رد/تبدیل پیشنهاد.
++
++## P2 — یکپارچه‌سازی
++- [ ] تکمیل API/Auth/DTO/validation، migrations و seed policy در Backend.
++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS و recovery.
++- [ ] اتصال ERP/ETL با mapping شناسه‌ها، outbox/retry/idempotency، monitoring و reconciliation.
++- [ ] آزمون end-to-end با داده/سامانه واقعی؛ تا پیش از آن اتصال واقعی ادعا نشود.
++
++
++## افزوده‌های ممیزی b22
++- [x] گزارش محلی عملکرد وصول زون و تفکیک مسئول؛ CSV با UTF-8 BOM و حفاظت از formula injection.
++- [ ] فیلتر بازهٔ تاریخ در گزارش و خروجی تفصیلی task/customer هنوز پیاده نشده است.
++- [ ] گزارش تجمیعی چندزون/سازمان، SLA واقعی، حضور GPS و تطبیق route با توقف واقعی هنوز پیاده نشده است.
++- [ ] Build و TypeCheck نهایی نیازمند نصب dependencyهای پروژه (خصوصاً `vite` و `vite/client`) در محیط دارای registry است.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/RBAC_AUDIT_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/RBAC_AUDIT_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/RBAC_AUDIT_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/RBAC_AUDIT_b22.md	2026-10-26 21:57:38.218606491 +0000
+@@ -0,0 +1,36 @@
++# RBAC Audit — b19
++
++## کنترل‌های اضافه‌شده
++- `geo.view`: مشاهدهٔ صفحهٔ هوش مکانی.
++- `geo.manage`: ایجاد/ویرایش هندسه، تغییر وضعیت زون و به‌روزرسانی انتساب مشتری.
++- این مجوزها در `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX` و `RBACService.canAccessWorkspace` تعریف شده‌اند؛ تنظیمات پروفایل مجوزها از `PERMISSION_LABELS` تغذیه می‌شود، پس هر دو مجوز در UI تنظیم‌پذیرند.
++- مدیرانی که مجوز موجود `settings.manage` یا `roles.manage` دارند، به‌منظور سازگاری می‌توانند صفحه را باز کنند؛ اما تغییر زون فقط با `geo.manage` (یا کلید عملیاتی صریح `geo.edit`) مجاز است. `geo.view` و مجوز ورود به صفحه به‌تنهایی مجوز مدیریت نیستند.
++- مسیر `/geo-intelligence` با `guard('geo_intelligence', ...)` محافظت شده و آیتم منو از `filterSections`/RBAC مشترک عبور می‌کند.
++- صفحه مشتریان قابل مشاهده را با `rbac.canActOnRecord('accounts','VIEW', scope)` محدود می‌کند؛ داشتن مجوز geo به‌تنهایی نباید scope مشتریان را گسترش دهد.
++- هنگام refresh انتساب، فقط رکوردهای قبلی مشتریان داخل محدوده مجاز کاربر بسته می‌شوند؛ رکوردهای بیرون scope تغییر نمی‌کنند.
++- تغییر هندسه، وضعیت زون، انتساب مشتری و ساخت task وصول از زون در `auditLogs` محلی ثبت می‌شود. ساخت task به `tasks.CREATE` نیاز دارد؛ ارجاع به کاربر دیگر/تعیین ناظر به `tasks.ASSIGN` نیاز دارد.
++
++## شواهد تست
++- `tests/rbac-configurability.test.mjs`: 13 assertion، شامل مشاهده geo، جدایی view/manage و رد دسترسی کاربر بدون مجوز.
++- `tests/geoWorkspaceContracts.test.mjs`: 9 assertion قراردادی برای route guard، navigation، permission matrix، scope، point-in-polygon، versioning و عدم نمایش سنجه غیرمتصل.
++- `node scripts/audit-actions.mjs`: 74/74 handler تغییردهنده دارای guard در ممیزی ایستا.
++
++## محدودیت‌ها/ریسک‌های باز
++- این‌ها کنترل‌های سمت کلاینت هستند؛ کاربر کنترل‌گر state محلی است و این روش مرز امنیتی برای دادهٔ حساس محسوب نمی‌شود.
++- `geo.manage` در حال حاضر به صورت مجوز کلی زون/انتساب است؛ مجوزهای جداگانه برای ویرایش هندسه، فعال‌سازی، انتساب و export هنوز تفکیک نشده‌اند.
++- Scope مشتری از RBAC حساب‌ها reuse می‌شود، اما scope اختصاصی زون (territory/team ownership) هنوز کامل نیست؛ مدل `GeoZone` باید با سیاست واقعی قلمرو و تیم هم‌راستا شود.
++- فیلدهای `SEE/DO/HIDDEN` در تنظیمات قابل تنظیم‌اند، ولی پوشش واقعی تمام rendererها و APIها هنوز audit و اثبات نشده است.
++- آزمون مرورگر، iOS، API و SQL Server RLS اجرا نشده است.
++
++
++## افزوده b20 — کنترل نتیجه وظیفهٔ وصول
++- ثبت نتیجه از `canOn('tasks','EDIT', ...)` استفاده می‌کند و همان scope موجود وظایف را می‌سنجد. این بررسی client-side است و مرز امنیتی server-side نیست.
++- فهرست taskها به `source=GEO_ZONE`, `taskType=COLLECTION`, زون انتخاب‌شده و مشتریان قابل مشاهده محدود است.
++- اعتبارسنجی helper مانع ثبت پرداخت ناشناخته/معلق/متعلق به مشتری دیگر و مبلغ دستی می‌شود. این کنترل‌ها باید در Backend تکرار شوند.
++
++
++## b22 delta
++- The geo collection report is built only from tasks passing customer visibility and `RBACService.canActOnRecord('tasks', 'VIEW', ...)` in the client.
++- Export button requires `geo.view`; report contents inherit the filtered task subset.
++- The workspace now explicitly destructures `rbac` from `useCan`; this avoids relying on an undeclared identifier.
++- These controls are client-side and are not a security boundary against modified browser state or direct API calls. Backend authorization and SQL Server RLS remain mandatory before production data.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/REQUIREMENTS_TRACEABILITY_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/REQUIREMENTS_TRACEABILITY_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/REQUIREMENTS_TRACEABILITY_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/REQUIREMENTS_TRACEABILITY_b22.md	2026-10-26 21:57:38.218477668 +0000
+@@ -0,0 +1,49 @@
++# REQUIREMENTS TRACEABILITY — b19
++
++| الزام | محل کد/سند | وضعیت فعلی | معیار پذیرش باقی‌مانده |
++|---|---|---|---|
++| حفظ معماری افزایشی و عدم ساخت موتور RBAC موازی | `src/lib/rbac.ts`, diff b18→b19 | رعایت شد در این دور | regression کامل پس از build |
++| مجوز نقش قابل تنظیم | `src/types.ts`, `src/lib/rbac.ts`, `SettingsWorkspace.tsx`, tests | `geo.view/manage` افزوده و در UI مجوزها قابل تنظیم است | تست UI واقعی و API enforcement |
++| scope مشتری | `GeoIntelligenceWorkspace.tsx` → `rbac.canActOnRecord` | client-side اعمال شده | تست همه scopeها و سرور/RLS |
++| صفحه مستقل هوش مکانی | `src/App.tsx`, `src/lib/navigation.ts`, `GeoIntelligenceWorkspace.tsx` | پیاده و route-guard شده | browser/iOS |
++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx` | پوسته و رفتار پایه | Heatmap و عملیات هنوز منبع/موتور واقعی ندارند |
++| تعریف نام/کد زون | `GeoIntelligenceWorkspace.tsx` | کد یکتا در state، نام اجباری | قید یکتا و validation سمت سرور |
++| GeoJSON polygon | `src/lib/geoIntelligence.ts`, workspace | validation و preview شکل | نقشه واقعی، polygon self-intersection و تست داده واقعی |
++| versioning و audit | `ZoneGeometryVersion`, `auditLogs` | محلی و نسخه‌دار | DB transaction, audit server-side, reload test |
++| انتساب مشتری به زون | `isPointInsideZone`, `assignCustomersInZone` | فقط مختصات معتبر و مشتریان قابل مشاهده | بررسی کیفیت مختصات و داده واقعی |
++| Heatmap مالی/فروش/برگشتی/وصول | `GEO_METRIC_CATALOG` | قرارداد سنجه موجود؛ عمداً disabled | منبع واحد، فرمول، freshness، تطبیق عددی |
++| نقشهٔ ایران/tile provider | backlog و master audit | پیاده نشده | انتخاب/هزینه/مجوز/provider و آزمون ایران |
++| تسک وصول و گزارش سرپرست | `GeoIntelligenceWorkspace.tsx` و `processTaskCollaborationEvents` | task برای یک مشتری با مسئول/ناظر/مهلت/اولویت به tasks موجود متصل است | ثبت نتیجه/مبلغ/evidence، batch, report drill-down و route/visit واقعی |
++| چاپ/cross-filter/clustering | `NOT_DONE_b19.md` | پیاده نشده | پیاده‌سازی و آزمون کارایی |
++| Build/Lint | اجرای واقعی ثبت‌شده در `STATUS_b19.md` | مسدود به علت dependency | نصب موفق و اجرای مجدد |
++| Browser/iOS/SQL/ERP | `STATUS_b19.md` | اجرا نشده | محیط واقعی و evidence قابل تکرار |
++
++برای مشخصات کامل، جزئیات سنجه‌ها، فیلترها، قواعد مالی، عملیات مسیر/ویزیت، سلسله‌مراتب نقش‌ها و تمام backlogهای محصول، به `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` و `NOT_DONE_b19.md` رجوع شود. هیچ الزام صرفاً به علت ذکر شدن در جدول به‌عنوان انجام‌شده ثبت نشده است.
++
++
++## الحاقیه b20 — نتیجهٔ وظیفهٔ وصول
++| الزام | شاهد | وضعیت | محدودیت باقی‌مانده |
++|---|---|---|---|
++| انتخاب نتیجهٔ کنترل‌شده برای task وصول مکانی | `src/lib/collectionTaskOutcome.ts`, `GeoIntelligenceWorkspace.tsx` | پیاده‌سازی UI و helper | مرورگر واقعی و API enforcement تست نشده |
++| علت نتیجه ناموفق | `validateCollectionTaskOutcome` | اجباری برای NO_PAYMENT/CUSTOMER_UNAVAILABLE/DISPUTED/NO_SHOW | taxonomy قابل پیکربندی و گزارش تحلیلی باقی است |
++| تعهد به پرداخت و پیگیری بعدی | helper + فرم نتیجه | تاریخ پیگیری اجباری | reminder/SLA follow-up خودکار متصل نشده |
++| مبلغ وصول | پرداخت همان مشتری، status=CLEARED، amount>0 | مبلغ دستی ممنوع؛ از رکورد پرداخت خوانده می‌شود | اثبات تخصیص به فاکتور/تطبیق دفترکل هنوز جداست |
++| تاریخچه و audit | `resultHistory`, `GEO_COLLECTION_TASK_RESULT_RECORDED` | محلی و افزایشی | audit ضد‌دستکاری backend باقی است |
++| فایل مدرک | فرم فعلی فقط یادداشت متنی | ناقص | پیوست فایل و کنترل دسترسی evidence باقی است |
++
++
++## b21 — مدارک وظیفه وصول
++- وضعیت: پیاده‌سازی کلاینتی با تست دامنه و قرارداد UI.
++- شواهد: `src/lib/collectionTaskEvidence.ts`, `src/components/GeoIntelligenceWorkspace.tsx`, `tests/collectionTaskEvidence.test.mjs`, `tests/geoWorkspaceContracts.test.mjs`.
++- معیارهای پوشش‌داده‌شده: allowlist MIME، سقف ۵ MiB، رد فایل خالی/نوع نامجاز، اتصال به همان task، scope check در دریافت، audit محلی.
++- باقی‌مانده: ذخیره‌سازی امن سمت سرور، ضدبدافزار، retention، quota مجموع و آزمون مجوز backend.
++
++
++## b22 delta — collection reporting
++| Requirement | Implementation evidence | Test evidence | Status / boundary |
++|---|---|---|---|
++| Zone collection report by status and assignee | `src/lib/geoCollectionReporting.ts`; `GeoIntelligenceWorkspace.tsx` | `tests/geoCollectionReporting.test.mjs`; workspace contracts | Implemented client-side for currently visible tasks in selected zone |
++| Collection amount must originate from valid payment record | Re-resolves payment ID and checks `CLEARED`, amount > 0, and same customer | Report tests reject pending/cross-customer payments | Does not replace invoice allocation/reconciliation |
++| Prevent duplicate counting of the same payment | `countedPaymentIds` deduplication and latest-result attribution | duplicate-payment assertions | Local report only |
++| Export report to spreadsheet | CSV with UTF-8 BOM and formula-cell neutralization | CSV export and formula-injection assertions | Export is client-side; no server audit yet |
++| Task-level visibility | `rbac.canActOnRecord('tasks','VIEW', ...)` and customer visibility filter | static workspace contract assertion | Client-side only; API/RLS enforcement pending |
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/STATUS_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/STATUS_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/STATUS_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/STATUS_b22.md	2026-10-26 21:57:38.218157717 +0000
+@@ -0,0 +1,9 @@
++# STATUS — AKHAVAN CRM b22
++
++- نسخه: `0.11.8` — `r11-cp9-b22`؛ مبنا: b21.
++- توسعهٔ این دور: گزارش عملکرد وصول زون، تفکیک وضعیت و نتیجه، تجمیع بر اساس مسئول، خروجی CSV، حذف دوباره‌شماری پرداخت‌ها، اعتبارسنجی مجدد منبع مبلغ از پرداخت CLEARED، خنثی‌سازی CSV formula injection و اعمال scope مشاهدهٔ task در فهرست گزارش.
++- رفع: `rbac` اکنون به‌صراحت از `useCan` دریافت می‌شود؛ این مشکل پیش‌تر در کد workspace به شناسهٔ تعریف‌نشده منجر می‌شد.
++- آزمون‌ها: `npm test` PASS پس از اضافه‌شدن suite گزارش؛ `audit-actions` PASS (76/76 guarded)؛ `audit:contracts` PASS ایستا فقط.
++- TypeCheck: هنوز مسدود است؛ اجرای `tsc --noEmit` با خطای `TS2688: Cannot find type definition file for 'vite/client'` متوقف شد. Build/Lint و مرورگر/iOS واقعی در این محیط تأیید نشده‌اند.
++- امنیت: scope کلاینتی به‌تنهایی جایگزین Backend/API authorization یا SQL Server RLS نیست.
++- وضعیت محصول: نسخهٔ توسعه‌ای؛ production-ready اعلام نمی‌شود.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/TEST_RESULTS_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/TEST_RESULTS_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/TEST_RESULTS_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/TEST_RESULTS_b22.md	2026-10-26 21:57:38.218210890 +0000
+@@ -0,0 +1,11 @@
++# Test Results — b22
++
++Date: 2026-10-27
++
++- `npm test`: PASS; all configured suites completed, including 13 assertions for `geoCollectionReporting` and 32 static workspace contract assertions. Total assertions based on suite output: 519.
++- `node scripts/audit-actions.mjs`: PASS; 76 mutating handlers, 76 guarded, 0 unguarded in static audit.
++- `npm run audit:contracts`: PASS static-only; 9 SQL files, 46 tables, 44 tenant-scoped tables, 44 RLS targets, 5 required views. No SQL Server connection or execution occurred.
++- `tsc --noEmit --pretty false`: BLOCKED with `TS2688: Cannot find type definition file for 'vite/client'`.
++- `npm run build` / browser smoke / iPhone Safari: not verified in this environment because dependencies are absent.
++
++The passing tests cover domain logic and static source contracts; they do not prove browser runtime, backend authorization, SQL Server RLS, or production storage security.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/VERSION.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/VERSION.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/VERSION.md	2026-10-26 20:55:10.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/VERSION.md	2026-10-26 21:56:42.168448479 +0000
+@@ -1,20 +1,17 @@
+ # VERSION
+ 
+-- نسخه محصول: **0.11.7**
+-- شناسه بسته: **r11-cp9-b21**
+-- مبنا: **r11-cp9-b19**؛ تغییرات افزایشی هستند.
++- نسخه محصول: **0.11.8**
++- شناسه بسته: **r11-cp9-b22**
++- مبنا: **r11-cp9-b21**؛ تغییرات افزایشی هستند.
+ 
+ ## تاریخچه
+ - b15: مرکز عملیات فروش/پخش آزمایشی، موتور تحلیل عملیات و داده seed محلی.
+ - b16: گسترش seed آزمایشی و توسعه نمای مالی/خزانه/هزینه‌ها.
+-- b17-audit-docs: ممیزی جامع و ردیابی الزامات؛ صرفاً مستندات.
+-- b18: تنظیم‌پذیری RBAC، scope نقش، نقش بالادست، سرپرست مستقیم، safeguards و مدل دامنه GeoJSON.
+-- b19: صفحهٔ هوش مکانی، مدیریت زون و هندسه نسخه‌دار، انتساب مشتری با point-in-polygon و مجوزهای geo قابل تنظیم.
+-- b20: گردش ثبت نتیجهٔ وظیفهٔ وصول از زون؛ انتخاب نتیجهٔ کنترل‌شده، علت نتیجه ناموفق، پیگیری بعدی، تاریخچهٔ نتیجه، audit و اتصال به رکورد پرداخت CLEARED همان مشتری برای استخراج مبلغ (بدون ورود دستی مبلغ).
++- b17-audit-docs: ممیزی جامع و ردیابی الزامات.
++- b18: تنظیم‌پذیری RBAC، scope نقش و مدل دامنه GeoJSON.
++- b19: صفحه هوش مکانی، مدیریت زون و هندسه نسخه‌دار، انتساب مشتری با point-in-polygon.
++- b20: گردش ثبت نتیجه وظیفه وصول و اتصال به پرداخت CLEARED مشتری.
++- b21: پیوست مدرک وظیفه وصول و ایجاد گروهی وظایف روی موتور موجود.
++- b22: گزارش عملکرد وصول زون، گزارش بر اساس مسئول، خروجی CSV امن‌تر، جلوگیری از دوباره‌شماری پرداخت و رفع دریافت صریح RBAC service.
+ 
+-## قرارداد بسته
+-`AkhavanCRM-SolarEmber_r11-cp9_b21.zip`
+-
+-گزارش‌های جاری: `STATUS_b20.md`, `NOT_DONE_b20.md`, `RBAC_AUDIT_b20.md`, `CHANGELOG_b20.md`, `HANDOFF.md`, `REQUIREMENTS_TRACEABILITY_b20.md` و `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b20.md`.
+-
+-- b21: پیوست امن‌تر مدرک وظیفه وصول به Attachment موجود؛ allowlist فایل، سقف حجم، scope check و audit محلی.
++گزارش جاری: `STATUS_b22.md`, `NOT_DONE_b22.md`, `CHANGELOG_b22.md`, `TEST_RESULTS_b22.md`, `HANDOFF.md` و `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b22.md`.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b22.md /mnt/data/akhavan_release_b22/akhavan_dev_b22/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b22.md
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b22.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/docs/08_MASTER_AUDIT_AND_TRACEABILITY_b22.md	2026-10-26 21:57:38.217957124 +0000
+@@ -0,0 +1,397 @@
++# AKHAVAN CRM — ممیزی جامع، ردیابی الزامات و وضعیت انجام‌شده/باقی‌مانده
++
++- نسخه مبنا: `AkhavanCRM-SolarEmber_r11-cp9_b16.zip`
++- نسخه سند: `b17-audit-docs` (فقط به‌روزرسانی مستندات؛ به معنی پیاده‌سازی قابلیت‌های محصول نیست)
++- تاریخ ممیزی: 2026-10-26
++- نوع بررسی: بازبینی ایستای سورس و اسناد بسته؛ بدون اتصال SQL Server/ERP و بدون اجرای مرورگر واقعی
++- وضعیت انتشار: **توسعه‌ای؛ آمادهٔ اعلام به‌عنوان محصول عملیاتی نیست**
++
++
++## الحاقیهٔ وضعیت اجرایی b18 — 2026-10-26
++
++این الحاقیه وضعیت را از روی تغییرات واقعی b18 به‌روزرسانی می‌کند؛ متن ممیزی b17 پایین‌تر به‌عنوان سابقه حفظ شده است.
++
++- **انجام‌شده در b18:** مدل‌های `GeoZone`, `ZoneGeometryVersion`, `ZoneAssignment`, `GeoMetricDefinition`, `ZoneMetricSnapshot` در AppState؛ normalization امن برای state قدیمی؛ اعتبارسنجی GeoJSON Polygon؛ point-in-polygon با احتساب مرز؛ نسخه‌بندی هندسه و جلوگیری از دو نسخهٔ فعال هم‌زمان؛ کاتالوگ هشت سنجه با واحد/منبع/تجمیع/جهت مطلوب؛ تست‌های دامنه.
++- **عمداً غیرفعال:** تمام سنجه‌ها `available: false` هستند تا منبع واقعی و قواعد تجمیع متصل و راستی‌آزمایی شوند؛ این تصمیم مانع نمایش Heatmap ساختگی می‌شود.
++- **هنوز باقی‌مانده:** صفحهٔ نقشه، MapLibre و تأمین‌کنندهٔ tile، رسم/ویرایش بصری، جست‌وجو/نمایش نقشهٔ ایران، انتساب مشتری، چاپ، فیلترهای مشترک، اتصال سنجه‌ها به اسناد واقعی، تسک وصول و گزارش عملکرد.
++- **RBAC b18:** پروفایل‌های مجوز، scope نقش، نقش بالادست و سرپرست مستقیم از UI قابل تنظیم شده‌اند؛ این enforcement فقط سمت کلاینت است و نیاز به Backend/RLS دارد. جزئیات در `../RBAC_AUDIT_b18.md`.
++- **آزمون b18:** `npm test` برابر 446 assertion موفق؛ `audit:contracts` و `audit-actions` موفق در بررسی ایستا. Build/Lint به‌دلیل dependency نصب‌نشده مسدود؛ مرورگر/iOS/SQL Server واقعی اجرا نشده. جزئیات در `../STATUS_b18.md` و `../NOT_DONE_b18.md`.
++
++## 1. هدف و قواعد ممیزی
++
++این سند، مرجع واحد ردیابی خواسته‌ها و وضعیت فعلی است. هر الزام باید مستقل ارزیابی شود؛ وجود یک مفهوم کلی مثل «زون»، «گزارش»، «RBAC» یا «هوش مکانی» به‌تنهایی به معنی پیاده‌سازی جزئیات آن نیست.
++
++برچسب‌های وضعیت:
++- **تأییدشده در سورس/سند:** شواهد مشخص در بسته موجود است؛ این برچسب به‌تنهایی کیفیت عملیاتی یا تست انتهابه‌انتها را ثابت نمی‌کند.
++- **ناقص/نمونه‌ای:** بخشی از رفتار وجود دارد، اما چرخه کامل، منبع معتبر یا معیار پذیرش تأمین نشده است.
++- **یافت نشد/پیاده‌سازی‌نشده در بسته بررسی‌شده:** در سورس و اسناد بررسی‌شده شاهد کافی پیدا نشد؛ این عبارت ادعای نبود در تمام نسخه‌های خارج از این بسته نیست.
++- **تأییدنشده:** برای اعلام نتیجه به اجرای تست یا محیط بیرونی نیاز است.
++
++قواعد غیرقابل نقض برای ادامه:
++1. ابتدا آخرین سورس واقعی، Git/status و اسناد جاری را بررسی کن؛ اگر سورس جدیدتری ارائه شد، آن را مبنا قرار بده و اختلاف را ثبت کن.
++2. قبل از تغییر کد، Diff با مبنا و فهرست رگرسیون تهیه شود. تغییر افزایشی باشد؛ حذف یا بازنویسی بدون دلیل مستند ممنوع.
++3. هیچ قابلیت، اتصال، تست یا پذیرشی که اجرا نشده، موفق اعلام نشود.
++4. داده‌های `demo-*` و `LOCAL_TEST` مصنوعی‌اند و نباید داده واقعی کسب‌وکار معرفی شوند.
++5. منبع واحد حقیقت برای هر قلم داده؛ از کپی‌کردن مانده، فاکتور، پرداخت، کالا یا اطلاعات ERP در مدل موازی خودداری شود.
++6. `Quote ≠ Order ≠ Invoice`; پذیرش Quote نباید به‌طور ضمنی فاکتور یا سفارش ERP بسازد.
++7. تخصیص پرداخت باید از `PaymentAllocation` و قواعد مالی معتبر پیروی کند؛ پرداخت/چک دوباره‌شماری نشود.
++8. Backend، اتصال واقعی SQL Server و ERP طبق اولویت فعلی، مرحله‌ای جدا پس از تکمیل و آزمون فرانت‌اند انجام می‌شود.
++9. RBAC باید هم در رابط و هم در لایه عملیات/داده enforce شود؛ پنهان‌کردن دکمه کافی نیست.
++10. هر الزام جزئی در ماتریس ردیابی مستقل باقی بماند و در خلاصه‌ها حذف نشود.
++
++## 2. مبنای واقعی و محدودیت شواهد
++
++بستهٔ قابل‌دسترسی و تأییدشده برای این ممیزی `AkhavanCRM-SolarEmber_r11-cp9_b16.zip` است. اسناد همراه آن می‌گویند نسخه محصول `0.11.3` و checkpoint `r11-cp9-b16` است.
++
++اسناد b16 گزارش می‌کنند:
++- `npm test`: تعداد 426 assertion موفق در محیط اجرای ثبت‌شده در handoff.
++- بررسی syntax از طریق `transpileModule` برای `src/lib/seed.ts` و `src/components/FinanceWorkspace.tsx` موفق گزارش شده است.
++- Build و lint کامل تأیید نشده‌اند؛ در محیط قبلی `vite: not found` و نبود `vite/client` ثبت شده است.
++- SQL Server، مرورگر واقعی، Safari/iOS و اتصال ERP اجرا/تست نشده‌اند.
++
++این ممیزی، خروجی تست‌های قبلی را به‌عنوان گزارش تاریخی ثبت می‌کند، نه اینکه در این مرحله دوباره آن‌ها را اجرا کرده باشد. وضعیت واقعی `npm test`, lint و build باید در محیط تمیز و از روی همین سورس دوباره ثبت شود.
++
++## 3. یافته‌های مشخص از سورس
++
++### 3.1 داده و عملیات
++- `src/lib/seed.ts` داده‌های مصنوعی مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه و فعالیت را تولید می‌کند؛ در seed، زون‌هایی مانند `CENTER`, `NORTH`, `SOUTH` و شهرهای نمونه دیده می‌شوند. این‌ها دادهٔ نمایشی‌اند، نه نقشه و هندسهٔ معتبر جغرافیایی ایران.
++- `src/components/OperationsControlWorkspace.tsx` برنامه پخش و سفارش آزمایشی می‌سازد و `zone` را به‌صورت مقدار متنی نگه می‌دارد؛ برخی مسیرهای ایجاد، صراحتاً `LOCAL_TEST` هستند.
++- `src/lib/operationsEngine.ts` مغایرت متنی زون سفارش و برنامه پخش و سیگنال‌های عملیاتی را بررسی می‌کند. این قابلیت با آزمون قرارگیری نقطه/مشتری داخل چندضلعی، مسیریابی واقعی یا تحلیل جغرافیایی یکسان نیست.
++- `src/lib/rbac.ts` و تست‌های مرتبط وجود دارند؛ با این حال دسترسی واقعی هر نقش به همهٔ عملیات، گزارش‌ها و داده‌های جغرافیایی باید جداگانه آزمون شود.
++- `database/sqlserver/v1/` شامل اسکریپت‌های پایه، integration، finance، semantic analytics، KPI seed، RLS و sales/dispatch preflight است. وجود migrationها اثبات نمی‌کند که آن‌ها روی SQL Server اجرا شده یا با فرانت‌اند یکپارچه شده‌اند.
++
++### 3.2 هوش مکانی
++در بستهٔ بررسی‌شده، شاهدی از صفحه/موتور مستقل «هوش مکانی و مدیریت زون‌ها»، نقشهٔ سراسری ایران، MapLibre، ابزار رسم polygon، GeoJSON ذخیره‌شده و قابل بارگذاری، نسخه‌بندی هندسه، انتخاب مشتری با نقطه‌درچندضلعی، چاپ نقشه/فهرست مشتریان یا Heatmap متصل به داده‌های مالی معتبر پیدا نشد.
++
++**نتیجه:** برچسب/قانون زون و سیگنال مغایرت متنی، بخش محدودی از منطق عملیاتی است؛ جایگزین زیرسیستم هوش مکانی نیست. کل این زیرسیستم در این بسته باید «باقی‌مانده/طراحی‌نشده در محصول» تلقی شود تا پس از پیاده‌سازی و آزمون شواهد خلاف آن ثبت شود.
++
++## 4. ماتریس جامع وضعیت ماژول‌ها
++
++| حوزه | وضعیت قابل اثبات از بسته | کار باقی‌مانده / شرط پذیرش |
++|---|---|---|
++| Solar Ember و پوسته UI | سیستم طراحی و کد رابط در سورس وجود دارد؛ حفظ‌شدن بصری در تمام دستگاه‌ها دوباره تأیید نشده | build، مرورگر، Safari/iOS، RTL، overflow، دسترس‌پذیری و رگرسیون بصری |
++| داده‌های نمونه | seed گسترده و تست حداقل حجم در اسناد b16 گزارش شده | برچسب‌گذاری demo، تکرارپذیری، جلوگیری از آمیختن با داده واقعی؛ سیاست ارتقای seed قدیمی روشن شود |
++| داشبورد مالی | KPIها، روند شش‌ماهه و تفکیک دسته‌ای هزینه در b16 گزارش شده | منبع معتبر، تعریف KPI، فیلترها، drill-down، خروجی و تطبیق با سند منبع |
++| خزانه/چک | تب نمایش و خلاصه‌های چک/سررسید وجود دارد | گردش کامل ثبت/تحویل/واگذاری/وصول/برگشت/ابطال، تاریخچه، مانده حساب معتبر و تطبیق بانکی |
++| هزینه‌ها | تب هزینه و تحلیل دسته‌ای وجود دارد؛ ثبت/پرداخت نهایی صراحتاً کامل اعلام نشده | فرم، مرکز هزینه، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit trail و ضدتکرار |
++| مطالبات و پرداخت | قواعد `PaymentAllocation` در مستندات به‌عنوان مرجع تخصیص آمده | آزمون عددی جامع، برگشتی/اعتبار، جلوگیری از دوباره‌شماری، تاریخ مبنا و تطبیق گزارش‌ها |
++| Quote / سفارش / پخش | موتورهای Quote/عملیات، داده‌های نمونه و برخی بررسی‌های زون متنی موجودند | چرخه کامل Quote تا handoff خارجی، وضعیت‌های واقعی، شواهد تحویل و اتصال ERP؛ Quote ≠ Order ≠ Invoice حفظ شود |
++| RBAC و سازمان | `rbac.ts` و تست‌های scope وجود دارد | آزمون deny برای هر نقش/عملیات، hierarchy قابل تنظیم، محدودیت مالی جدا از دسترسی فروش، اعمال در data/action layer |
++| ممیزی تغییرات | بخش‌هایی از audit/تاریخچه در معماری و کد وجود دارند | پوشش سراسری تغییرات حساس، قبل/بعد، عامل، زمان، دلیل و جلوگیری از دور زدن UI |
++| Backend / SQL Server | migrationها و اسناد معماری در بسته موجودند | اجرای واقعی migrations، API/Auth، RLS، تست امنیت/بازیابی و تطبیق قراردادها؛ هنوز اجرا نشده |
++| ERP / ETL | قراردادها و schema پایه در مستندات/مهاجرت‌ها دیده می‌شوند | connector واقعی، mapping شناسه‌ها، outbox، retry، idempotency، sync monitoring و آزمون با ERP واقعی |
++| هوش مکانی و زون‌ها | b17: فیلدهای متنی؛ b18: مدل دامنه، polygon validation، point-in-polygon، versioning و catalog سنجه‌ها | نقشه UI، tile provider، drawing، انتساب مشتری، Heatmap متصل به داده واقعی، چاپ و عملیات وصول باقی است؛ قابلیت کامل تأیید نشده |
++| گزارش‌ها و KPIهای مشترک | semantic layer/KPI catalog در SQL scripts وجود دارد | اثبات یکسانی تعریف در همه ماژول‌ها، cross-filter، freshness/source، drill-down و تست تطبیق اعداد |
++| محصولات/تأمین/موجودی | داده‌ها و بخش‌هایی از مدل/نمونه‌ها موجود است | ERP منبع حقیقت باقی بماند؛ موجودی/رزرو/خرید واقعی بدون اتصال تأیید نشده |
++
++## 5. مشخصات کامل زیرسیستم «هوش مکانی و مدیریت زون‌ها»
++
++این بخش ثبت کامل الزام‌هاست، نه ادعای پیاده‌سازی. هر مورد باید جداگانه به backlog، آزمون و معیار پذیرش متصل شود.
++
++### 5.1 هدف و مرز محصول
++زیرسیستم مستقل «هوش مکانی و مدیریت زون‌ها» باید نقشه و زون‌های ذخیره‌شده را به تحلیل فروش و مطالبات، برنامه‌ریزی پخش، تخصیص وظیفه، پیگیری اجرای کار و گزارش عملکرد مدیران متصل کند. این زیرسیستم تصمیم‌یار است؛ صرف نزدیکی جغرافیایی نباید به‌صورت خودکار مأموریت ایجاد کند و نباید جای ERP/DMS یا منبع سند مالی را بگیرد.
++
++### 5.2 سه حالت کاری، یک نقشه و یک مدل داده
++1. **تعریف و مدیریت زون:** نقشهٔ کل ایران؛ رسم polygon با حداقل ۳ نقطه و ترجیحاً ۵ تا ۶ نقطه یا بیشتر؛ نام و کد یکتا؛ ذخیره، بازیابی، ویرایش، فعال/غیرفعال‌کردن و نسخه‌بندی محدوده. زون مرز واقعی polygon است، نه مجموعه‌ای از pinها.
++2. **تحلیل Heatmap:** در هر نما یک شاخص اصلی و یک مقیاس رنگی. مقایسهٔ دو شاخص فقط با مقایسهٔ صریح کنارهم/دو پنل انجام شود، نه ترکیب مقیاس‌های نامرتبط. Legend باید واحد، بازه و معنای بهتر/بدتر را توضیح دهد.
++3. **عملیات و تخصیص کار:** انتخاب زون، مشاهده مشتریان داخل آن و مطالبات معتبر، ساخت task وصول/پیگیری، تعیین مجری، ناظر/سرپرست، مهلت، اولویت و نتیجه مورد انتظار؛ ثبت نتیجه واقعی و شواهد مجاز.
++
++سه حالت باید نقشه و مدل مشترک داشته باشند، اما کنترل‌ها و ابزارهای صفحه بر اساس حالت انتخابی تغییر کنند؛ همه ابزارها هم‌زمان و شلوغ نمایش داده نشوند.
++
++### 5.3 فناوری نقشه و الزامات انتخاب
++گزینهٔ اولیهٔ بررسی: MapLibre GL JS + GeoJSON + ابزار رسم polygon. این انتخاب هنوز تصمیم فنی نهایی یا پیاده‌سازی‌شده نیست. پیش از تثبیت باید آزمایش شود:
++- پوشش ایران: استان، شهر، راه‌ها و برچسب مکان‌ها.
++- کیفیت و دسترسی tile provider از محیط استقرار واقعی؛ هزینه، محدودیت درخواست و شرایط مجوز.
++- گزینهٔ self-host/cache در صورت محدودیت دسترسی یا هزینه؛ عدم وابستگی به tile server نمایشی.
++- فارسی و RTL، موبایل و دسکتاپ، کارایی با تعداد زیاد مشتری و clustering.
++- ذخیره/بارگذاری GeoJSON و حفظ precision مختصات.
++- چاپ نقشه و فهرست مشتریان داخل زون و مجوزهای مربوط به داده/نقشه.
++- امکان رسم، انتخاب، ویرایش، لغو تغییر و بازگشت به نسخه قبلی.
++
++رایگان بودن کتابخانه به معنی رایگان یا در دسترس بودن tileها نیست.
++
++### 5.4 مدل داده و قواعد مالکیت
++قبل از ایجاد جدول جدید، موجودیت‌ها و ساختارهای فعلی، شناسه‌ها، audit، versioning، task، مشتری، فاکتور، پرداخت، برگشتی و salesperson بررسی شوند. از ایجاد مدل موازی خودداری شود.
++
++موجودیت‌های منطقی مورد نیاز (فقط در صورت نبود معادل معتبر):
++- `Zone`: شناسه، کد، نام، وضعیت، مالک/دامنه دسترسی.
++- `ZoneGeometryVersion`: هندسه polygon، شماره نسخه، زمان اعتبار از/تا، سازنده و دلیل تغییر.
++- `ZoneAssignment`: ارتباط مشتری یا رکورد مکانی با زون، روش تخصیص و بازه اعتبار؛ قابل محاسبه مجدد.
++- `GeoMetricDefinition`: شناسه KPI، منبع داده، واحد، فرمول، grain، aggregation، semantics بهتر/بدتر، مجوز و تازگی.
++- `ZoneMetricSnapshot`: فقط cache اختیاری؛ قابل بازسازی از منبع و هرگز منبع حقیقت مستقل نیست.
++- Task/TaskAssignment: از موتور task موجود استفاده شود؛ مجری، ناظر/مشاهده‌گر، مهلت، اولویت و وضعیت.
++- `TaskEvidence`: نتیجه، زمان و موقعیت مجاز، مبلغ وصول تأییدشده، علت عدم وصول/عدم تحویل و مرجع سند.
++- `AuditEvent`: استفاده از audit مشترک موجود برای تغییر زون، هندسه، تخصیص و عملیات.
++
++ارتباط‌ها باید با شناسه‌های واقعی Customer/Invoice/Payment/Return/Salesperson/Task باشند، نه نام‌ها یا متن‌های کپی‌شده. نسخهٔ مرز زون و تاریخ اعتبار باید برای گزارش تاریخی حفظ شود. تغییر هندسه نباید گزارش گذشته را بی‌صدا بازنویسی کند.
++
++### 5.5 تعریف دقیق شاخص‌های Heatmap
++هر شاخص باید قبل از نمایش، منبع، واحد، فرمول، grain، فیلترهای مجاز، زمان تازگی و معنای بهتر/بدتر داشته باشد:
++- **مطالبات باز:** مانده فاکتورهای معتبر در تاریخ انتخابی با لحاظ تخصیص پرداخت/اعتبار و سیاست مالی مرجع.
++- **فروش:** مبلغ اسناد فروش معتبر در بازه؛ تعریف مالیاتی/تخفیف/ابطال باید ثابت و مستند باشد.
++- **مرجوعی:** مبلغ یا تعداد اسناد برگشتی معتبر؛ واحد انتخابی واضح باشد و مبلغ با تعداد مخلوط نشود.
++- **تعداد فاکتور:** شمار فاکتورهای معتبر، نه تعداد سفارش.
++- **تراکم مشتری:** تعداد مشتریان یکتا با موقعیت معتبر در هندسه؛ مشتری فاقد مختصات معتبر از محاسبه مکانی حذف یا جداگانه نشان داده شود.
++- **وصول نقدی:** مبلغ وصول معتبر؛ پرداخت ثبت‌شده از تخصیص پرداخت به فاکتور جدا شود تا دوباره‌شماری رخ ندهد.
++- **عملکرد فروشنده:** فقط یک معیار صریح در هر نمایش، مانند فروش، وصول، پوشش مشتری یا تحقق هدف؛ ترکیب مبهم چند معیار ممنوع.
++- **توزیع/تحویل خارج از زون:** اسناد تحویل/فاکتورهای مرتبطی که با مرز معتبر زون در زمان مربوط همخوانی ندارند؛ برنامه، سفارش، فاکتور و تحویل نباید معادل فرض شوند.
++
++برای رنگ‌ها: مقدار بیشتر فروش می‌تواند مثبت، اما مقدار بیشتر بدهی معوق می‌تواند منفی باشد. legend و عبارت «بالاتر بهتر است/بدتر است» باید برای هر KPI صریح باشد.
++
++### 5.6 فیلترهای مشترک و قواعد انتساب
++فیلترهای موردنیاز، در صورت ارتباط با شاخص: بازه تاریخ، ماه/سال، مقایسه با دوره قبل، فروشنده، سرپرست، تیم، مسئول پخش، تولیدکننده، کالا، گروه کالا، زون، منطقه، مشتری، وضعیت مشتری، وضعیت فاکتور/پرداخت/مرجوعی/عملیات وصول.
++
++فیلترها فقط زمانی نمایش داده شوند که از نظر معنایی به KPI مربوط باشند. برای مثال، فیلتر تولیدکننده روی مطالبات باید از خطوط فاکتور و قواعد تخصیص مالی معتبر استفاده کند؛ نباید کل مانده مشتری به تمام تولیدکنندگان نسبت داده شود. اگر attribution دقیق ممکن نیست، نتیجه باید محدودیت را آشکار کند، نه اینکه عدد دقیق‌نما بسازد.
++
++نقشه، جدول، نمودار و KPI باید از تعریف و فیلتر مشترک استفاده کنند. انتخاب یک زون/نقطه/بازه نمودار باید نماهای مرتبط را cross-filter کند؛ تغییر فیلتر باید هم‌زمان همه نماهای مرتبط را به‌روز کند. منبع، زمان آخرین به‌روزرسانی و تعریف KPI باید قابل مشاهده باشد.
++
++### 5.7 عملیات، وصول و مسیر
++- انتخاب زون باید مشتریان واقعاً داخل polygon را با آزمون point-in-polygon و قواعد مرز معتبر پیدا کند؛ صرف برابر بودن متن `zone` کافی نیست.
++- پیشنهاد فهرست اولویت‌دار وصول باید از مانده معتبر، سررسید، سابقه تلاش، موقعیت معتبر و scope کاربر استفاده کند.
++- ایجاد task با مجری اصلی، ناظر/سرپرست، مهلت، اولویت، زون، مشتریان و نتیجه مورد انتظار.
++- ثبت نتیجه‌های مجزا: ویزیت انجام شد، تحویل موفق، تحویل ناموفق، مرجوعی، مراجعه ناموفق/عدم حضور، وصول موفق یا عدم وصول.
++- ثبت مبلغ وصول فقط با مرجع معتبر؛ ثبت علت عدم وصول/تحویل، زمان، موقعیت در صورت مجاز بودن و شواهد.
++- گزارش سرپرست/مدیر: تخصیص‌یافته، انجام‌شده، ناموفق، معوق، مبلغ وصول معتبر و نرخ نتیجه؛ drill-down از سازمان → زون → مجری → task → مشتری.
++- تطبیق برنامه با توقف‌ها/ویزیت‌های واقعی و تحلیل انحراف مسیر/زمان فقط وقتی داده واقعی معتبر وجود دارد.
++- هشدار تأخیر تحویل یا تکرار مراجعه ناموفق؛ اعلان باید قابل توضیح و قابل ممیزی باشد.
++- GPS به‌تنهایی اثبات انجام کار نیست. استفاده از موقعیت باید محدود به هدف، مجاز و دارای کنترل حریم خصوصی باشد.
++- نزدیکی جغرافیایی به‌تنهایی مجوز تخصیص خودکار کار نیست.
++
++### 5.8 نقش‌ها و دامنه دسترسی
++- فروشنده: مسیر/قلمرو و مشتریان خودش، حتی اگر در برنامه بازدید جاری نباشند.
++- سرپرست: تیم خود و مشتریانی که در scope همان تیم‌اند.
++- مدیر فروش: داده‌ها و گزارش‌های فروش در دامنه سازمانی تعریف‌شده.
++- مدیرعامل: نمای سازمانی طبق سیاست.
++- حسابدار و نقش‌های دیگر: جداسازی وظایف؛ دسترسی به داده فروش به معنی اجازه ثبت/تأیید همه اقدامات مالی نیست.
++- ساختار سازمانی و رابطه مدیر مستقیم/زیردست قابل پیکربندی باشد؛ در مقیاس فعلی ساده بماند و برای چند شعبه پیچیدگی غیرضروری ساخته نشود.
++- همان scope در نقشه، KPI، فیلتر، فهرست، task، گزارش و export اعمال شود و در لایه عملیات/داده enforce گردد.
++
++### 5.9 صفحه و تعامل
++صفحه مستقل «هوش مکانی» با سه حالت «زون‌ها»، «نقشه حرارتی»، «عملیات»؛ نوار فیلتر زمینه‌ای؛ نقشهٔ تعاملی ایران؛ نمایش زون‌های ذخیره‌شده، مشتریان و لایهٔ شاخص انتخاب‌شده؛ انتخاب زون؛ رسم/ویرایش؛ چاپ نقشه و فهرست مشتریان داخل زون؛ جدول مرتبط با مشتری، مانده معتبر، وضعیت و اقدام بعدی. طراحی باید با Solar Ember، فارسی/RTL و موبایل سازگار باشد.
++
++### 5.10 برنامه اجرا و معیار پذیرش
++**مرحله 1 — ممیزی و مدل داده:** بررسی مختصات مشتری، مدل بازدید/مسیر، مانده مالی، RBAC، audit، task و جدول‌های موجود؛ ثبت قراردادها و وابستگی‌ها؛ بدون ساخت جدول تکراری.
++
++**مرحله 2 — نقشه و زون ذخیره‌شده:** نقشه ایران، رسم/ویرایش polygon، کد/نام/نسخه، ذخیره و بارگذاری، انتخاب مشتریان داخل محدوده، چاپ فهرست. پذیرش: پس از reload زون باقی بماند؛ ویرایش و نسخه‌بندی شود؛ مجموعه مشتریان داخل polygon با موارد آزمون دستی/عددی صحیح باشد.
++
++**مرحله 3 — KPI و Heatmap:** اتصال به داده معتبر فروش/مانده/مرجوعی/فاکتور/وصول/عملکرد؛ یک شاخص در هر نما و فیلترهای مشترک. پذیرش: عدد نقشه با رکوردهای منبع و گزارش برابر باشد؛ تغییر فیلتر تمام نماهای مرتبط را به‌روزرسانی کند.
++
++**مرحله 4 — تخصیص و پیگیری:** استفاده از task engine موجود، مجری/ناظر، برنامه مسیر، یادآوری وصول، نتیجه واقعی و گزارش مدیر. پذیرش: task از زون ساخته شود؛ مجری تعیین شود؛ نتیجه و مبلغ وصول واقعی ثبت شود؛ تلاش ناموفق از وصول موفق تفکیک شود.
++
++**مرحله 5 — سخت‌سازی:** مجوزها، history، مرزهای هندسی، فیلترهای ترکیبی، چاپ، تعداد بالای مشتری، tile access، ذخیره‌سازی و عملکرد. پذیرش: تست‌های deny، reload، هندسه، KPI، cross-filter و خروجی ثبت‌شده و قابل تکرار باشند.
++
++**اولویت MVP:** زون ذخیره‌شده + Heatmap با عدد معتبر + تخصیص/پیگیری وصول + گزارش عملکرد سرپرست. شاخص‌های دیگر باید از همان موتور/تعریف مشترک استفاده کنند، نه صفحه و جدول مستقل برای هر شاخص.
++
++### 5.11 قابلیت‌های تصمیم‌یار مرتبط که نباید از نقشه راه حذف شوند
++- تحلیل مشتری ازدست‌رفته و پیشنهاد بازگرداندن مشتری.
++- پیشنهاد خرید بعدی بر اساس سابقه معتبر مشتری؛ بدون ثبت سفارش خودکار.
++- تحلیل فرصت ازدست‌رفته و مرحلهٔ از دست رفتن در قیف.
++- تشخیص ناهنجاری و ناسازگاری داده‌ها.
++- اثربخشی مسیر/ویزیت بر اساس نتیجه واقعی، نه تعداد task بسته‌شده.
++- هشدار افت فروش یا افزایش مرجوعی با مقایسه دوره و توجه به فصل/ترکیب مشتری، فقط در صورت کفایت داده.
++- ثبت اینکه چه کسی پیشنهاد را ایجاد، قبول، رد یا به task تبدیل کرده است.
++- نمایش منبع، تازگی، تعریف KPI و توضیح اصلاح/مغایرت داده.
++
++## 6. کارهای انجام‌شده در b16 (طبق شواهد موجود)
++
++این فهرست محدود به تغییرات مستند b16 است و به معنی تکمیل کل محصول نیست:
++1. ارتقای برچسب نسخه به `0.11.3` / `r11-cp9-b16`.
++2. گسترش seed مصنوعی برای مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه، فعالیت/ویزیت/تسک و داده‌های مرتبط.
++3. افزودن/گسترش KPIهای مالی، نمودار روند شش‌ماهه و تفکیک دسته‌ای هزینه در `FinanceWorkspace`.
++4. افزودن تب «خزانه و سررسید» و تب «هزینه‌ها» به‌صورت نمای تحلیلی؛ گردش کامل بانک/هزینه/چک تکمیل‌شده محسوب نمی‌شود.
++5. مستندات handoff، changelog و not-done برای b16 موجود است.
++6. طبق گزارش همراه نسخه: `npm test` با 426 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
++
++## 7. کارهای باقی‌مانده و اولویت اجرا
++
++### P0 — پیش از هر ادعای release
++- [ ] در محیط تمیز `npm install` و سپس `npm test`, `npm run lint`, `npm run build` اجرا و خروجی دقیق ثبت شود.
++- [ ] تست مرورگر دسکتاپ و Safari/iOS، RTL، ریسپانسیو و overflow.
++- [ ] تست deny/allow دسترسی برای CEO، Sales Manager، Supervisor، Salesperson، Accountant و Visitor مطابق scope واقعی؛ هر نقش فقط در محدوده مجاز.
++- [ ] اجرای regression و بررسی اینکه هیچ قابلیت/داده موجود با تغییرات بعدی حذف نشده است.
++- [ ] seed مصنوعی و داده واقعی از هم تفکیک بمانند؛ مسئله ارتقای seed قدیمی با شناسه‌های تازه تعیین تکلیف شود.
++
++### P1 — تکمیل فرانت‌اند و منطق مشترک
++- [ ] تکمیل فیلترهای مالی، drill-down از KPI به رکورد مبنا و خروجی CSV/XLSX/PDF با مجوز و آزمون.
++- [ ] گردش هزینه با validation، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit و idempotency.
++- [ ] دفتر نقد/بانک، مانده معتبر، دریافت/پرداخت، انتقال بین حساب و مغایرت‌گیری بانکی.
++- [ ] گردش کامل چک با تاریخچه وضعیت و هشدار سررسید.
++- [ ] تطبیق مطالبات و مانده با `PaymentAllocation`؛ تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
++- [ ] چرخه Quote → پذیرش → handoff سفارش خارجی → پخش/تحویل → اتصال سندی فاکتور؛ حفظ تمایز Quote/Order/Invoice.
++- [ ] تکمیل policy/override، فرم‌ها، validation و audit برای عملیات حساس.
++- [ ] تکمیل تعاریف مشترک KPI، منبع، تازگی، cross-filter و سازگاری عدد بین نقشه/جدول/نمودار.
++
++### P1 — هوش مکانی (مدل دامنه در b18 شروع شده؛ زیرسیستم کامل نشده)
++- [ ] ممیزی دقیق مختصات و کیفیت مکان مشتری، visit/route، task، مالی و RBAC.
++- [ ] تصمیم فناوری پس از آزمایش MapLibre، provider، دسترسی/هزینه tile ایران، RTL، چاپ و گزینهٔ self-host.
++- [ ] پیاده‌سازی Zone + polygon + ذخیره/reload + geometry versioning + audit.
++- [ ] point-in-polygon و تخصیص مشتری به زون با تاریخ اعتبار؛ زون متنی فعلی به‌تنهایی کافی نیست.
++- [ ] تعریف KPIها و فرمول/واحد/منبع/aggregation/معنای رنگ؛ انتساب تولیدکننده و تخصیص مالی معتبر.
++- [ ] Heatmap تک‌شاخصی، legend، فیلترهای مشترک و cross-filter.
++- [ ] اتصال به task engine برای وصول/پیگیری، نتیجه واقعی، evidence و گزارش سلسله‌مراتبی.
++- [ ] چاپ نقشه و فهرست، clustering، عملکرد در حجم بالا، تست مجوز و حریم خصوصی.
++- [ ] تکمیل پنج مرحله و ثبت evidence پذیرش هر مرحله.
++
++### P2 — پس از تثبیت فرانت‌اند و تست رگرسیون
++- [ ] طراحی/تکمیل Backend API/Auth و RBAC سمت سرور.
++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS، امنیت، بازیابی و integrity.
++- [ ] اتصال ERP/ETL واقعی: mapping شناسه، outbox، retry، idempotency، پایش sync، خطا/تعارض و reconciliation.
++- [ ] تست end-to-end با داده و سامانه واقعی؛ هر موفقیت اتصال فقط پس از مشاهدهٔ نتیجهٔ واقعی ثبت شود.
++
++## 8. تعریف Done و شواهد الزامی
++
++یک قابلیت فقط وقتی «انجام‌شده» ثبت می‌شود که همه موارد مربوط به آن فراهم باشد:
++1. کد در سورس جاری وجود دارد و مسیر UI/عملیات واقعی به آن متصل است.
++2. دادهٔ نمایشی به‌جای دادهٔ واقعی جا زده نشده است.
++3. validation، خطاها، حالت خالی، loading، مجوز و audit مربوطه بررسی شده‌اند.
++4. آزمون واحد/قراردادی و در صورت نیاز آزمون رابط/یکپارچه اجرا شده‌اند؛ خروجی واقعی ثبت شده است.
++5. منبع حقیقت و تعریف KPI/فرمول مستند است.
++6. Diff و changelog نشان می‌دهند چه چیزی تغییر کرده و چه چیزی دست‌نخورده مانده است.
++7. معیار پذیرش مختص همان الزام پاس شده است.
++
++اگر کد وجود دارد ولی یکی از موارد بالا تأیید نشده، وضعیت باید «ناقص» یا «تأییدنشده» باشد.
++
++## 9. خروجی لازم در هر دور کاری بعدی
++
++- `BASELINE_REPORT`: مبنا، commit/hash یا نام دقیق ZIP، وضعیت Git و محدودیت دسترسی.
++- `AUDIT_CURRENT`: یافته‌های این دور با مسیر فایل و شواهد.
++- `REQUIREMENTS_TRACEABILITY`: نگاشت بندبه‌بند هر خواسته به فایل/کد/تست/وضعیت.
++- `GAP_REGISTER`: موارد باقی‌مانده با اولویت، وابستگی، ریسک و معیار پذیرش.
++- `CHANGELOG`: فایل‌های تغییرکرده و دلیل تغییر.
++- `TEST_REPORT`: دستور دقیق، محیط، خروجی واقعی و تست‌های اجرا‌نشده.
++- `NOT_DONE`: هر کار باقی‌مانده؛ موارد تأییدنشده نباید حذف شوند.
++- `STATUS` و `HANDOFF`: قدم بعدی دقیق و ترتیب مطالعه.
++- `DIFF`: اختلاف با مبنا.
++- `ZIP`: فقط پس از ایجاد واقعی و بررسی محتویات/مسیر؛ لینک ساختگی ممنوع.
++
++## 10. فرمان ادامه کار برای عامل بعدی
++
++ابتدا `../HANDOFF.md`, `../STATUS_b18.md`, `../NOT_DONE_b18.md`, `../RBAC_AUDIT_b18.md`, سپس این سند و `docs/01..05` را بخوان. سورس را دوباره ممیزی کن و هیچ ادعایی را فقط از روی این سند قطعی ندان. آخرین ZIP واقعی را مبنا قرار بده؛ وضعیت Git و diff را بررسی کن. ابتدا P0، سپس موارد P1 را بدون رگرسیون پیش ببر. برای هوش مکانی، مرحله 1 ممیزی و قراردادها را انجام بده؛ قبل از تأیید فناوری نقشه و قبل از ایجاد هر جدول، ساختار موجود را بررسی کن. Backend/SQL Server/ERP را تا پایان مرحلهٔ فرانت‌اند و تست‌های مقرر به فاز بعد موکول کن. پیش از پایان ظرفیت کاری، سورس، diff، تست، `NOT_DONE`, `STATUS`, `HANDOFF` و بستهٔ دانلودی واقعی را ذخیره و مسیر را تأیید کن.
++
++---
++
++# الحاقیهٔ اجرایی b19 — وضعیت واقعی پس از توسعهٔ صفحهٔ هوش مکانی
++
++تاریخ: 2026-10-26. این الحاقیه وضعیت جاری را به‌روزرسانی می‌کند؛ متن تاریخی b17 و فهرست جزئیات الزام‌ها در بالا عمداً حفظ شده است.
++
++## A. تغییرات کد و مسیرهای قابل ردیابی
++
++| الزام | شواهد سورس جاری | وضعیت b19 | محدودیت/پذیرش باقی‌مانده |
++|---|---|---|---|
++| صفحه مستقل هوش مکانی | `src/components/GeoIntelligenceWorkspace.tsx`; route در `src/App.tsx` | ناقص ولی به مسیر و منو وصل شده | مرورگر واقعی، طراحی کامل و نقشهٔ واقعی ایران |
++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx`، حالت‌های `zones`, `heatmap`, `operations` | پوسته و رفتار پایه وجود دارد | حالت عملیات هنوز موتور ایجاد Task وصول نیست؛ Heatmap غیرفعال است |
++| نام و کد یکتا | فرم زون در `GeoIntelligenceWorkspace.tsx` | پیاده شده سمت کلاینت | آزمون end-to-end و قید یکتایی سمت سرور باقی است |
++| ورودی مرز polygon | `parseCoordinates`, `validateZonePolygon` در `src/lib/geoIntelligence.ts` | پیاده شده | ترسیم/ویرایش مستقیم روی نقشه و بررسی polygonهای self-intersecting باقی است |
++| پیش‌نمایش هندسه | `PolygonGeometryPreview` در `GeoIntelligenceWorkspace.tsx` | پیاده شده | این preview نقشهٔ جغرافیایی/ایران نیست |
++| ذخیره و نسخه‌بندی هندسه | `createZoneGeometryVersion`, `zoneGeometryVersions`, `currentGeometryVersionId` | پیاده شده در state محلی | آزمون reload واقعی، migration و persistence در مرورگر باقی است |
++| فعال/پیش‌نویس/بایگانی | `changeZoneStatus` | پیاده شده در UI/state | آزمون نقش/مرورگر و سیاست اثر نسخهٔ هندسه روی وضعیت فعال باقی است |
++| انتساب مشتری داخل polygon | `isPointInsideZone` و `assignCustomersInZone` | پیاده شده برای مشتریان دارای مختصات معتبر | ممیزی schema مختصات و آزمون داده واقعی باقی است |
++| تاریخچه انتساب | `zoneAssignments`؛ بستن `effectiveTo` به‌جای حذف | پیاده شده در state محلی | تراکنش اتمیک/قیود DB و rollback باقی است |
++| مجوزهای مشاهده/مدیریت geo | `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX`, `canAccessWorkspace` در `src/lib/rbac.ts` | پیاده شده و قابل تنظیم در پروفایل | تفکیک مجوزهای granular و server-side enforcement باقی است |
++| دسترسی به مسیر | `guard('geo_intelligence', ...)` در `src/App.tsx`; navigation در `src/lib/navigation.ts` | پیاده شده | آزمون مرورگر و تغییر URL/حالت واقعی باقی است |
++| scope مشتریان | `rbac.canActOnRecord('accounts','VIEW',...)` در صفحهٔ geo | پیاده شده در UI/action محلی | scope اختصاصی zone/team/territory و enforcement سرور باقی است |
++| audit تغییرات | `auditLogs` برای ایجاد/تغییر هندسه، وضعیت و انتساب | پیاده شده در state محلی | audit ضد‌دستکاری و ثبت سمت سرور باقی است |
++| سنجه‌های Heatmap | `src/lib/geoIntelligence.ts`، کاتالوگ ۸ سنجه | قرارداد/توضیح موجود، عمداً غیرفعال | اتصال منبع معتبر، فرمول، تازگی، رنگ و تطبیق عددی باقی است |
++| نقشه ایران و tile | در این نسخه provider/MapLibre متصل نیست | پیاده‌سازی نشده | انتخاب و تست provider، هزینه/licensing، دسترسی شبکه، RTL، cache/self-host |
++| task وصول و route | `createCollectionTask` در `GeoIntelligenceWorkspace.tsx`؛ `processTaskCollaborationEvents`؛ `tasks` موجود | ایجاد task برای یک مشتری با مسئول/ناظر/مهلت/اولویت پیاده شده؛ گردش نتیجه ناقص | ثبت مبلغ وصول/علت/evidence، batch assignment، گزارش عملکرد، route/visit واقعی |
++| چاپ، clustering، cross-filter | شاهد اجرایی جدید در b19 وجود ندارد | پیاده‌سازی نشده | پس از نقشه و KPI واقعی |
++
++## B. RBAC — تصمیم و ریسک
++
++- صفحه با مجوزهای `geo.view` و `geo.manage` قابل پیکربندی است. نقش‌های قدیمی با مجوز مدیریتی موجود `settings.manage` یا `roles.manage` نیز برای سازگاری دسترسی دارند.
++- مشاهدهٔ geo به‌تنهایی اجازهٔ مدیریت زون نمی‌دهد؛ `geo.manage` برای تغییرات زون/انتساب لازم است مگر اینکه کاربر از قبل مجوز مدیریت تنظیمات/نقش‌ها داشته باشد.
++- مشاهده و انتساب مشتریان از `accounts` record-scope استفاده می‌کند؛ مجوز geo نباید دسترسی مشتری را گسترش دهد.
++- کنترل‌ها هنوز client-side هستند. امنیت واقعی باید در API/DB/RLS دوباره enforce شود؛ local state و audit log محلی مرز امنیتی نیستند.
++- مجوز granular جداگانه برای ویرایش هندسه، فعال‌سازی، بایگانی، انتساب، export و مشاهدهٔ KPI هنوز باید طراحی/تست شود.
++
++## C. نتیجهٔ آزمون b19
++
++- `npm test`: PASS؛ 471 assertion مجموع suiteها (از جمله 13 تست تنظیم‌پذیری RBAC و 14 تست قراردادی صفحهٔ geo).
++- `node scripts/audit-actions.mjs`: PASS؛ 74 handler تغییردهنده، 74 guard، صفر بدون guard در تحلیل ایستا.
++- `npm run audit:contracts`: PASS ایستا؛ 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS، 5 view موردنیاز. SQL Server واقعی متصل یا اجرا نشده.
++- `transpileModule`: PASS فقط برای syntax/transpile فایل‌های تغییرکرده؛ typecheck کامل نیست.
++- `npm install --ignore-scripts --no-audit --no-fund`: در محیط فعلی به timeout 120 ثانیه رسید و dependency نصب نشد.
++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/dependencyها.
++- `npm run build`: BLOCKED؛ `vite: not found`.
++- مرورگر، Safari/iOS، Backend/API، SQL Server runtime و ERP اجرا نشده‌اند.
++
++## D. ماتریس باقی‌مانده به ترتیب اجرا
++
++1. **P0:** دسترسی npm؛ نصب dependency؛ typecheck/lint/build؛ رفع همه خطاهای واقعی.
++2. **P0:** مرورگر دسکتاپ؛ تست CRUD زون، reload، allow/deny RBAC، scope مشتری و رگرسیون.
++3. **P0:** iPhone/Safari واقعی، RTL، لمس، performance و دسترس‌پذیری.
++4. **P1:** ممیزی مختصات واقعی مشتریان و دادهٔ مسیر/ویزیت/تحویل/مالی؛ ثبت منبع و کیفیت.
++5. **P1:** انتخاب MapLibre/tile provider پس از بررسی هزینه، مجوز، ایران، دسترسی و چاپ؛ سپس نقشهٔ واقعی و ابزار رسم.
++6. **P1:** Heatmap معتبر؛ یک شاخص در هر نما، aggregation، freshness، semantics رنگ، فیلترهای مرتبط و cross-filter؛ تطبیق با اسناد مبنا.
++7. **P1:** اتصال زون به task engine موجود؛ مسئول/ناظر/مهلت/اولویت/نتیجه و گزارش بر اساس نتیجه واقعی.
++8. **P1:** تکمیل field-level `SEE/DO/HIDDEN` و scope یکسان در map/report/task/export.
++9. **P2:** Backend/API/Auth، migrationهای SQL Server، RLS واقعی و آزمون امنیت/بازیابی.
++10. **P2:** ERP/ETL با mapping، outbox/retry/idempotency، monitoring و reconciliation.
++
++هیچ بند بالا به دلیل اشاره در roadmap یا وجود مدل داده، «انجام‌شده» محسوب نمی‌شود؛ وضعیت فقط پس از شواهد کد و معیار پذیرش اختصاصی تغییر می‌کند.
++
++
++---
++
++# الحاقیهٔ ممیزی اجرایی b20 — گردش نتیجهٔ وصول مکانی
++
++تاریخ: 2026-10-27؛ مبنا `r11-cp9-b19`؛ نسخه `0.11.6 / r11-cp9-b20`.
++
++## تغییرات و شواهد
++- `src/lib/collectionTaskOutcome.ts`: کاتالوگ ۷ نتیجه و اعتبارسنجی مستقل. نتیجهٔ `PAYMENT_RECORDED` نیازمند شناسهٔ پرداخت معتبر است؛ پرداخت باید به همان مشتری تعلق داشته باشد، `CLEARED` باشد و مبلغ مثبت داشته باشد. مبلغ از پرداخت خوانده می‌شود و ورودی دستی ندارد.
++- `src/components/GeoIntelligenceWorkspace.tsx`: فهرست taskهای وصول همین زون/مشتریان قابل مشاهده، فرم ثبت نتیجه، تاریخ پیگیری، علت، یادداشت، تاریخچه و audit. برای ویرایش از `canOn('tasks','EDIT', ...)` استفاده می‌شود.
++- `tests/collectionTaskOutcome.test.mjs`: ۱۱ assertion برای پرداخت معتبر، مشتری اشتباه، پرداخت معلق، علت و پیگیری اجباری، و محدودکردن جریان به task وصول زون.
++- `tests/geoWorkspaceContracts.test.mjs`: ۱۹ assertion برای مسیر، RBAC، scope، versioning، نتیجه و منبع پرداخت.
++
++## وضعیت پذیرش
++| معیار | نتیجه | توضیح |
++|---|---|---|
++| نتیجه‌های کنترل‌شده | پیاده‌سازی شده | ۷ نوع نتیجه |
++| علت عدم وصول | پیاده‌سازی شده | برای نتیجه‌های ناموفق مشخص اجباری است |
++| تاریخ پیگیری تعهد پرداخت | پیاده‌سازی شده | تاریخ الزامی؛ reminder خودکار هنوز نیست |
++| مبلغ وصول از منبع پرداخت | پیاده‌سازی شده در UI/helper | فقط payment CLEARED همان مشتری؛ به‌تنهایی اثبات تخصیص به invoice/ledger نیست |
++| تاریخچه و audit محلی | پیاده‌سازی شده | state محلی؛ ضد‌دستکاری نیست |
++| evidence file | باقی‌مانده | فرم فعلی یادداشت متنی است |
++| گروه‌بندی و گزارش سلسله‌مراتبی | باقی‌مانده | نیازمند توسعه روی task engine موجود |
++
++## نتایج آزمون b20
++- `npm test`: PASS؛ 487 assertion طبق جمع خروجی suiteها.
++- `node scripts/audit-actions.mjs`: PASS؛ 76 handler تغییردهنده، 76 guard، صفر unguarded در تحلیل ایستا.
++- `npm run audit:contracts`: PASS ایستا؛ 9 SQL files، 46 tables، 44 tenant-scoped tables، 44 RLS targets، 5 required views. SQL Server واقعی اجرا نشده.
++- Build/Lint و browser/Safari/iOS: تأیید نشده‌اند؛ dependencyهای Vite/types در این محیط موجود نیستند.
++
++## محدودیت امنیت و اجرا
++این تغییر RBAC client-side را دور نمی‌زند اما آن را به امنیت واقعی تبدیل نمی‌کند. پرداخت و task باید در Backend دوباره مجوزدهی و اعتبارسنجی شوند. `Payment.status=CLEARED` صرفاً وضعیت رکورد پرداخت موجود در state است؛ این توسعه، bank settlement، invoice allocation یا reconciliation واقعی ایجاد نمی‌کند.
++
++
++## الحاقیهٔ اجرایی b21 — مدرک وظیفهٔ وصول (2026-10-27)
++- نسخهٔ جاری برای این بسته `0.11.7 / r11-cp9-b21` است؛ مبنای کد b20 و تغییرات افزایشی‌اند.
++- `src/lib/collectionTaskEvidence.ts` نوع و اندازهٔ فایل را اعتبارسنجی می‌کند: JPEG/PNG/WebP/PDF، بزرگ‌تر از صفر و حداکثر ۵ MiB.
++- `GeoIntelligenceWorkspace.tsx` فایل را در `state.attachments` به همان task وصل می‌کند، با scope check دریافت فایل و audit محلی. از AttachmentManager/state موجود استفاده می‌شود؛ موتور موازی ساخته نشده.
++- تست‌ها: `collectionTaskEvidence.test.mjs` دارای ۶ assertion؛ قرارداد Geo UI دارای ۲۶ assertion؛ کل `npm test` موفق اجرا شد. `audit-actions` 76/76 و `audit:contracts` موفق در حالت static-only.
++- محدودیت: ذخیره‌سازی base64 در state محلی است. سقف مجموع storage، retention، اسکن بدافزار، دسترسی سروری و ذخیره‌سازی امن هنوز طراحی/اجرا نشده‌اند؛ بنابراین این پیاده‌سازی برای production امن اعلام نمی‌شود.
++- Build/Lint کامل، browser/iOS، SQL Server runtime/RLS و ERP هنوز تأییدنشده‌اند.
++
++- افزودهٔ b21 تکمیلی: ساخت گروهی وظایف از مشتریان انتخاب‌شده در زون، با reuse از task engine و notification collaboration، کنترل `tasks.CREATE/ASSIGN`، جلوگیری از task باز تکراری و audit. انتخاب فعلاً مکانی/دستی است؛ اولویت‌بندی بر اساس ماندهٔ مالی معتبر و گزارش سلسله‌مراتبی هنوز باقی است.
++
++
++---
++
++# b22 Addendum — Collection reporting and export (2026-10-27)
++
++## Delivered in source
++- `src/lib/geoCollectionReporting.ts`: derives report totals from zone-scoped task list passed by the UI; separates open/completed/overdue; counts latest outcome per task; recalculates collected amount from CLEARED payments belonging to the same customer; deduplicates payment IDs; attributes a repeated payment to the most recently recorded task result; groups by assignee.
++- `collectionReportToCsv`: UTF-8 BOM CSV output and neutralization of cells starting with formula-sensitive characters.
++- `GeoIntelligenceWorkspace.tsx`: report summary, outcome breakdown, assignee table and CSV export. Task visibility uses existing RBAC record scope; customer visibility remains scoped.
++- Explicitly fixed `rbac` destructuring from `useCan`; static contract asserts this wiring.
++
++## Evidence
++- `npm test`: PASS, 519 assertions based on printed suite counts.
++- `audit-actions`: 76/76 mutation handlers guarded in static audit.
++- `audit:contracts`: PASS in static-only mode.
++- Full TypeScript check remains blocked by missing `vite/client` type definitions; no claim of a passing build or browser test.
++
++## Known boundaries
++- Report is local-state, zone-scoped and client-side. It is not an official accounting statement, not multi-zone organization reporting, and not server-enforced.
++- The report relies on the payment model's `CLEARED` status and customer identity; invoice allocation/reconciliation remains a separate pending requirement.
++- API authorization, SQL Server runtime/RLS, server evidence storage, date-range filtering, detail export, real map provider and iOS/Safari testing remain open.
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/package.json /mnt/data/akhavan_release_b22/akhavan_dev_b22/package.json
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/package.json	2026-10-26 20:55:10.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/package.json	2026-10-26 21:56:42.166079925 +0000
+@@ -1,7 +1,7 @@
+ {
+   "name": "react-example",
+   "private": true,
+-  "version": "0.11.7",
++  "version": "0.11.8",
+   "type": "module",
+   "scripts": {
+     "dev": "vite --port=3000 --host=0.0.0.0",
+@@ -10,7 +10,7 @@
+     "clean": "rm -rf dist server.js",
+     "lint": "tsc --noEmit",
+     "audit:contracts": "node scripts/audit-sqlserver-contracts.mjs",
+-    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs && node --experimental-strip-types tests/collectionTaskEvidence.test.mjs"
++    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs && node --experimental-strip-types tests/collectionTaskEvidence.test.mjs && node --experimental-strip-types tests/geoCollectionReporting.test.mjs"
+   },
+   "dependencies": {
+     "@google/genai": "^2.4.0",
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/components/GeoIntelligenceWorkspace.tsx /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/components/GeoIntelligenceWorkspace.tsx
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/components/GeoIntelligenceWorkspace.tsx	2026-10-26 20:56:25.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/components/GeoIntelligenceWorkspace.tsx	2026-10-26 21:56:42.167686316 +0000
+@@ -5,6 +5,7 @@
+ import { processTaskCollaborationEvents } from '../lib/collaboration';
+ import { COLLECTION_OUTCOME_OPTIONS, validateCollectionTaskOutcome } from '../lib/collectionTaskOutcome';
+ import { validateCollectionEvidenceFile } from '../lib/collectionTaskEvidence';
++import { buildGeoCollectionReport, collectionReportToCsv } from '../lib/geoCollectionReporting';
+ import { useCan } from '../hooks/useCan';
+ import { Card } from './ui/Card';
+ import { Button } from './ui/Button';
+@@ -46,7 +47,7 @@
+ }
+ 
+ export function GeoIntelligenceWorkspace({ state, updateState }: Props) {
+-  const { can, canOn, denied } = useCan(state, updateState);
++  const { rbac, can, canOn, denied } = useCan(state, updateState);
+   const canEdit = can('geo', 'EDIT');
+   const [mode, setMode] = useState<Mode>('zones');
+   const [selectedZoneId, setSelectedZoneId] = useState('');
+@@ -136,7 +137,15 @@
+     });
+     setStatusMessage({ type: 'ok', text: `وضعیت زون به ${status === 'ACTIVE' ? 'فعال' : status === 'ARCHIVED' ? 'بایگانی' : 'پیش‌نویس'} تغییر کرد.` });
+   };
+-  const zoneCollectionTasks = (state.tasks || []).filter(task => task.source === 'GEO_ZONE' && task.taskType === 'COLLECTION' && task.zoneId === selectedZoneId && visibleCustomerIdSet.has(String(task.customerId || task.accountId || '')));
++  const zoneCollectionTasks = (state.tasks || []).filter(task => task.source === 'GEO_ZONE' && task.taskType === 'COLLECTION' && task.zoneId === selectedZoneId && visibleCustomerIdSet.has(String(task.customerId || task.accountId || '')) && rbac.canActOnRecord('tasks', 'VIEW', { ownerId: task.assigneeId, branchId: (task as any).branchId, territoryId: (task as any).territoryId, teamId: (task as any).teamId, tenantId: (task as any).tenantId, deletedAt: (task as any).deletedAt, isDeleted: (task as any).isDeleted }));
++  const collectionReport = buildGeoCollectionReport(zoneCollectionTasks as any, state.payments || [], (state.users || []).map(user => ({ id: user.id, name: user.name })));
++  const exportCollectionReport = () => {
++    if (!selectedZone || !can('geo', 'VIEW')) { denied('خروجی گزارش وصول زون'); return; }
++    const blob = new Blob([collectionReportToCsv(collectionReport)], { type: 'text/csv;charset=utf-8' });
++    const url = URL.createObjectURL(blob); const link = document.createElement('a');
++    link.href = url; link.download = `akhavan-collection-${selectedZone.code || selectedZone.id}.csv`;
++    document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1500);
++  };
+   const selectedOutcomeTask = zoneCollectionTasks.find(task => task.id === outcomeTaskId) || null;
+   const selectedOutcomeCustomerId = selectedOutcomeTask ? String(selectedOutcomeTask.customerId || selectedOutcomeTask.accountId || '') : '';
+   const availablePayments = (state.payments || []).filter(payment => String(payment.customerId || payment.accountId || '') === selectedOutcomeCustomerId && payment.status === 'CLEARED' && Number.isFinite(payment.amount) && payment.amount > 0);
+@@ -283,6 +292,7 @@
+     {mode==='operations' && <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">مشتریان داخل زون</h2><label className="block text-xs font-bold text-text-secondary">زون<select value={selectedZoneId} onChange={event=>{const zone=zones.find(item=>item.id===event.target.value);if(zone)selectZone(zone);else setSelectedZoneId('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب زون</option>{zones.map(zone=><option key={zone.id} value={zone.id}>{zone.name} · {zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</option>)}</select></label><div className="grid grid-cols-2 gap-3"><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">مشتری داخل مرز</div><div className="mt-1 text-2xl font-black text-text-main">{customersInside.length.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">انتساب فعال</div><div className="mt-1 text-2xl font-black text-text-main">{selectedZoneAssignments.length.toLocaleString('fa-IR')}</div></div></div><Button block disabled={!canEdit||!selectedZone||selectedZone.status!=='ACTIVE'||!activeGeometry} onClick={assignCustomersInZone} icon={<Users size={15}/>}>انتساب / به‌روزرسانی مشتریان داخل مرز</Button><p className="text-xs leading-6 text-text-secondary">این عمل فقط مشتریانی را در نظر می‌گیرد که مختصات واقعی و معتبر دارند و از RBAC اجازهٔ مشاهدهٔ آن‌ها را دارید. انتساب‌های قبلی همین مشتریان با پایان اعتبار بسته می‌شوند؛ رکوردهای خارج از محدودهٔ دسترسی تغییر نمی‌کنند.</p>
+       <div className="mt-5 border-t border-border pt-4"><h3 className="mb-1 text-sm font-black text-text-main">ایجاد وظیفهٔ پیگیری وصول از زون</h3><p className="mb-3 text-xs leading-6 text-text-secondary">وظیفه به موتور وظایف موجود اضافه می‌شود؛ مبلغ وصول یا موفقیت مراجعه به‌صورت خودکار فرض نمی‌شود و باید بعداً با نتیجهٔ واقعی ثبت شود.</p>
+       <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">مشتری<select value={taskCustomerId} onChange={event=>setTaskCustomerId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب مشتری داخل زون</option>{customersInside.map(customer=><option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">مسئول اصلی<select value={taskAssigneeId} onChange={event=>setTaskAssigneeId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{(state.users||[]).filter(user=>(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">ناظر / سرپرست اختیاری<select value={taskWatcherId} onChange={event=>setTaskWatcherId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">بدون ناظر</option>{(state.users||[]).filter(user=>user.id!==taskAssigneeId&&(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><Input label="مهلت انجام" type="date" value={taskDueDate} onChange={event=>setTaskDueDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary">اولویت<select value={taskPriority} onChange={event=>setTaskPriority(event.target.value as Priority)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="LOW">کم</option><option value="NORMAL">عادی</option><option value="HIGH">زیاد</option><option value="URGENT">فوری</option></select></label></div><Button block className="mt-3" disabled={!can('tasks','CREATE')||!selectedZone||selectedZone.status!=='ACTIVE'||!taskCustomerId||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))||(!!taskWatcherId&&!can('tasks','ASSIGN'))} onClick={createCollectionTask}>ایجاد وظیفه و ارجاع</Button>{!can('tasks','CREATE')&&<p className="mt-2 text-xs text-warning">برای ساخت وظیفه باید مجوز ایجاد وظایف داشته باشید.</p>}<div className="mt-4 border-t border-border pt-4 space-y-3"><div><h4 className="text-sm font-black text-text-main">ساخت گروهی وظیفهٔ وصول</h4><p className="mt-1 text-xs leading-5 text-text-secondary">مشتریان را انتخاب کن؛ وظیفه‌های باز تکراری از همین زون ساخته نمی‌شوند. این عملیات بر اساس عضویت مکانی است و تا اتصال منبع مالی معتبر، ادعای اولویت‌بندی بر اساس ماندهٔ واقعی نمی‌کند.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" className="rounded-lg border border-border px-3 py-2 text-xs font-bold" onClick={()=>setBulkCustomerIds(customersInside.map(customer=>customer.id))}>انتخاب همه</button><button type="button" className="rounded-lg border border-border px-3 py-2 text-xs font-bold" onClick={()=>setBulkCustomerIds([])}>پاک‌کردن انتخاب</button><span className="text-xs text-text-secondary">انتخاب‌شده: {bulkCustomerIds.filter(id=>customersInside.some(customer=>customer.id===id)).length.toLocaleString('fa-IR')}</span></div><div className="max-h-52 space-y-1 overflow-auto rounded-xl border border-border p-2">{customersInside.map(customer=><label key={customer.id} className="flex cursor-pointer items-center gap-2 rounded-lg p-2 text-xs hover:bg-canvas"><input type="checkbox" checked={bulkCustomerIds.includes(customer.id)} onChange={event=>setBulkCustomerIds(current=>event.target.checked?[...new Set([...current,customer.id])]:current.filter(id=>id!==customer.id))}/><span className="min-w-0 truncate">{customer.name}</span></label>)}</div><Button block disabled={!can('tasks','CREATE')||bulkCustomerIds.length===0||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))} onClick={createBulkCollectionTasks} icon={<Users size={15}/>}>ایجاد گروهی وظایف انتخاب‌شده</Button></div></div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">فهرست مشتریان داخل مرز</h2>{!selectedZone&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm text-text-secondary">زون را انتخاب کنید.</p>}{selectedZone&&customersInside.length===0&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm leading-6 text-text-secondary">مشتری دارای مختصات معتبر داخل هندسهٔ فعلی پیدا نشد؛ این وضعیت به‌معنی صفر بودن کل مشتریان زون نیست، ممکن است مختصات ثبت نشده باشند.</p>}{customersInside.slice(0,100).map(customer=>{const point=readCustomerPoint(customer)!;return <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="min-w-0"><div className="truncate text-sm font-bold text-text-main">{customer.name}</div><div className="mt-1 text-[11px] text-text-secondary">کد: {customer.code||customer.id}</div></div><div className="shrink-0 text-left font-mono text-[10px] text-text-secondary">{point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}</div></div>;})}{customersInside.length>100&&<p className="text-xs text-text-secondary">۱۰۰ مورد نخست نمایش داده شده؛ کل مشتریان داخل مرز: {customersInside.length.toLocaleString('fa-IR')}</p>}</Card></div>}
++    {mode==='operations' && selectedZone && <Card padding="lg" className="space-y-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-base font-black text-text-main">گزارش عملکرد وصول زون</h2><p className="mt-1 text-xs leading-6 text-text-secondary">فقط وظایف قابل مشاهده در محدودهٔ دسترسی جاری؛ مبلغ وصول از پرداخت‌های CLEARED بازخوانی می‌شود و پرداخت تکراری دوباره‌شماری نمی‌شود.</p></div><Button variant="secondary" disabled={!can('geo','VIEW')} onClick={exportCollectionReport} icon={<Download size={14}/>}>خروجی CSV</Button></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">کل وظایف</div><div className="mt-1 text-xl font-black text-text-main">{collectionReport.total.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">باز</div><div className="mt-1 text-xl font-black text-text-main">{collectionReport.open.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">معوق</div><div className="mt-1 text-xl font-black text-text-main">{collectionReport.overdue.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">وصول معتبر</div><div className="mt-1 text-lg font-black text-text-main">{collectionReport.collectedAmount.toLocaleString('fa-IR')}</div><div className="mt-1 text-[10px] text-text-secondary">{collectionReport.distinctPayments.toLocaleString('fa-IR')} پرداخت یکتا</div></div></div>{Object.keys(collectionReport.outcomes).length>0&&<div className="flex flex-wrap gap-2">{COLLECTION_OUTCOME_OPTIONS.filter(option=>collectionReport.outcomes[option.value]).map(option=><span key={option.value} className="rounded-full border border-border bg-canvas px-3 py-1.5 text-[11px] text-text-secondary">{option.label}: <strong className="text-text-main">{collectionReport.outcomes[option.value].toLocaleString('fa-IR')}</strong></span>)}</div>}{collectionReport.byAssignee.length===0?<p className="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">برای این زون وظیفهٔ قابل مشاهده‌ای وجود ندارد.</p>:<div className="overflow-x-auto rounded-xl border border-border"><table className="w-full min-w-[640px] text-right text-xs"><thead className="bg-canvas text-text-secondary"><tr><th className="p-3 font-bold">مسئول</th><th className="p-3 font-bold">کل</th><th className="p-3 font-bold">باز</th><th className="p-3 font-bold">تکمیل</th><th className="p-3 font-bold">معوق</th><th className="p-3 font-bold">وصول معتبر</th></tr></thead><tbody>{collectionReport.byAssignee.map(row=><tr key={row.assigneeId} className="border-t border-border"><td className="p-3 font-bold text-text-main">{row.assigneeName}</td><td className="p-3">{row.total.toLocaleString('fa-IR')}</td><td className="p-3">{row.open.toLocaleString('fa-IR')}</td><td className="p-3">{row.completed.toLocaleString('fa-IR')}</td><td className="p-3">{row.overdue.toLocaleString('fa-IR')}</td><td className="p-3">{row.collectedAmount.toLocaleString('fa-IR')}</td></tr>)}</tbody></table></div>}<p className="text-[11px] leading-5 text-text-secondary">این گزارش فعلاً بر اساس وظایف و پرداخت‌های محلی موجود است؛ تا اتصال Backend و منبع مالی تطبیق‌شده، گزارش رسمی حسابداری یا گزارش کامل سازمانی محسوب نمی‌شود.</p></Card>}
+     {mode==='operations' && selectedZone && <Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">ثبت نتیجهٔ واقعی وظیفهٔ وصول</h2><p className="mt-1 text-xs leading-6 text-text-secondary">این بخش فقط وظایف وصول همین زون و مشتریان قابل مشاهده را نشان می‌دهد. مبلغ وصول فقط از پرداخت CLEARED همان مشتری خوانده می‌شود؛ قول پرداخت یا مراجعه به‌تنهایی وصول مالی محسوب نمی‌شود.</p></div>{zoneCollectionTasks.length===0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">برای این زون هنوز وظیفهٔ وصولی ثبت نشده است.</p> : <><label className="block text-xs font-bold text-text-secondary">وظیفه<select value={outcomeTaskId} onChange={event=>{const id=event.target.value;setOutcomeTaskId(id);setOutcomeCode('');setOutcomePaymentId('');setOutcomeReason('');setOutcomeFollowUpDate('');setOutcomeNote('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب وظیفه</option>{zoneCollectionTasks.map(task=><option key={task.id} value={task.id}>{task.title} · {task.status==='COMPLETED'?'تکمیل‌شده':'باز'}</option>)}</select></label>{selectedOutcomeTask && <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">نتیجه<select value={outcomeCode} onChange={event=>setOutcomeCode(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب نتیجه</option>{COLLECTION_OUTCOME_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{outcomeCode==='PAYMENT_RECORDED' && <label className="block text-xs font-bold text-text-secondary">پرداخت نهایی‌شدهٔ مشتری<select value={outcomePaymentId} onChange={event=>setOutcomePaymentId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب پرداخت CLEARED</option>{availablePayments.map(payment=><option key={payment.id} value={payment.id}>{payment.date} · {payment.amount.toLocaleString('fa-IR')} · {payment.method}</option>)}</select>{availablePayments.length===0&&<span className="mt-1 block font-normal text-warning">برای این مشتری پرداخت نهایی‌شدهٔ معتبر موجود نیست.</span>}</label>}<Input label="تاریخ پیگیری بعدی (برای تعهد پرداخت الزامی)" type="date" value={outcomeFollowUpDate} onChange={event=>setOutcomeFollowUpDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary sm:col-span-2">علت عدم وصول / نتیجهٔ ناموفق<textarea value={outcomeReason} onChange={event=>setOutcomeReason(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="برای عدم وصول، عدم حضور یا اختلاف مالی الزامی است" /></label><div className="sm:col-span-2 rounded-xl border border-border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><div className="text-xs font-bold text-text-main">مدرک مراجعه / وصول</div><p className="mt-1 text-[11px] leading-5 text-text-secondary">تصویر JPEG/PNG/WebP یا PDF تا ۵ مگابایت؛ فقط برای کاربران دارای دسترسی به همین وظیفه.</p></div><label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg bg-primary/10 px-3 text-xs font-bold text-primary"><Paperclip size={14}/> افزودن مدرک<input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={!canOnTask(selectedOutcomeTask)} onChange={event=>{uploadCollectionEvidence(event.target.files?.[0]);event.currentTarget.value='';}} /></label></div><div className="mt-3 space-y-2">{taskEvidence(selectedOutcomeTask.id).length===0?<p className="text-xs text-text-secondary">هنوز مدرکی برای این وظیفه ثبت نشده است.</p>:taskEvidence(selectedOutcomeTask.id).map((file:any)=><div key={file.id} className="flex items-center justify-between gap-2 rounded-lg bg-canvas p-2 text-xs"><span className="min-w-0 truncate">{file.fileName} · {(file.fileSize/1024).toFixed(1)} KB</span><button type="button" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1" onClick={()=>downloadEvidence(file)}><Download size={13}/> دریافت</button></div>)}</div></div><label className="block text-xs font-bold text-text-secondary sm:col-span-2">یادداشت نتیجه / شرح مدرک (اختیاری)<textarea value={outcomeNote} onChange={event=>setOutcomeNote(event.target.value)} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-main" placeholder="شرح تماس یا مراجعه؛ این یادداشت جایگزین فایل مدرک نیست" /></label><div className="sm:col-span-2 rounded-xl border border-border bg-canvas p-3 text-xs leading-6 text-text-secondary">{outcomeCode==='PAYMENT_RECORDED' ? (availablePayments.length ? `مبلغ ثبت‌شونده از پرداخت انتخابی خوانده می‌شود: ${((availablePayments.find(payment=>payment.id===outcomePaymentId)?.amount)||0).toLocaleString('fa-IR')}` : 'تا ثبت پرداخت معتبر، مبلغ وصول قابل ثبت نیست.') : 'مبلغ وصول برای این نتیجه ثبت نمی‌شود.'}</div><Button block disabled={!canOnTask(selectedOutcomeTask)||!outcomeCode||(outcomeCode==='PAYMENT_RECORDED'&&(!outcomePaymentId||availablePayments.length===0))} onClick={saveCollectionOutcome} icon={<CheckCircle2 size={15}/>}>ثبت نتیجه و تکمیل وظیفه</Button>{!canOnTask(selectedOutcomeTask)&&<p className="text-xs text-warning">مجوز و محدودهٔ دسترسی برای ویرایش این وظیفه کافی نیست.</p>}{selectedOutcomeTask.resultHistory?.length>0&&<div className="sm:col-span-2 space-y-2 border-t border-border pt-3"><h3 className="text-sm font-black text-text-main">تاریخچهٔ نتایج</h3>{[...selectedOutcomeTask.resultHistory].reverse().map((item:any,index:number)=><div key={`${item.recordedAt}-${index}`} className="rounded-xl border border-border p-3 text-xs leading-6"><div className="font-bold text-text-main">{COLLECTION_OUTCOME_OPTIONS.find(option=>option.value===item.outcome)?.label||item.outcome}</div><div className="text-text-secondary">{new Date(item.recordedAt).toLocaleString('fa-IR')}{item.collectedAmount!==undefined?` · مبلغ ثبت‌شده: ${Number(item.collectedAmount).toLocaleString('fa-IR')}`:''}</div>{item.failureReason&&<div>علت: {item.failureReason}</div>}{item.note&&<div>یادداشت: {item.note}</div>}</div>)}</div>}</div>}</>}</Card>}
+     <Card padding="md" className="flex items-start gap-3 border-warning/30 bg-warning-soft"><Clock3 size={18} className="mt-1 shrink-0 text-warning"/><div className="text-xs leading-6 text-text-main"><strong>محدودیت این مرحله:</strong> مدیریت زون و انتساب مکانی در state محلی ذخیره می‌شود. نقشهٔ واقعی ایران، ترسیم لمسی روی نقشه، چاپ، اتصال به موتور وظایف وصول، فیلترهای مالی و Heatmap واقعی هنوز به سرویس نقشه و قراردادهای دادهٔ معتبر نیاز دارند. برای این موارد هیچ نتیجهٔ ساختگی نمایش داده نمی‌شود.</div></Card>
+   </div>;
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/lib/geoCollectionReporting.ts /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/lib/geoCollectionReporting.ts
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/lib/geoCollectionReporting.ts	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/lib/geoCollectionReporting.ts	2026-10-26 21:55:34.466760541 +0000
+@@ -0,0 +1,117 @@
++import type { Payment, Task } from '../types';
++
++export interface CollectionReportRow {
++  assigneeId: string;
++  assigneeName: string;
++  total: number;
++  open: number;
++  completed: number;
++  overdue: number;
++  outcomes: Record<string, number>;
++  collectedAmount: number;
++  distinctPayments: number;
++}
++export interface CollectionReport {
++  total: number;
++  open: number;
++  completed: number;
++  overdue: number;
++  collectedAmount: number;
++  distinctPayments: number;
++  outcomes: Record<string, number>;
++  byAssignee: CollectionReportRow[];
++}
++
++const latestResult = (task: any) => {
++  const history = Array.isArray(task.resultHistory) ? task.resultHistory : [];
++  return history.length ? history[history.length - 1] : {
++    outcome: task.result,
++    paymentId: task.paymentId,
++    recordedAt: task.resultAt,
++    collectedAmount: task.collectedAmount,
++  };
++};
++
++/**
++ * Build a zone-scoped report from the tasks already visible to the caller.
++ * Collection amounts are recalculated from CLEARED payment records, never trusted from task fields.
++ * A payment is counted once in the report even if multiple tasks reference it.
++ */
++export function buildGeoCollectionReport(
++  tasks: Array<Partial<Task> & Record<string, any>>,
++  payments: Payment[] = [],
++  users: Array<{ id: string; name?: string }> = [],
++  now: Date = new Date(),
++): CollectionReport {
++  const paymentById = new Map(payments.map(payment => [payment.id, payment]));
++  const userNameById = new Map(users.map(user => [user.id, user.name || user.id]));
++  const countedPaymentIds = new Set<string>();
++  const outcomes: Record<string, number> = {};
++  const rows = new Map<string, CollectionReportRow>();
++  let open = 0;
++  let completed = 0;
++  let overdue = 0;
++  let collectedAmount = 0;
++  const orderedTasks = [...tasks].sort((a, b) => {
++    const aTime = Date.parse(String(latestResult(a)?.recordedAt || a.resultAt || a.createdAt || '')) || 0;
++    const bTime = Date.parse(String(latestResult(b)?.recordedAt || b.resultAt || b.createdAt || '')) || 0;
++    return bTime - aTime; // when a payment is linked to multiple tasks, attribute it once to the latest recorded result
++  });
++
++  for (const task of orderedTasks) {
++    const assigneeId = String(task.assigneeId || 'UNASSIGNED');
++    if (!rows.has(assigneeId)) rows.set(assigneeId, {
++      assigneeId,
++      assigneeName: userNameById.get(assigneeId) || (assigneeId === 'UNASSIGNED' ? 'بدون مسئول' : assigneeId),
++      total: 0, open: 0, completed: 0, overdue: 0, outcomes: {}, collectedAmount: 0, distinctPayments: 0,
++    });
++    const row = rows.get(assigneeId)!;
++    row.total += 1;
++    const isCompleted = task.status === 'COMPLETED';
++    const isClosed = isCompleted || task.status === 'CANCELLED';
++    if (isCompleted) { completed += 1; row.completed += 1; }
++    if (!isClosed) { open += 1; row.open += 1; }
++    const due = task.dueDate ? new Date(`${String(task.dueDate).slice(0, 10)}T23:59:59`) : null;
++    if (!isClosed && due && Number.isFinite(due.getTime()) && due.getTime() < now.getTime()) { overdue += 1; row.overdue += 1; }
++
++    const result = latestResult(task);
++    const outcome = typeof result?.outcome === 'string' && result.outcome ? result.outcome : '';
++    if (outcome) {
++      outcomes[outcome] = (outcomes[outcome] || 0) + 1;
++      row.outcomes[outcome] = (row.outcomes[outcome] || 0) + 1;
++    }
++    if (outcome !== 'PAYMENT_RECORDED' || !result?.paymentId) continue;
++    const paymentId = String(result.paymentId);
++    if (countedPaymentIds.has(paymentId)) continue;
++    const payment = paymentById.get(paymentId);
++    const taskCustomerId = String(task.customerId || task.accountId || '');
++    const paymentCustomerId = String(payment?.customerId || payment?.accountId || '');
++    if (!payment || payment.status !== 'CLEARED' || !Number.isFinite(payment.amount) || payment.amount <= 0 || !taskCustomerId || taskCustomerId !== paymentCustomerId) continue;
++    countedPaymentIds.add(paymentId);
++    collectedAmount += payment.amount;
++    row.collectedAmount += payment.amount;
++    row.distinctPayments += 1;
++  }
++
++  return {
++    total: tasks.length,
++    open,
++    completed,
++    overdue,
++    collectedAmount,
++    distinctPayments: countedPaymentIds.size,
++    outcomes,
++    byAssignee: [...rows.values()].sort((a, b) => b.overdue - a.overdue || b.open - a.open || a.assigneeName.localeCompare(b.assigneeName, 'fa')),
++  };
++}
++
++export function collectionReportToCsv(report: CollectionReport): string {
++  const escape = (value: unknown) => {
++    let text = String(value ?? '');
++    if (/^[\s]*[=+@\-]/.test(text)) text = `'${text}`; // prevent spreadsheet formula execution for untrusted labels
++    return `"${text.replace(/"/g, '""')}"`;
++  };
++  const header = ['مسئول', 'کل وظایف', 'باز', 'تکمیل‌شده', 'معوق', 'مبلغ وصول معتبر', 'تعداد پرداخت یکتا'];
++  const rows = report.byAssignee.map(row => [row.assigneeName, row.total, row.open, row.completed, row.overdue, row.collectedAmount, row.distinctPayments]);
++  return '\uFEFF' + [header, ...rows].map(row => row.map(escape).join(',')).join('\r\n');
++}
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/lib/version.ts /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/lib/version.ts
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/src/lib/version.ts	2026-10-26 20:55:10.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/src/lib/version.ts	2026-10-26 21:56:42.166390996 +0000
+@@ -1,4 +1,4 @@
+ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
+-export const APP_VERSION = '0.11.7';
+-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b21', base: 'r11-cp9-b19' } as const;
++export const APP_VERSION = '0.11.8';
++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b22', base: 'r11-cp9-b21' } as const;
+ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/tests/geoCollectionReporting.test.mjs /mnt/data/akhavan_release_b22/akhavan_dev_b22/tests/geoCollectionReporting.test.mjs
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/tests/geoCollectionReporting.test.mjs	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/tests/geoCollectionReporting.test.mjs	2026-10-26 21:55:34.467090559 +0000
+@@ -0,0 +1,33 @@
++import assert from 'node:assert/strict';
++import { buildGeoCollectionReport, collectionReportToCsv } from '../src/lib/geoCollectionReporting.ts';
++const now = new Date('2026-10-27T12:00:00Z');
++const payments = [
++  { id: 'p1', customerId: 'c1', amount: 1000, status: 'CLEARED' },
++  { id: 'p2', customerId: 'c2', amount: 2500, status: 'PENDING' },
++  { id: 'p3', customerId: 'c3', amount: 700, status: 'CLEARED' },
++];
++const tasks = [
++  { id: 't1', taskType: 'COLLECTION', source: 'GEO_ZONE', customerId: 'c1', assigneeId: 'u1', status: 'COMPLETED', resultHistory: [{ outcome: 'PAYMENT_RECORDED', paymentId: 'p1', recordedAt: '2026-10-26T10:00:00Z' }] },
++  { id: 't2', taskType: 'COLLECTION', source: 'GEO_ZONE', customerId: 'c1', assigneeId: 'u2', status: 'COMPLETED', resultHistory: [{ outcome: 'PAYMENT_RECORDED', paymentId: 'p1', recordedAt: '2026-10-26T11:00:00Z' }] },
++  { id: 't3', taskType: 'COLLECTION', source: 'GEO_ZONE', customerId: 'c2', assigneeId: 'u1', status: 'OPEN', dueDate: '2026-10-20', result: 'PROMISE_TO_PAY' },
++  { id: 't4', taskType: 'COLLECTION', source: 'GEO_ZONE', customerId: 'c3', assigneeId: 'u1', status: 'OPEN', dueDate: '2026-11-02', result: 'NO_PAYMENT' },
++  { id: 't5', taskType: 'COLLECTION', source: 'GEO_ZONE', customerId: 'c3', assigneeId: 'u3', status: 'CANCELLED', result: 'NO_SHOW' },
++];
++const report = buildGeoCollectionReport(tasks, payments, [{ id: 'u1', name: 'سرپرست' }, { id: 'u2', name: 'فروشنده' }], now);
++assert.equal(report.total, 5);
++assert.equal(report.open, 2);
++assert.equal(report.completed, 2);
++assert.equal(report.overdue, 1);
++assert.equal(report.collectedAmount, 1000, 'same payment is counted only once across tasks');
++assert.equal(report.distinctPayments, 1);
++assert.equal(report.outcomes.PAYMENT_RECORDED, 2, 'outcomes count tasks, not payments');
++assert.equal(report.byAssignee.find(row => row.assigneeId === 'u1').overdue, 1);
++assert.equal(report.byAssignee.find(row => row.assigneeId === 'u1').collectedAmount, 0, 'duplicate payment is not attributed twice');
++assert.equal(report.byAssignee.find(row => row.assigneeId === 'u2').collectedAmount, 1000, 'unique payment is attributed to the latest recorded result');
++const invalidPaymentReport = buildGeoCollectionReport([{ ...tasks[0], customerId: 'other' }], payments, [], now);
++assert.equal(invalidPaymentReport.collectedAmount, 0, 'payment for another customer is rejected');
++assert.equal(buildGeoCollectionReport([{ ...tasks[0], resultHistory: [{ outcome: 'PAYMENT_RECORDED', paymentId: 'p2' }] }], payments, [], now).collectedAmount, 0, 'pending payment is rejected');
++assert.ok(collectionReportToCsv(report).startsWith('\uFEFF'));
++assert.ok(collectionReportToCsv(report).includes('سرپرست'));
++assert.ok(collectionReportToCsv(buildGeoCollectionReport([{ id: 'unsafe', assigneeId: '=1+1', status: 'OPEN' }], [], [], now)).includes("'=1+1"), 'CSV formula injection is neutralized');
++console.log('PASS: 13 assertions (zone collection report aggregation and CSV export)');
+diff -ruN '--exclude=DIFF_*.patch' /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/tests/geoWorkspaceContracts.test.mjs /mnt/data/akhavan_release_b22/akhavan_dev_b22/tests/geoWorkspaceContracts.test.mjs
+--- /mnt/data/akhavan_b21_baseline/akhavan_dev_b21/tests/geoWorkspaceContracts.test.mjs	2026-10-26 20:56:40.000000000 +0000
++++ /mnt/data/akhavan_release_b22/akhavan_dev_b22/tests/geoWorkspaceContracts.test.mjs	2026-10-26 21:55:51.764878262 +0000
+@@ -6,11 +6,13 @@
+ const app = fs.readFileSync(path.join(root, 'src/App.tsx'), 'utf8');
+ const nav = fs.readFileSync(path.join(root, 'src/lib/navigation.ts'), 'utf8');
+ const rbac = fs.readFileSync(path.join(root, 'src/lib/rbac.ts'), 'utf8');
++const collectionReport = fs.readFileSync(path.join(root, 'src/lib/geoCollectionReporting.ts'), 'utf8');
+ assert.ok(app.includes("path=\"/geo-intelligence\" element={guard('geo_intelligence'"), 'geo page is behind canonical workspace guard');
+ assert.ok(nav.includes("id: 'geo_intelligence', path: '/geo-intelligence'"), 'geo page is reachable from main navigation');
+ assert.ok(rbac.includes("case 'geo_intelligence': return this.hasPermission('geo.view')"), 'geo workspace has explicit RBAC gate');
+ assert.ok(rbac.includes("geo:           { VIEW: ['geo.view'], CREATE: ['geo.manage'], EDIT: ['geo.manage'], ASSIGN: ['geo.manage']"), 'zone mutation actions have explicit geo.manage permission');
+ assert.ok(workspace.includes("const canEdit = can('geo', 'EDIT')"), 'administrative workspace access alone does not bypass geo.manage for mutations');
++assert.ok(workspace.includes('const { rbac, can, canOn, denied } = useCan(state, updateState)'), 'RBAC service is explicitly retrieved from useCan');
+ assert.ok(workspace.includes("rbac.canActOnRecord('accounts', 'VIEW'"), 'customer visibility reuses record scope rather than widening it');
+ assert.ok(workspace.includes("isPointInsideZone(point, activeGeometry.geometry)"), 'zone customer matching uses polygon containment');
+ assert.ok(workspace.includes('createZoneGeometryVersion'), 'geometry edits are versioned');
+@@ -31,5 +33,10 @@
+ assert.ok(workspace.includes('createBulkCollectionTasks'), 'bulk task creation reuses the existing task workflow');
+ assert.ok(workspace.includes('existingOpenCustomerIds'), 'bulk task creation avoids duplicate open collection tasks');
+ assert.ok(workspace.includes('GEO_COLLECTION_TASKS_BULK_CREATED'), 'bulk task creation is audited');
++assert.ok(workspace.includes('buildGeoCollectionReport(zoneCollectionTasks'), 'collection report uses the visible zone task subset');
++assert.ok(workspace.includes("rbac.canActOnRecord('tasks', 'VIEW'"), 'collection report applies task record scope');
++assert.ok(workspace.includes('collectionReportToCsv(collectionReport)'), 'collection report CSV export is wired');
++assert.ok(collectionReport.includes("payment.status !== 'CLEARED'"), 'report recalculates collection amount from cleared payment source');
++assert.ok(collectionReport.includes('countedPaymentIds.has(paymentId)'), 'same payment is deduplicated in reporting');
+ assert.ok(workspace.includes("accept=\"image/jpeg,image/png,image/webp,application/pdf\""), 'evidence picker limits the visible allowed file types');
+-console.log('PASS: 26 assertions (geo workspace routing, RBAC, scope, geometry, outcomes, evidence, bulk tasks and honest metric availability)');
++console.log('PASS: 32 assertions (geo workspace routing, RBAC, scope, geometry, outcomes, evidence, bulk tasks, collection reporting and honest metric availability)');

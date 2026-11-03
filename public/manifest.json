@@ -1,0 +1,18 @@
+{
+  "name": "AKHAVAN CRM",
+  "short_name": "AkhavanCRM",
+  "description": "سیستم جامع مدیریت ارتباط با مشتریان و سازمان اخوان",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F0E7",
+  "theme_color": "#71364B",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

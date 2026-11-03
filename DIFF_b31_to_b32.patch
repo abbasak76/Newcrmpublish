@@ -1,0 +1,432 @@
+diff -ruN b31base/b30_edit/CHANGELOG_b32.md b30_edit/CHANGELOG_b32.md
+--- b31base/b30_edit/CHANGELOG_b32.md	1970-01-01 00:00:00.000000000 +0000
++++ b30_edit/CHANGELOG_b32.md	2026-10-27 13:39:19.464276539 +0000
+@@ -0,0 +1,17 @@
++# Changelog b32
++
++## Phase 1 — source stabilization
++- Fixed SQL audit parsing for indented closing parentheses, resolving the 51-vs-46 counting discrepancy.
++- Added audit output for raw table definitions, unique names, and parsed/raw count consistency.
++- Added `010_sales_dispatch_rls.sql` to add tenant RLS filter predicates for five sales/dispatch tables created in migration 008.
++- Removed hardcoded profile email and phone fallbacks.
++- Persisted map provider/custom XYZ template/attribution through `state.settings.mapConfig`.
++- Added configurable organization country profile selector to locale settings.
++- Synchronized package and app release metadata to `0.12.7 / r11-cp9-b32`.
++- Added phase 1 evidence and explicit blockers.
++
++## Validation
++- `npm test`: PASS (all 23 configured test scripts).
++- `node scripts/audit-sqlserver-contracts.mjs`: PASS, static only.
++- Dependency installation timed out; `npm run lint` failed with missing `vite/client` type definitions and `npm run build` failed because `vite` is not installed.
++- SQL Server and real device/browser checks not performed.
+diff -ruN b31base/b30_edit/DIFF_b31_to_b32.patch b30_edit/DIFF_b31_to_b32.patch
+--- b31base/b30_edit/DIFF_b31_to_b32.patch	1970-01-01 00:00:00.000000000 +0000
++++ b30_edit/DIFF_b31_to_b32.patch	2026-10-27 13:39:24.121394102 +0000
+@@ -0,0 +1,21 @@
++diff -ruN b31base/b30_edit/CHANGELOG_b32.md b30_edit/CHANGELOG_b32.md
++--- b31base/b30_edit/CHANGELOG_b32.md	1970-01-01 00:00:00.000000000 +0000
+++++ b30_edit/CHANGELOG_b32.md	2026-10-27 13:39:19.464276539 +0000
++@@ -0,0 +1,17 @@
+++# Changelog b32
+++
+++## Phase 1 — source stabilization
+++- Fixed SQL audit parsing for indented closing parentheses, resolving the 51-vs-46 counting discrepancy.
+++- Added audit output for raw table definitions, unique names, and parsed/raw count consistency.
+++- Added `010_sales_dispatch_rls.sql` to add tenant RLS filter predicates for five sales/dispatch tables created in migration 008.
+++- Removed hardcoded profile email and phone fallbacks.
+++- Persisted map provider/custom XYZ template/attribution through `state.settings.mapConfig`.
+++- Added configurable organization country profile selector to locale settings.
+++- Synchronized package and app release metadata to `0.12.7 / r11-cp9-b32`.
+++- Added phase 1 evidence and explicit blockers.
+++
+++## Validation
+++- `npm test`: PASS (all 23 configured test scripts).
+++- `node scripts/audit-sqlserver-contracts.mjs`: PASS, static only.
+++- Dependency installation timed out; `npm run lint` failed with missing `vite/client` type definitions and `npm run build` failed because `vite` is not installed.
+++- SQL Server and real device/browser checks not performed.
+diff -ruN b31base/b30_edit/HANDOFF.md b30_edit/HANDOFF.md
+--- b31base/b30_edit/HANDOFF.md	2026-10-27 13:32:16.000000000 +0000
++++ b30_edit/HANDOFF.md	2026-10-27 13:37:50.924507991 +0000
+@@ -1,8 +1,9 @@
+ # HANDOFF — AKHAVAN CRM | برنامه اجرایی
+ 
+ ## نقطه شروع
+-- خط مبنای برنامه: سورس b30؛ این نسخه برنامه اجرایی را به ۴ فاز اصلی فشرده می‌کند و به‌خودی‌خود پیاده‌سازی runtime یا اتصال ERP را تأیید نمی‌کند.
+-- **برنامه اجرایی و وضعیت‌ها:** `docs/12_EXECUTION_HANDOFF_PLAN.md`
++- آخرین سورس: `r11-cp9-b32`؛ فاز ۱ روی سورس b31 تغییرات اجرایی محدود و افزایشی داشته است.
++- **برنامه اجرایی و وضعیت فازها:** `docs/12_EXECUTION_HANDOFF_PLAN.md`
++- **مدرک فاز ۱:** `docs/13_PHASE_1_COMPLETION_EVIDENCE.md`
+ - **تعریف قطعی جریان فروش و توزیع:** `docs/11_CANONICAL_SALES_DISTRIBUTION_FLOWS.md`
+ 
+ ## قواعد غیرقابل نقض
+@@ -15,16 +16,16 @@
+ 7. پیش از هر migration، schema و نام‌های موجود را بررسی کن؛ جدول تکراری نساز.
+ 8. تست محلی، Build موفق، اجرای SQL Server و اتصال عملیاتی چهار ادعای متفاوت‌اند. فقط چیزی را موفق اعلام کن که واقعاً اجرا و ثبت شده است.
+ 
+-## فازهای اجرایی
+-1. **تثبیت سورس و رفع موانع پایه:** ممیزی، حل اختلاف شمارش ۵۱/۴۶، آزمون‌های پایه و اصلاح هاردکدهای مؤثر.
+-2. **پیوند مدل‌ها و چرخه فاکتور/توزیع:** شناسه‌های پایدار، فاکتور ارسالی در برابر سند قطعی ERP، برنامه حمل/شماره خروجی، و تفکیک تسویه‌ها.
+-3. **تکمیل تسک و گردش کار:** پیگیری مانده، مرجوع، فاقد برنامه حمل/شماره خروجی، مسئول و موعد، از جمله یادآوری یک هفته بعد.
+-4. **کنترل کیفیت، مجوز و تحویل:** آزمون‌های قابل اجرا، تفکیک محدودیت‌های محیط واقعی، diff و اسناد handoff.
++## وضعیت فازها
++1. **فاز ۱ — تثبیت سورس و رفع موانع پایه:** بخشی از کارهای قابل اجرا انجام شد؛ مدرک و محدودیت‌ها در `docs/13_PHASE_1_COMPLETION_EVIDENCE.md` آمده است. Build/TypeScript/Lint و اجرای SQL Server به‌دلیل محیط تأیید نشده‌اند؛ بنابراین فاز ۱ هنوز «کاملِ تأییدشده» نیست.
++2. **فاز ۲ — پیوند مدل‌ها و چرخه فاکتور/توزیع:** شروع نشده.
++3. **فاز ۳ — تکمیل تسک و گردش کار:** شروع نشده.
++4. **فاز ۴ — کنترل کیفیت، مجوز و تحویل:** آزمون‌های محلی پایه اجرا شده‌اند؛ فاز نهایی هنوز شروع نشده.
+ 
+ شرح گام‌ها و معیار خروج هر فاز در `docs/12_EXECUTION_HANDOFF_PLAN.md` آمده است.
+ 
+-## وضعیت خط مبنا از ممیزی b28
+-- در 9 فایل migration بررسی‌شده، نام تکراری در دستورهای خام CREATE TABLE پیدا نشد؛ این تضمین ساختار دیتابیس اجراشده نیست.
+-- تست‌های محلی گزارش شده‌اند؛ Build/TypeScript به علت نبود وابستگی‌ها تأیید نشده بود.
++## وضعیت فعلی پس از فاز ۱
++- ممیزی ایستا اکنون 10 فایل SQL، 51 تعریف جدول با 51 نام یکتا، 49 جدول tenant-scoped و 49 هدف RLS را گزارش می‌کند. اختلاف 51/46 ناشی از regex قبلی بود که جدول‌های داخل بلوک‌های دارای تورفتگی را نمی‌شمرد.
++- تست‌های محلی `npm test` موفق شدند؛ Build/TypeScript/Lint به علت timeout نصب وابستگی‌ها تأیید نشده‌اند.
+ - اتصال واقعی ERP/API، SQL Server/RLS، GPS/تحویل، چت زنده و آزمون واقعی iOS تأیید نشده‌اند.
+ - جدول کامل حوزه‌ها، هاردکدها، معیارهای اتمام و ترتیب اجرا در `docs/12_EXECUTION_HANDOFF_PLAN.md` است.
+diff -ruN b31base/b30_edit/STATUS_b32.md b30_edit/STATUS_b32.md
+--- b31base/b30_edit/STATUS_b32.md	1970-01-01 00:00:00.000000000 +0000
++++ b30_edit/STATUS_b32.md	2026-10-27 13:39:19.464090760 +0000
+@@ -0,0 +1,9 @@
++# STATUS b32 — Phase 1 implementation evidence
++
++- Base: b31.
++- Implemented: SQL audit parser fix; raw table count/name uniqueness reporting; static RLS coverage for the five tables in migration 008 via migration 010; removed fixed profile email/phone fallbacks; persisted map provider configuration; added organization country profile selector; synchronized release metadata.
++- Passed: `npm test` (all 23 configured test scripts); `node scripts/audit-sqlserver-contracts.mjs` (10 SQL files, 51 definitions, 51 unique names, 49 tenant-scoped tables, 49 RLS targets, 5 required views).
++- Not verified: install/build/typecheck/lint (dependency install timed out); SQL Server execution; real map tile network; iOS/browser runtime.
++- Still incomplete: seed base data separation from production runtime; connecting every country-specific validator to country profile.
++- Phase 1 status: partially implemented with evidence; not declared fully closed until blockers are resolved.
++- Evidence: `docs/13_PHASE_1_COMPLETION_EVIDENCE.md`.
+diff -ruN b31base/b30_edit/VERSION.md b30_edit/VERSION.md
+--- b31base/b30_edit/VERSION.md	2026-10-27 13:32:16.000000000 +0000
++++ b30_edit/VERSION.md	2026-10-27 13:37:50.924173961 +0000
+@@ -1,6 +1,6 @@
+ # Version
+-- Product version: 0.12.6
+-- Release label: r11-cp9-b31
+-- Incremental base: r11-cp9-b30
+-- Scope: condensed implementation plan into four execution phases; aligned HANDOFF with the same phase sequence.
+-- Validation: documentation-only update; no runtime code, database migration, or ERP integration changed.
++- Product version: 0.12.7
++- Release label: r11-cp9-b32
++- Incremental base: r11-cp9-b31
++- Scope: Phase 1 implementation: corrected SQL contract parser, added tenant RLS coverage for sales/dispatch extension tables, removed hardcoded profile contact fallbacks, persisted map provider settings, and added organization country profile setting.
++- Validation: 23 local test scripts passed through `npm test`; SQL contract audit passed with 10 SQL files, 51 table definitions/names, 49 tenant-scoped tables, and 49 RLS targets. `npm install --ignore-scripts --no-audit --no-fund` timed out; Build/TypeScript/Lint and SQL Server execution remain unverified.
+diff -ruN b31base/b30_edit/database/sqlserver/v1/010_sales_dispatch_rls.sql b30_edit/database/sqlserver/v1/010_sales_dispatch_rls.sql
+--- b31base/b30_edit/database/sqlserver/v1/010_sales_dispatch_rls.sql	1970-01-01 00:00:00.000000000 +0000
++++ b30_edit/database/sqlserver/v1/010_sales_dispatch_rls.sql	2026-10-27 13:36:43.982136152 +0000
+@@ -0,0 +1,57 @@
++/*
++  AKHAVAN CRM — tenant RLS coverage for additive sales/dispatch tables.
++  This migration must run after 008_sales_dispatch_extension.sql because those tables do not exist in 006.
++  Static contract only; validate this migration against a disposable SQL Server before production.
++*/
++SET XACT_ABORT ON;
++GO
++IF NOT EXISTS (
++  SELECT 1 FROM sys.security_predicates sp
++  INNER JOIN sys.security_policies p ON p.object_id = sp.object_id
++  WHERE p.name = N'TenantIsolationPolicy'
++    AND SCHEMA_NAME(p.schema_id) = N'security'
++    AND sp.target_object_id = OBJECT_ID(N'crm.SalesOrder')
++)
++  ALTER SECURITY POLICY security.TenantIsolationPolicy
++    ADD FILTER PREDICATE security.fn_TenantAccessPredicate(TenantId) ON crm.SalesOrder;
++GO
++IF NOT EXISTS (
++  SELECT 1 FROM sys.security_predicates sp
++  INNER JOIN sys.security_policies p ON p.object_id = sp.object_id
++  WHERE p.name = N'TenantIsolationPolicy'
++    AND SCHEMA_NAME(p.schema_id) = N'security'
++    AND sp.target_object_id = OBJECT_ID(N'crm.SalesOrderLine')
++)
++  ALTER SECURITY POLICY security.TenantIsolationPolicy
++    ADD FILTER PREDICATE security.fn_TenantAccessPredicate(TenantId) ON crm.SalesOrderLine;
++GO
++IF NOT EXISTS (
++  SELECT 1 FROM sys.security_predicates sp
++  INNER JOIN sys.security_policies p ON p.object_id = sp.object_id
++  WHERE p.name = N'TenantIsolationPolicy'
++    AND SCHEMA_NAME(p.schema_id) = N'security'
++    AND sp.target_object_id = OBJECT_ID(N'crm.NegotiationScenario')
++)
++  ALTER SECURITY POLICY security.TenantIsolationPolicy
++    ADD FILTER PREDICATE security.fn_TenantAccessPredicate(TenantId) ON crm.NegotiationScenario;
++GO
++IF NOT EXISTS (
++  SELECT 1 FROM sys.security_predicates sp
++  INNER JOIN sys.security_policies p ON p.object_id = sp.object_id
++  WHERE p.name = N'TenantIsolationPolicy'
++    AND SCHEMA_NAME(p.schema_id) = N'security'
++    AND sp.target_object_id = OBJECT_ID(N'crm.DispatchPlan')
++)
++  ALTER SECURITY POLICY security.TenantIsolationPolicy
++    ADD FILTER PREDICATE security.fn_TenantAccessPredicate(TenantId) ON crm.DispatchPlan;
++GO
++IF NOT EXISTS (
++  SELECT 1 FROM sys.security_predicates sp
++  INNER JOIN sys.security_policies p ON p.object_id = sp.object_id
++  WHERE p.name = N'TenantIsolationPolicy'
++    AND SCHEMA_NAME(p.schema_id) = N'security'
++    AND sp.target_object_id = OBJECT_ID(N'crm.DispatchPlanLine')
++)
++  ALTER SECURITY POLICY security.TenantIsolationPolicy
++    ADD FILTER PREDICATE security.fn_TenantAccessPredicate(TenantId) ON crm.DispatchPlanLine;
++GO
+diff -ruN b31base/b30_edit/docs/13_PHASE_1_COMPLETION_EVIDENCE.md b30_edit/docs/13_PHASE_1_COMPLETION_EVIDENCE.md
+--- b31base/b30_edit/docs/13_PHASE_1_COMPLETION_EVIDENCE.md	1970-01-01 00:00:00.000000000 +0000
++++ b30_edit/docs/13_PHASE_1_COMPLETION_EVIDENCE.md	2026-10-27 13:39:19.463429227 +0000
+@@ -0,0 +1,82 @@
++# مدرک اجرای فاز ۱ — تثبیت سورس و موانع پایه
++
++- نسخه مبنا: `r11-cp9-b31`
++- نسخه تغییرکرده: `r11-cp9-b32`
++- تاریخ ثبت: 2026-10-27
++- نوع مدرک: گزارش قابل بازتولید از تغییرات سورس و فرمان‌های اجراشده؛ این سند جایگزین اجرای Build یا SQL Server نیست.
++
++## 1. نتیجه اجرایی
++
++**وضعیت فاز ۱: انجام بخش‌های قابل اجرا؛ تکمیل نهایی مسدود تا رفع موانع مشخص‌شده.** این فاز عمداً موفقیت کامل اعلام نمی‌شود چون نصب وابستگی‌ها timeout شد و بنابراین Build/TypeScript/Lint قابل تأیید نیستند؛ همچنین SQL Server واقعی در دسترس نبود و جداسازی کامل seed از اجرای عملیاتی هنوز حل نشده است.
++
++## 2. تغییرات کد انجام‌شده
++
++1. `scripts/audit-sqlserver-contracts.mjs`
++   - regex استخراج جدول اصلاح شد تا پرانتز پایانی دارای تورفتگی را بشمارد؛ در نتیجه جدول‌های تعریف‌شده داخل بلوک‌های `IF/BEGIN` نیز وارد ممیزی می‌شوند.
++   - خروجی ممیزی اکنون تعداد تعریف‌های خام، تعداد نام‌های یکتا و برابری شمارش خام با جدول‌های parseشده را ثبت می‌کند.
++   - اهداف RLS از سیاست پایه و migrationهای `ALTER SECURITY POLICY` استخراج می‌شوند.
++2. `database/sqlserver/v1/010_sales_dispatch_rls.sql`
++   - پوشش RLS برای پنج جدول افزوده‌شده در migration 008 اضافه شد: `crm.SalesOrder`، `crm.SalesOrderLine`، `crm.NegotiationScenario`، `crm.DispatchPlan` و `crm.DispatchPlanLine`.
++   - migration جدید باید پس از 008 اجرا شود؛ SQL Server واقعی برای تأیید نحوی/اجرایی آن هنوز اجرا نشده است.
++3. `src/workspaces/ProfileWorkspace.tsx`
++   - fallback ثابت ایمیل `admin@akhavangroup.com` و شماره تلفن نمونه حذف شدند؛ اگر اطلاعات واقعی پروفایل وجود نداشته باشد فیلد خالی می‌ماند.
++4. `src/components/GeoZoneMapEditor.tsx` و `src/components/GeoIntelligenceWorkspace.tsx`
++   - ارائه‌دهنده، الگوی XYZ سفارشی و attribution از `state.settings.mapConfig` خوانده و در همان تنظیمات ذخیره می‌شوند؛ OSM همچنان گزینه پیش‌فرض سازگار است.
++5. `src/components/SettingsWorkspace.tsx`
++   - تنظیم انتخاب پروفایل کشور به تنظیمات locale افزوده شد. این تنظیم هنوز به معنی اتصال تمام اعتبارسنجی‌های کد ملی/موبایل/شبا به پروفایل کشور نیست؛ آن پیوندها باید در ممیزی مستقل تکمیل شوند.
++6. `package.json`، `src/lib/version.ts` و `VERSION.md`
++   - شماره نسخه و شناسه انتشار به `0.12.7 / r11-cp9-b32` همسان شدند.
++
++## 3. نتایج آزمون اجراشده
++
++### تست‌های محلی
++
++فرمان اجراشده: `npm test`
++
++نتیجه: موفق؛ تمام 23 اسکریپت تستی که در script فعلی `package.json` فهرست شده‌اند اجرا شدند. خروجی‌ها شامل آزمون‌های RBAC، reminder، policy/CPQ، receipt، onboarding، finance requests، negotiation, quote lifecycle، operations، seed، geo، collection, receivable reconciliation، credit note، accessibility، atmosphere و domain integration بودند.
++
++### ممیزی قرارداد SQL
++
++فرمان اجراشده: `node scripts/audit-sqlserver-contracts.mjs`
++
++خروجی:
++
++```json
++{
++  "sqlFiles": 10,
++  "rawCreateTableDefinitions": 51,
++  "uniqueRawTableNames": 51,
++  "rawDefinitionCountMatchesParsedTables": true,
++  "tables": 51,
++  "tenantScopedTables": 49,
++  "rlsTargets": 49,
++  "requiredViews": 5,
++  "mode": "static-only; no database connection or SQL execution"
++}
++```
++
++نتیجه: `PASS` در ممیزی ایستا.
++
++**توضیح اختلاف 51/46:** parser قبلی به‌خاطر انتظار `);` بدون فاصله/تورفتگی، پنج تعریف جدول داخل بلوک migration 008 را نمی‌شمرد. پس اختلاف گزارش‌شده از روش شمارش parser بود، نه مدرکی بر وجود پنج جدول تکراری. اکنون 51 تعریف خام و 51 نام یکتا شمرده می‌شوند.
++
++**نکته کشف‌شده:** parser اصلاح‌شده همچنین نشان داد پنج جدول افزوده‌شده در migration 008 در RLS پایه 006 پوشش نداشتند. برای آن‌ها migration افزایشی 010 اضافه شد؛ تا اجرای SQL Server، پوشش عملیاتی هنوز تأییدشده نیست.
++
++## 4. موارد مسدود/ناتمام — نباید به‌عنوان انجام‌شده گزارش شوند
++
++1. `npm install --ignore-scripts --no-audit --no-fund` در محیط اجرا timeout شد و `node_modules` ساخته نشد. سپس `npm run lint` با خطای `TS2688: Cannot find type definition file for vite/client` و `npm run build` با خطای `vite: not found` شکست خوردند؛ بنابراین Build/TypeScript/Lint تأیید نشده‌اند و بررسی واقعی مرورگر اجرا نشده است.
++2. SQL Server واقعی در دسترس نبود؛ migration 010، RLS، FK و RowVersion روی دیتابیس اجرا و تأیید نشده‌اند.
++3. `src/lib/storage.ts` و `src/lib/seed.ts` هنوز برای ایجاد/ترمیم ساختار اولیه از `generateSeedData()` استفاده می‌کنند. پنل DemoDataPanel برای افزودن seed اضافی گارد دارد، اما این گارد به معنی حذف داده‌های seed پایه از راه‌اندازی برنامه نیست. حذف seed پایه بدون تعیین منبع داده/ورود عملیاتی می‌تواند برنامه را بشکند؛ این کار باید با تصمیم معماری و آزمون یکپارچه انجام شود، پس در این فاز به‌اشتباه «رفع‌شده» اعلام نشده است.
++4. پروفایل کشور ذخیره می‌شود، اما همهٔ اعتبارسنجی‌های کشورمحور هنوز به آن متصل نشده‌اند.
++5. نام ثابت `AKHAVAN CRM` در جاهایی که نام داخلی محصول است باقی مانده؛ نام نمایشی سازمان از تنظیمات tenant خوانده می‌شود. لازم است هر مورد UI جداگانه بررسی شود تا برند داخلی با نام شرکت یکی فرض نشود.
++6. تنظیمات map provider اکنون در `state.settings.mapConfig` ماندگار می‌شوند، اما آزمون شبکه/کاشی واقعی و آزمون دستگاه iOS انجام نشده است.
++
++## 5. معیار ورود به فاز ۲
++
++- نصب موفق وابستگی‌ها و اجرای Build/TypeScript/Lint با ثبت خروجی؛
++- تصمیم و پیاده‌سازی ایمن درباره seed پایه و منبع داده عملیاتی؛
++- اجرای migrationهای 001 تا 010 در SQL Server آزمایشی، با ثبت نتیجه واقعی؛
++- حفظ گزارش تست فعلی و اجرای مجدد آن پس از نصب وابستگی‌ها.
++
++## 6. اصل صداقت گزارش
++
++تست محلی موفق ≠ Build موفق ≠ SQL Server اجراشده ≠ اتصال ERP عملیاتی. فقط وضعیت‌هایی که خروجی واقعی دارند در این سند موفق ثبت شده‌اند.
+diff -ruN b31base/b30_edit/metadata.json b30_edit/metadata.json
+--- b31base/b30_edit/metadata.json	2026-10-27 11:56:04.000000000 +0000
++++ b30_edit/metadata.json	2026-10-27 13:38:44.773218794 +0000
+@@ -1,8 +1,8 @@
+ {
+   "name": "AKHAVAN CRM",
+-  "version": "0.12.4",
+-  "release": "r11-cp9-b28",
+-  "description": "AKHAVAN CRM — قرارداد یکپارچگی دامنه و ممیزی روابط b28",
++  "version": "0.12.7",
++  "release": "r11-cp9-b32",
++  "description": "AKHAVAN CRM — قرارداد یکپارچگی دامنه و ممیزی روابط؛ نسخه b32",
+   "requestFramePermissions": [],
+   "majorCapabilities": [
+     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+diff -ruN b31base/b30_edit/package.json b30_edit/package.json
+--- b31base/b30_edit/package.json	2026-10-27 11:55:34.000000000 +0000
++++ b30_edit/package.json	2026-10-27 13:37:50.918816641 +0000
+@@ -1,7 +1,7 @@
+ {
+   "name": "react-example",
+   "private": true,
+-  "version": "0.12.4",
++  "version": "0.12.7",
+   "type": "module",
+   "scripts": {
+     "dev": "vite --port=3000 --host=0.0.0.0",
+diff -ruN b31base/b30_edit/scripts/audit-sqlserver-contracts.mjs b30_edit/scripts/audit-sqlserver-contracts.mjs
+--- b31base/b30_edit/scripts/audit-sqlserver-contracts.mjs	2026-10-25 18:47:24.000000000 +0000
++++ b30_edit/scripts/audit-sqlserver-contracts.mjs	2026-10-27 13:36:51.230747866 +0000
+@@ -26,7 +26,8 @@
+ for (const file of files) {
+   const source = fs.readFileSync(path.join(sqlDir, file), 'utf8');
+   allSql.push(source);
+-  const tableRegex = /CREATE\s+TABLE\s+([\w]+\.[\w]+)\s*\(([\s\S]*?)\n\);/gi;
++  // Permit indentation before a closing parenthesis. Migration 008 intentionally nests CREATE TABLE inside IF/BEGIN blocks.
++  const tableRegex = /CREATE\s+TABLE\s+([\w]+\.[\w]+)\s*\(([\s\S]*?)\n\s*\);/gi;
+   for (const match of source.matchAll(tableRegex)) {
+     const name = match[1];
+     const body = match[2];
+@@ -39,7 +40,8 @@
+ const policyFile = files.find((name) => name.startsWith('006_'));
+ if (!policyFile) errors.push('Missing 006 Row-Level Security policy script.');
+ const policySql = policyFile ? fs.readFileSync(path.join(sqlDir, policyFile), 'utf8') : '';
+-const policyTargets = new Set([...policySql.matchAll(/\bON\s+([\w]+\.[\w]+)/gi)].map((match) => match[1]));
++const policySources = [policySql, ...allSql.filter((source) => /ALTER\s+SECURITY\s+POLICY/i.test(source))].join('\n');
++const policyTargets = new Set([...policySources.matchAll(/FILTER\s+PREDICATE[\s\S]*?\bON\s+([\w]+\.[\w]+)/gi)].map((match) => match[1]));
+ 
+ for (const [name, meta] of tables) {
+   if (meta.hasTenantId && !policyTargets.has(name)) errors.push(`Tenant-scoped table is not listed in RLS policy: ${name} (${meta.file})`);
+@@ -72,8 +74,13 @@
+ if (!/CREATE\s+TABLE\s+integration\.FieldOwnership\b/i.test(combined)) errors.push('Missing field ownership registry.');
+ if (!/CREATE\s+TABLE\s+integration\.OutboxMessage\b/i.test(combined)) errors.push('Missing transactional outbox table.');
+ 
++const rawCreateTableMatches = [...combined.matchAll(/\bCREATE\s+TABLE\s+([\w]+\.[\w]+)/gi)];
++const rawTableNames = rawCreateTableMatches.map((match) => match[1]);
+ const summary = {
+   sqlFiles: files.length,
++  rawCreateTableDefinitions: rawTableNames.length,
++  uniqueRawTableNames: new Set(rawTableNames).size,
++  rawDefinitionCountMatchesParsedTables: rawTableNames.length === tables.size,
+   tables: tables.size,
+   tenantScopedTables: [...tables.values()].filter((item) => item.hasTenantId).length,
+   rlsTargets: policyTargets.size,
+diff -ruN b31base/b30_edit/src/components/GeoIntelligenceWorkspace.tsx b30_edit/src/components/GeoIntelligenceWorkspace.tsx
+--- b31base/b30_edit/src/components/GeoIntelligenceWorkspace.tsx	2026-10-26 23:03:46.000000000 +0000
++++ b30_edit/src/components/GeoIntelligenceWorkspace.tsx	2026-10-27 13:37:14.604138663 +0000
+@@ -301,7 +301,7 @@
+       <Card className="space-y-4" padding="lg"><div><h2 className="text-base font-black text-text-main">{selectedZone?'ویرایش زون و ثبت نسخهٔ جدید':'تعریف زون جدید'}</h2><p className="mt-1 text-xs leading-6 text-text-secondary">مختصات را در ترتیب طول، عرض جغرافیایی وارد کنید؛ هر رأس در یک خط، نمونهٔ قالب: <code>51.42, 35.72</code>. حلقه هنگام ذخیره بسته می‌شود.</p></div>
+         <div className="grid gap-3 sm:grid-cols-2"><Input label="نام زون" value={zoneName} onChange={event=>setZoneName(event.target.value)} placeholder="مثلاً منطقه شمالی" required/><Input label="کد یکتا" value={zoneCode} onChange={event=>setZoneCode(event.target.value)} placeholder="مثلاً ZN-001" required/></div>
+         <label className="block text-xs font-bold text-text-secondary">رأس‌های مرز (طول، عرض)<textarea value={coordinateText} onChange={event=>setCoordinateText(event.target.value)} rows={7} placeholder={'51.42, 35.72\n51.50, 35.70\n51.48, 35.78'} className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 font-mono text-sm text-text-main outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" /></label>
+-        <GeoZoneMapEditor key={selectedZoneId || 'new-zone'} geometry={parsedGeometry?.geometry} coordinateText={coordinateText} disabled={!canEdit} onChange={geometry=>{if(geometry)setCoordinateText(coordinatesToText(geometry));}} onPointsChange={points=>setCoordinateText(points.map(point=>`${point.longitude}, ${point.latitude}`).join('\n'))} />
++        <GeoZoneMapEditor key={selectedZoneId || 'new-zone'} geometry={parsedGeometry?.geometry} coordinateText={coordinateText} disabled={!canEdit} mapConfig={state.settings?.mapConfig || {}} onMapConfigChange={config=>updateState(draft=>{if(!draft.settings)draft.settings={};draft.settings.mapConfig=config;})} onChange={geometry=>{if(geometry)setCoordinateText(coordinatesToText(geometry));}} onPointsChange={points=>setCoordinateText(points.map(point=>`${point.longitude}, ${point.latitude}`).join('\n'))} />
+         <Input label="دلیل تغییر مرز / توضیح ممیزی" value={changeReason} onChange={event=>setChangeReason(event.target.value)} placeholder="اختیاری؛ مثلاً اصلاح محدوده پوشش"/>
+         {parsedGeometry && <div className={`rounded-xl border p-3 text-xs leading-6 ${parsedGeometry.error?'border-danger/30 bg-danger-soft text-danger':'border-success/30 bg-success-soft text-success'}`}>{parsedGeometry.error || `هندسه معتبر است؛ ${validateZonePolygon(parsedGeometry.geometry!).vertexCount.toLocaleString('fa-IR')} رأس متمایز.`}</div>}{parsedGeometry?.geometry && !parsedGeometry.error && <PolygonGeometryPreview geometry={parsedGeometry.geometry} />}
+         <div className="flex flex-wrap gap-2"><Button onClick={saveZone} disabled={!canEdit || !zoneName.trim() || !zoneCode.trim() || !parsedGeometry?.geometry || !!parsedGeometry.error} icon={<Save size={15}/>}>ذخیره نسخهٔ هندسه</Button>{selectedZone?.status!=='ACTIVE'&&selectedZone&&<Button variant="success" disabled={!canEdit||!activeGeometry} onClick={()=>changeZoneStatus(selectedZone,'ACTIVE')} icon={<CheckCircle2 size={15}/>}>فعال‌سازی زون</Button>}{selectedZone?.status==='ACTIVE'&&<Button variant="outline" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'DRAFT')}>بازگشت به پیش‌نویس</Button>}{selectedZone&&selectedZone.status!=='ARCHIVED'&&<Button variant="ghost" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'ARCHIVED')} icon={<Archive size={15}/>}>بایگانی</Button>}</div>
+diff -ruN b31base/b30_edit/src/components/GeoZoneMapEditor.tsx b30_edit/src/components/GeoZoneMapEditor.tsx
+--- b31base/b30_edit/src/components/GeoZoneMapEditor.tsx	2026-10-26 23:03:46.000000000 +0000
++++ b30_edit/src/components/GeoZoneMapEditor.tsx	2026-10-27 13:37:14.603186623 +0000
+@@ -8,11 +8,14 @@
+ function unproject(x:number,y:number,z:number):GeoPoint{const size=TILE*2**z;const lon=x/size*360-180;const n=Math.PI-2*Math.PI*y/size;const lat=180/Math.PI*Math.atan(Math.sinh(n));return{longitude:Number(lon.toFixed(6)),latitude:Number(lat.toFixed(6))};}
+ function toGeometry(points:GeoPoint[]):GeoPolygonGeometry|null{if(points.length<3)return null;const ring=points.map(p=>[p.longitude,p.latitude]);ring.push([...ring[0]]);return{type:'Polygon',coordinates:[ring]};}
+ function fromGeometry(g?:GeoPolygonGeometry):GeoPoint[]{return g?.coordinates?.[0]?.slice(0,-1).map(p=>({longitude:p[0],latitude:p[1]}))||[];}
+-interface Props{geometry?:GeoPolygonGeometry;coordinateText:string;onChange:(geometry:GeoPolygonGeometry|null)=>void;onPointsChange?:(points:GeoPoint[])=>void;disabled?:boolean;}
+-export function GeoZoneMapEditor({geometry,coordinateText,onChange,onPointsChange,disabled=false}:Props){
+- const [center,setCenter]=useState<GeoPoint>(()=>{const ring=geometry?.coordinates?.[0]?.slice(0,-1)||[];return ring.length?ring.reduce((a,p)=>({longitude:a.longitude+p[0]/ring.length,latitude:a.latitude+p[1]/ring.length}),{longitude:0,latitude:0}):{longitude:53,latitude:32};});const [zoom,setZoom]=useState(5);const [drawing,setDrawing]=useState(false);const [points,setPoints]=useState<GeoPoint[]>(()=>fromGeometry(geometry));const [provider,setProvider]=useState<Provider>('osm');const [customTemplate,setCustomTemplate]=useState('');const [customAttribution,setCustomAttribution]=useState('');const [tileState,setTileState]=useState<'idle'|'loading'|'ok'|'error'>('idle');const [size,setSize]=useState({width:800,height:420});const mapRef=useRef<HTMLDivElement>(null);const drag=useRef<{x:number;y:number;cx:number;cy:number;startX:number;startY:number;moved:boolean}|null>(null);
++type MapProviderConfig = { provider?: Provider; customTemplate?: string; customAttribution?: string };
++interface Props{geometry?:GeoPolygonGeometry;coordinateText:string;onChange:(geometry:GeoPolygonGeometry|null)=>void;onPointsChange?:(points:GeoPoint[])=>void;disabled?:boolean;mapConfig?:MapProviderConfig;onMapConfigChange?:(config:MapProviderConfig)=>void;}
++export function GeoZoneMapEditor({geometry,coordinateText,onChange,onPointsChange,disabled=false,mapConfig={},onMapConfigChange}:Props){
++ const [center,setCenter]=useState<GeoPoint>(()=>{const ring=geometry?.coordinates?.[0]?.slice(0,-1)||[];return ring.length?ring.reduce((a,p)=>({longitude:a.longitude+p[0]/ring.length,latitude:a.latitude+p[1]/ring.length}),{longitude:0,latitude:0}):{longitude:53,latitude:32};});const [zoom,setZoom]=useState(5);const [drawing,setDrawing]=useState(false);const [points,setPoints]=useState<GeoPoint[]>(()=>fromGeometry(geometry));const [provider,setProvider]=useState<Provider>(mapConfig.provider==='custom'?'custom':'osm');const [customTemplate,setCustomTemplate]=useState(mapConfig.customTemplate||'');const [customAttribution,setCustomAttribution]=useState(mapConfig.customAttribution||'');const [tileState,setTileState]=useState<'idle'|'loading'|'ok'|'error'>('idle');const [size,setSize]=useState({width:800,height:420});const mapRef=useRef<HTMLDivElement>(null);const drag=useRef<{x:number;y:number;cx:number;cy:number;startX:number;startY:number;moved:boolean}|null>(null);
+  useEffect(()=>{const raw=coordinateText.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);if(!raw.length){setPoints([]);return;}const parsed:GeoPoint[]=[];for(const [index,line] of raw.entries()){const parts=line.split(/[;,\s]+/).filter(Boolean);if(parts.length!==2)return;const longitude=Number(parts[0]),latitude=Number(parts[1]);if(!Number.isFinite(longitude)||!Number.isFinite(latitude)||longitude < -180||longitude>180||latitude < -90||latitude>90)return;parsed.push({longitude,latitude});}setPoints(parsed);},[coordinateText]);
+  useEffect(()=>{const el=mapRef.current;if(!el)return;const ro=new ResizeObserver(entries=>{const r=entries[0]?.contentRect;if(r)setSize({width:Math.max(1,r.width),height:Math.max(1,r.height)});});ro.observe(el);return()=>ro.disconnect();},[]);
++ useEffect(()=>{setProvider(mapConfig.provider==='custom'?'custom':'osm');setCustomTemplate(mapConfig.customTemplate||'');setCustomAttribution(mapConfig.customAttribution||'');},[mapConfig.provider,mapConfig.customTemplate,mapConfig.customAttribution]);
++ const updateMapConfig=(patch:Partial<MapProviderConfig>)=>onMapConfigChange?.({...mapConfig,provider,customTemplate,customAttribution,...patch});
+  const centerPx=useMemo(()=>project(center.longitude,center.latitude,zoom),[center,zoom]);const tiles=useMemo(()=>{const left=centerPx.x-size.width/2,top=centerPx.y-size.height/2;const minX=Math.floor(left/TILE),maxX=Math.floor((left+size.width)/TILE),minY=Math.floor(top/TILE),maxY=Math.floor((top+size.height)/TILE);const out:{x:number;y:number;left:number;top:number;key:string}[]=[];for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){const n=2**zoom;if(y<0||y>=n)continue;const wrapped=((x%n)+n)%n;out.push({x:wrapped,y,left:x*TILE-left,top:y*TILE-top,key:`${zoom}/${wrapped}/${y}`});}return out;},[centerPx,size,zoom]);
+  const pointXY=useCallback((p:GeoPoint)=>{const q=project(p.longitude,p.latitude,zoom);return{x:q.x-(centerPx.x-size.width/2),y:q.y-(centerPx.y-size.height/2)};},[zoom,centerPx,size]);
+  const screenToGeo=useCallback((clientX:number,clientY:number)=>{const r=mapRef.current?.getBoundingClientRect();if(!r)return null;return unproject(centerPx.x+(clientX-r.left-size.width/2),centerPx.y+(clientY-r.top-size.height/2),zoom);},[centerPx,size,zoom]);
+@@ -31,7 +34,7 @@
+  {provider==='custom'&&!template&&<div className="absolute inset-x-3 top-3 rounded-lg border border-warning/40 bg-white/95 p-2 text-xs text-warning">الگوی URL ارائه‌دهندهٔ سفارشی را وارد کنید.</div>}{tileState==='error'&&<div className="absolute inset-x-3 top-3 rounded-lg border border-warning/40 bg-white/95 p-2 text-xs text-warning">بارگذاری کاشی نقشه ناموفق بود؛ اتصال شبکه یا ارائه‌دهنده را بررسی کنید. می‌توانید از الگوی XYZ سازگار استفاده کنید.</div>}
+  <div className="absolute bottom-2 left-2 max-w-[75%] rounded bg-white/90 px-2 py-1 text-[10px] text-[#392A30]">{provider==='osm'?<>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline">OpenStreetMap contributors</a></>:customAttribution.trim()||'انتساب منبع ارائه‌دهندهٔ سفارشی را تنظیم کنید'}</div><div className="absolute bottom-2 right-2 rounded bg-white/90 px-2 py-1 text-[10px] text-[#392A30]">{center.latitude.toFixed(3)}, {center.longitude.toFixed(3)} · z{zoom}</div>
+  </div>
+- <div className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"><label className="text-xs font-bold text-text-secondary">ارائه‌دهنده<select value={provider} onChange={e=>{setProvider(e.target.value as Provider);setTileState('idle');}} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 text-text-main"><option value="osm">OpenStreetMap Standard</option><option value="custom">ارائه‌دهندهٔ سفارشی XYZ</option></select></label><label className="text-xs font-bold text-text-secondary">الگوی URL کاشی{provider==='osm'?<input readOnly value="https://tile.openstreetmap.org/{z}/{x}/{y}.png" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 font-mono text-[10px] text-text-secondary"/>:<input value={customTemplate} onChange={e=>{setCustomTemplate(e.target.value);setTileState('idle');}} placeholder="https://provider/{z}/{x}/{y}.png" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 font-mono text-[10px] text-text-main"/>}</label>{provider==='custom'&&<label className="text-xs font-bold text-text-secondary">متن انتساب / مجوز ارائه‌دهنده<input value={customAttribution} onChange={e=>setCustomAttribution(e.target.value)} placeholder="© نام ارائه‌دهنده" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 text-xs text-text-main"/></label>}<div className="flex items-end"><button type="button" onClick={testProvider} className="min-h-10 w-full rounded-lg border border-border bg-white px-3 text-xs font-bold">آزمون کاشی</button></div></div>
++ <div className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"><label className="text-xs font-bold text-text-secondary">ارائه‌دهنده<select value={provider} onChange={e=>{const value=e.target.value as Provider;setProvider(value);setTileState('idle');updateMapConfig({provider:value});}} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 text-text-main"><option value="osm">OpenStreetMap Standard</option><option value="custom">ارائه‌دهندهٔ سفارشی XYZ</option></select></label><label className="text-xs font-bold text-text-secondary">الگوی URL کاشی{provider==='osm'?<input readOnly value="https://tile.openstreetmap.org/{z}/{x}/{y}.png" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 font-mono text-[10px] text-text-secondary"/>:<input value={customTemplate} onChange={e=>{setCustomTemplate(e.target.value);setTileState('idle');updateMapConfig({customTemplate:e.target.value});}} placeholder="https://provider/{z}/{x}/{y}.png" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 font-mono text-[10px] text-text-main"/>}</label>{provider==='custom'&&<label className="text-xs font-bold text-text-secondary">متن انتساب / مجوز ارائه‌دهنده<input value={customAttribution} onChange={e=>{setCustomAttribution(e.target.value);updateMapConfig({customAttribution:e.target.value});}} placeholder="© نام ارائه‌دهنده" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-white px-2 text-xs text-text-main"/></label>}<div className="flex items-end"><button type="button" onClick={testProvider} className="min-h-10 w-full rounded-lg border border-border bg-white px-3 text-xs font-bold">آزمون کاشی</button></div></div>
+  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-text-secondary"><span>رأس‌های ترسیم‌شده: {points.length.toLocaleString('fa-IR')} · وضعیت ارائه‌دهنده: {tileState==='ok'?'پاسخ کاشی دریافت شد':tileState==='error'?'خطا در دریافت کاشی / URL یا انتساب را بررسی کنید':tileState==='loading'?'در حال آزمون':'هنوز آزمون نشده'}</span><span>برای استفادهٔ تجاری/پرترافیک، SLA و سیاست کاشی ارائه‌دهنده را بررسی کنید؛ سرور عمومی OSM تضمین دسترس‌پذیری ندارد.</span></div>
+  {points.length>0&&<div className="max-h-24 overflow-auto rounded-lg border border-border bg-white p-2 font-mono text-[10px] text-text-secondary">{points.map((p,i)=><div key={i}>{i+1}. {p.longitude}, {p.latitude}</div>)}</div>}
+  </section>;
+diff -ruN b31base/b30_edit/src/components/SettingsWorkspace.tsx b30_edit/src/components/SettingsWorkspace.tsx
+--- b31base/b30_edit/src/components/SettingsWorkspace.tsx	2026-10-26 23:05:12.000000000 +0000
++++ b30_edit/src/components/SettingsWorkspace.tsx	2026-10-27 13:37:14.605026520 +0000
+@@ -1019,6 +1019,19 @@
+                 </select>
+               </div>
+ 
++              {/* Business country */}
++              <div className="p-4 bg-canvas rounded-xl border border-border space-y-2">
++                <label className="font-bold text-text-main block">کشور / پروفایل مقرراتی سازمان:</label>
++                <select value={currentLocale.countryCode || 'IR'} onChange={e => handleUpdateLocale({ countryCode: e.target.value })} className="w-full bg-white border border-border p-2.5 rounded-xl font-bold outline-none">
++                  <option value="IR">ایران</option>
++                  <option value="DE">آلمان</option>
++                  <option value="US">ایالات متحده</option>
++                  <option value="GB">بریتانیا</option>
++                  <option value="OTHER">سایر / تنظیم دستی</option>
++                </select>
++                <p className="text-[11px] leading-5 text-text-secondary">این تنظیم، پروفایل سازمان را مشخص می‌کند؛ قواعد اعتبارسنجی اختصاصی کشور فقط در جاهایی که به این تنظیم متصل شده‌اند تغییر می‌کنند. اعتبارسنجی کامل همه فرم‌ها در فاز آزمون جداگانه بررسی می‌شود.</p>
++              </div>
++
+               {/* Currency */}
+               <div className="p-4 bg-canvas rounded-xl border border-border space-y-2">
+                 <label className="font-bold text-text-main block">واحد پول رسمی سازمان:</label>
+diff -ruN b31base/b30_edit/src/lib/version.ts b30_edit/src/lib/version.ts
+--- b31base/b30_edit/src/lib/version.ts	2026-10-27 11:56:04.000000000 +0000
++++ b30_edit/src/lib/version.ts	2026-10-27 13:37:50.923374532 +0000
+@@ -1,4 +1,4 @@
+ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
+-export const APP_VERSION = '0.12.4';
+-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b28', base: 'r11-cp9-b27' } as const;
++export const APP_VERSION = '0.12.7';
++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b32', base: 'r11-cp9-b31' } as const;
+ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
+diff -ruN b31base/b30_edit/src/workspaces/ProfileWorkspace.tsx b30_edit/src/workspaces/ProfileWorkspace.tsx
+--- b31base/b30_edit/src/workspaces/ProfileWorkspace.tsx	2026-10-25 18:47:24.000000000 +0000
++++ b30_edit/src/workspaces/ProfileWorkspace.tsx	2026-10-27 13:36:23.116880819 +0000
+@@ -21,8 +21,8 @@
+   const permissionSet = state.permissionSets?.find(p => p.id === currentUser?.permissionSetId);
+   const userRole = state.roles?.find(r => r.id === currentUser?.roleId);
+   
+-  const [editingPhone, setEditingPhone] = useState(currentUser?.phone || '۰۹۱۲۱۱۱۱۱۱۱');
+-  const [editingEmail, setEditingEmail] = useState(currentUser?.email || 'admin@akhavangroup.com');
++  const [editingPhone, setEditingPhone] = useState(currentUser?.phone || '');
++  const [editingEmail, setEditingEmail] = useState(currentUser?.email || '');
+   const [saveSuccess, setSaveSuccess] = useState(false);
+ 
+   const userTasks = (state.tasks || []).filter(t => t.assigneeId === currentUser?.id);
+diff -ruN b31base/b30_edit/tests/atmosphereContracts.test.mjs b30_edit/tests/atmosphereContracts.test.mjs
+--- b31base/b30_edit/tests/atmosphereContracts.test.mjs	2026-10-27 11:56:04.000000000 +0000
++++ b30_edit/tests/atmosphereContracts.test.mjs	2026-10-27 13:38:56.118378251 +0000
+@@ -11,9 +11,9 @@
+ assert.match(css,/prefers-reduced-motion:\s*reduce/,'system reduced-motion preference is respected');
+ assert.match(css,/data-performance-mode="low"[\s\S]*?se-sky-clouds/,'low-performance mode reduces cloud layer');
+ assert.match(css,/96s ease-in-out/,'cloud motion is slow and non-distracting');
+-assert.equal(pkg.version,'0.12.4','package version synchronized');
+-assert.match(version,/APP_VERSION = '0\.12\.4'/,'app version synchronized');
+-assert.match(version,/r11-cp9-b28/,'app release label synchronized');
+-assert.equal(metadata.version,'0.12.4','metadata version synchronized');
+-assert.equal(metadata.release,'r11-cp9-b28','metadata release synchronized');
++assert.equal(pkg.version,'0.12.7','package version synchronized');
++assert.match(version,/APP_VERSION = '0\.12\.7'/,'app version synchronized');
++assert.match(version,/r11-cp9-b32/,'app release label synchronized');
++assert.equal(metadata.version,'0.12.7','metadata version synchronized');
++assert.equal(metadata.release,'r11-cp9-b32','metadata release synchronized');
+ console.log('PASS: 11 assertions (iOS-style atmosphere, reduced motion, low graphics and release metadata)');

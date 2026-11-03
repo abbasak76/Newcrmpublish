@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: AKHAVAN CRM Integration Control API
+  version: 1.0.0
+  description: Contract draft only. Runtime backend is not configured in the current frontend package.
+servers:
+  - url: https://{host}/api/v1
+    variables:
+      host:
+        default: crm.example.invalid
+security:
+  - bearerAuth: []
+paths:
+  /connectors:
+    get:
+      summary: List connectors visible to the authenticated tenant
+      parameters:
+        - in: header
+          name: X-Correlation-ID
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Connector status snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConnectorStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /connectors/{connectorCode}/health:
+    post:
+      summary: Execute a real upstream health check; never return synthetic connected status
+      parameters:
+        - in: path
+          name: connectorCode
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-Correlation-ID
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Health check completed (upstream may be degraded)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, checkedAtUtc, contractVersion]
+                properties:
+                  status: { type: string, enum: [READY, CONNECTED, DEGRADED, FAILED, NOT_CONFIGURED] }
+                  checkedAtUtc: { type: string, format: date-time }
+                  latencyMs: { type: integer, minimum: 0 }
+                  contractVersion: { type: string }
+                  error: { $ref: '#/components/schemas/ApiError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /webhooks/{connectorCode}/{contractVersion}:
+    post:
+      summary: Receive an authenticated, idempotent upstream event
+      security: []
+      parameters:
+        - in: path
+          name: connectorCode
+          required: true
+          schema: { type: string }
+        - in: path
+          name: contractVersion
+          required: true
+          schema: { type: string, example: '1.0' }
+        - in: header
+          name: X-Webhook-Signature
+          required: true
+          schema: { type: string }
+        - in: header
+          name: X-Webhook-Timestamp
+          required: true
+          schema: { type: string, format: date-time }
+        - in: header
+          name: X-Event-ID
+          required: true
+          schema: { type: string, maxLength: 200 }
+        - in: header
+          name: X-Correlation-ID
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventType, occurredAtUtc, data]
+              properties:
+                eventType: { type: string }
+                occurredAtUtc: { type: string, format: date-time }
+                data: { type: object, additionalProperties: true }
+      responses:
+        '202': { description: Envelope persisted for asynchronous processing }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: Missing or invalid HMAC signature }
+        '409': { description: Conflicting duplicate event ID and payload }
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After: { schema: { type: integer, minimum: 1 } }
+        '503': { description: Durable receiver temporarily unavailable }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ConnectorStatus:
+      type: object
+      required: [connectorCode, status, contractVersion, isEnabled]
+      properties:
+        connectorCode: { type: string }
+        systemCode: { type: string }
+        status: { type: string, enum: [NOT_CONFIGURED, DISABLED, READY, CONNECTED, DEGRADED, FAILED, RATE_LIMITED] }
+        contractVersion: { type: string }
+        isEnabled: { type: boolean }
+        lastAttemptAtUtc: { type: [string, 'null'], format: date-time }
+        lastSuccessAtUtc: { type: [string, 'null'], format: date-time }
+        lastErrorCode: { type: [string, 'null'] }
+    ApiError:
+      type: object
+      required: [code, message, retryable, correlationId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        retryable: { type: boolean }
+        correlationId: { type: string, format: uuid }
+        details: { type: object, additionalProperties: true }
+  responses:
+    Unauthorized:
+      description: Authentication required or invalid
+    Forbidden:
+      description: Tenant/scope/permission denied
+    NotFound:
+      description: Resource not found in the current tenant scope
+    BadRequest:
+      description: Payload or contract validation failed

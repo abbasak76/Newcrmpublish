@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const contract = fs.readFileSync(new URL('../DOMAIN_INTEGRATION_CONTRACT_b28.md', import.meta.url), 'utf8');
+const migration = fs.readFileSync(new URL('../database/sqlserver/v1/008_sales_dispatch_extension.sql', import.meta.url), 'utf8');
+const preflight = fs.readFileSync(new URL('../database/sqlserver/v1/009_sales_dispatch_preflight.sql', import.meta.url), 'utf8');
+const quote = fs.readFileSync(new URL('../src/components/QuotesWorkspace.tsx', import.meta.url), 'utf8');
+const ops = fs.readFileSync(new URL('../src/components/OperationsControlWorkspace.tsx', import.meta.url), 'utf8');
+for (const phrase of ['Customer/Account → Activity/Task','Quote → NegotiationScenario','Quote → SalesOrder','SalesOrder → SalesOrderLine','SalesOrder → DispatchPlan','ERP InvoiceMirror → PaymentAllocation/CreditNoteMirror','Task/Workflow → Notification','idempotencyKey','expectedRowVersion','موانع خارجی']) assert.ok(contract.includes(phrase), `integration contract missing: ${phrase}`);
+for (const table of ['crm.SalesOrder','crm.SalesOrderLine','crm.NegotiationScenario','crm.DispatchPlan','crm.DispatchPlanLine']) assert.ok(migration.includes(table), `migration missing ${table}`);
+assert.ok(preflight.includes('TenantIsolationPolicy') && preflight.includes('sys.foreign_keys'), 'preflight must verify tenant RLS and FKs');
+assert.ok(quote.includes('Outbox سمت سرور') || quote.includes('Outbox'), 'quote handoff must not pretend external delivery is local-only');
+assert.ok(ops.includes('آزمایشی'), 'dispatch demo states must remain explicitly labelled as test-only');
+console.log('PASS: domain integration traceability and non-production boundaries');

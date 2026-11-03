@@ -1,0 +1,509 @@
+# AKHAVAN CRM — ممیزی جامع، ردیابی الزامات و وضعیت انجام‌شده/باقی‌مانده
+
+- نسخه مبنا: `AkhavanCRM-SolarEmber_r11-cp9_b16.zip`
+- نسخه سند: `b17-audit-docs` (فقط به‌روزرسانی مستندات؛ به معنی پیاده‌سازی قابلیت‌های محصول نیست)
+- تاریخ ممیزی: 2026-10-26
+- نوع بررسی: بازبینی ایستای سورس و اسناد بسته؛ بدون اتصال SQL Server/ERP و بدون اجرای مرورگر واقعی
+- وضعیت انتشار: **توسعه‌ای؛ آمادهٔ اعلام به‌عنوان محصول عملیاتی نیست**
+
+
+## الحاقیهٔ وضعیت اجرایی b18 — 2026-10-26
+
+این الحاقیه وضعیت را از روی تغییرات واقعی b18 به‌روزرسانی می‌کند؛ متن ممیزی b17 پایین‌تر به‌عنوان سابقه حفظ شده است.
+
+- **انجام‌شده در b18:** مدل‌های `GeoZone`, `ZoneGeometryVersion`, `ZoneAssignment`, `GeoMetricDefinition`, `ZoneMetricSnapshot` در AppState؛ normalization امن برای state قدیمی؛ اعتبارسنجی GeoJSON Polygon؛ point-in-polygon با احتساب مرز؛ نسخه‌بندی هندسه و جلوگیری از دو نسخهٔ فعال هم‌زمان؛ کاتالوگ هشت سنجه با واحد/منبع/تجمیع/جهت مطلوب؛ تست‌های دامنه.
+- **عمداً غیرفعال:** تمام سنجه‌ها `available: false` هستند تا منبع واقعی و قواعد تجمیع متصل و راستی‌آزمایی شوند؛ این تصمیم مانع نمایش Heatmap ساختگی می‌شود.
+- **هنوز باقی‌مانده:** صفحهٔ نقشه، MapLibre و تأمین‌کنندهٔ tile، رسم/ویرایش بصری، جست‌وجو/نمایش نقشهٔ ایران، انتساب مشتری، چاپ، فیلترهای مشترک، اتصال سنجه‌ها به اسناد واقعی، تسک وصول و گزارش عملکرد.
+- **RBAC b18:** پروفایل‌های مجوز، scope نقش، نقش بالادست و سرپرست مستقیم از UI قابل تنظیم شده‌اند؛ این enforcement فقط سمت کلاینت است و نیاز به Backend/RLS دارد. جزئیات در `../RBAC_AUDIT_b18.md`.
+- **آزمون b18:** `npm test` برابر 446 assertion موفق؛ `audit:contracts` و `audit-actions` موفق در بررسی ایستا. Build/Lint به‌دلیل dependency نصب‌نشده مسدود؛ مرورگر/iOS/SQL Server واقعی اجرا نشده. جزئیات در `../STATUS_b18.md` و `../NOT_DONE_b18.md`.
+
+## 1. هدف و قواعد ممیزی
+
+این سند، مرجع واحد ردیابی خواسته‌ها و وضعیت فعلی است. هر الزام باید مستقل ارزیابی شود؛ وجود یک مفهوم کلی مثل «زون»، «گزارش»، «RBAC» یا «هوش مکانی» به‌تنهایی به معنی پیاده‌سازی جزئیات آن نیست.
+
+برچسب‌های وضعیت:
+- **تأییدشده در سورس/سند:** شواهد مشخص در بسته موجود است؛ این برچسب به‌تنهایی کیفیت عملیاتی یا تست انتهابه‌انتها را ثابت نمی‌کند.
+- **ناقص/نمونه‌ای:** بخشی از رفتار وجود دارد، اما چرخه کامل، منبع معتبر یا معیار پذیرش تأمین نشده است.
+- **یافت نشد/پیاده‌سازی‌نشده در بسته بررسی‌شده:** در سورس و اسناد بررسی‌شده شاهد کافی پیدا نشد؛ این عبارت ادعای نبود در تمام نسخه‌های خارج از این بسته نیست.
+- **تأییدنشده:** برای اعلام نتیجه به اجرای تست یا محیط بیرونی نیاز است.
+
+قواعد غیرقابل نقض برای ادامه:
+1. ابتدا آخرین سورس واقعی، Git/status و اسناد جاری را بررسی کن؛ اگر سورس جدیدتری ارائه شد، آن را مبنا قرار بده و اختلاف را ثبت کن.
+2. قبل از تغییر کد، Diff با مبنا و فهرست رگرسیون تهیه شود. تغییر افزایشی باشد؛ حذف یا بازنویسی بدون دلیل مستند ممنوع.
+3. هیچ قابلیت، اتصال، تست یا پذیرشی که اجرا نشده، موفق اعلام نشود.
+4. داده‌های `demo-*` و `LOCAL_TEST` مصنوعی‌اند و نباید داده واقعی کسب‌وکار معرفی شوند.
+5. منبع واحد حقیقت برای هر قلم داده؛ از کپی‌کردن مانده، فاکتور، پرداخت، کالا یا اطلاعات ERP در مدل موازی خودداری شود.
+6. `Quote ≠ Order ≠ Invoice`; پذیرش Quote نباید به‌طور ضمنی فاکتور یا سفارش ERP بسازد.
+7. تخصیص پرداخت باید از `PaymentAllocation` و قواعد مالی معتبر پیروی کند؛ پرداخت/چک دوباره‌شماری نشود.
+8. Backend، اتصال واقعی SQL Server و ERP طبق اولویت فعلی، مرحله‌ای جدا پس از تکمیل و آزمون فرانت‌اند انجام می‌شود.
+9. RBAC باید هم در رابط و هم در لایه عملیات/داده enforce شود؛ پنهان‌کردن دکمه کافی نیست.
+10. هر الزام جزئی در ماتریس ردیابی مستقل باقی بماند و در خلاصه‌ها حذف نشود.
+
+## 2. مبنای واقعی و محدودیت شواهد
+
+بستهٔ قابل‌دسترسی و تأییدشده برای این ممیزی `AkhavanCRM-SolarEmber_r11-cp9_b16.zip` است. اسناد همراه آن می‌گویند نسخه محصول `0.11.3` و checkpoint `r11-cp9-b16` است.
+
+اسناد b16 گزارش می‌کنند:
+- `npm test`: تعداد 426 assertion موفق در محیط اجرای ثبت‌شده در handoff.
+- بررسی syntax از طریق `transpileModule` برای `src/lib/seed.ts` و `src/components/FinanceWorkspace.tsx` موفق گزارش شده است.
+- Build و lint کامل تأیید نشده‌اند؛ در محیط قبلی `vite: not found` و نبود `vite/client` ثبت شده است.
+- SQL Server، مرورگر واقعی، Safari/iOS و اتصال ERP اجرا/تست نشده‌اند.
+
+این ممیزی، خروجی تست‌های قبلی را به‌عنوان گزارش تاریخی ثبت می‌کند، نه اینکه در این مرحله دوباره آن‌ها را اجرا کرده باشد. وضعیت واقعی `npm test`, lint و build باید در محیط تمیز و از روی همین سورس دوباره ثبت شود.
+
+## 3. یافته‌های مشخص از سورس
+
+### 3.1 داده و عملیات
+- `src/lib/seed.ts` داده‌های مصنوعی مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه و فعالیت را تولید می‌کند؛ در seed، زون‌هایی مانند `CENTER`, `NORTH`, `SOUTH` و شهرهای نمونه دیده می‌شوند. این‌ها دادهٔ نمایشی‌اند، نه نقشه و هندسهٔ معتبر جغرافیایی ایران.
+- `src/components/OperationsControlWorkspace.tsx` برنامه پخش و سفارش آزمایشی می‌سازد و `zone` را به‌صورت مقدار متنی نگه می‌دارد؛ برخی مسیرهای ایجاد، صراحتاً `LOCAL_TEST` هستند.
+- `src/lib/operationsEngine.ts` مغایرت متنی زون سفارش و برنامه پخش و سیگنال‌های عملیاتی را بررسی می‌کند. این قابلیت با آزمون قرارگیری نقطه/مشتری داخل چندضلعی، مسیریابی واقعی یا تحلیل جغرافیایی یکسان نیست.
+- `src/lib/rbac.ts` و تست‌های مرتبط وجود دارند؛ با این حال دسترسی واقعی هر نقش به همهٔ عملیات، گزارش‌ها و داده‌های جغرافیایی باید جداگانه آزمون شود.
+- `database/sqlserver/v1/` شامل اسکریپت‌های پایه، integration، finance، semantic analytics، KPI seed، RLS و sales/dispatch preflight است. وجود migrationها اثبات نمی‌کند که آن‌ها روی SQL Server اجرا شده یا با فرانت‌اند یکپارچه شده‌اند.
+
+### 3.2 هوش مکانی
+در بستهٔ بررسی‌شده، شاهدی از صفحه/موتور مستقل «هوش مکانی و مدیریت زون‌ها»، نقشهٔ سراسری ایران، MapLibre، ابزار رسم polygon، GeoJSON ذخیره‌شده و قابل بارگذاری، نسخه‌بندی هندسه، انتخاب مشتری با نقطه‌درچندضلعی، چاپ نقشه/فهرست مشتریان یا Heatmap متصل به داده‌های مالی معتبر پیدا نشد.
+
+**نتیجه:** برچسب/قانون زون و سیگنال مغایرت متنی، بخش محدودی از منطق عملیاتی است؛ جایگزین زیرسیستم هوش مکانی نیست. کل این زیرسیستم در این بسته باید «باقی‌مانده/طراحی‌نشده در محصول» تلقی شود تا پس از پیاده‌سازی و آزمون شواهد خلاف آن ثبت شود.
+
+## 4. ماتریس جامع وضعیت ماژول‌ها
+
+| حوزه | وضعیت قابل اثبات از بسته | کار باقی‌مانده / شرط پذیرش |
+|---|---|---|
+| Solar Ember و پوسته UI | سیستم طراحی و کد رابط در سورس وجود دارد؛ حفظ‌شدن بصری در تمام دستگاه‌ها دوباره تأیید نشده | build، مرورگر، Safari/iOS، RTL، overflow، دسترس‌پذیری و رگرسیون بصری |
+| داده‌های نمونه | seed گسترده و تست حداقل حجم در اسناد b16 گزارش شده | برچسب‌گذاری demo، تکرارپذیری، جلوگیری از آمیختن با داده واقعی؛ سیاست ارتقای seed قدیمی روشن شود |
+| داشبورد مالی | KPIها، روند شش‌ماهه و تفکیک دسته‌ای هزینه در b16 گزارش شده | منبع معتبر، تعریف KPI، فیلترها، drill-down، خروجی و تطبیق با سند منبع |
+| خزانه/چک | تب نمایش و خلاصه‌های چک/سررسید وجود دارد | گردش کامل ثبت/تحویل/واگذاری/وصول/برگشت/ابطال، تاریخچه، مانده حساب معتبر و تطبیق بانکی |
+| هزینه‌ها | تب هزینه و تحلیل دسته‌ای وجود دارد؛ ثبت/پرداخت نهایی صراحتاً کامل اعلام نشده | فرم، مرکز هزینه، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit trail و ضدتکرار |
+| مطالبات و پرداخت | قواعد `PaymentAllocation` در مستندات به‌عنوان مرجع تخصیص آمده | آزمون عددی جامع، برگشتی/اعتبار، جلوگیری از دوباره‌شماری، تاریخ مبنا و تطبیق گزارش‌ها |
+| Quote / سفارش / پخش | موتورهای Quote/عملیات، داده‌های نمونه و برخی بررسی‌های زون متنی موجودند | چرخه کامل Quote تا handoff خارجی، وضعیت‌های واقعی، شواهد تحویل و اتصال ERP؛ Quote ≠ Order ≠ Invoice حفظ شود |
+| RBAC و سازمان | `rbac.ts` و تست‌های scope وجود دارد | آزمون deny برای هر نقش/عملیات، hierarchy قابل تنظیم، محدودیت مالی جدا از دسترسی فروش، اعمال در data/action layer |
+| ممیزی تغییرات | بخش‌هایی از audit/تاریخچه در معماری و کد وجود دارند | پوشش سراسری تغییرات حساس، قبل/بعد، عامل، زمان، دلیل و جلوگیری از دور زدن UI |
+| Backend / SQL Server | migrationها و اسناد معماری در بسته موجودند | اجرای واقعی migrations، API/Auth، RLS، تست امنیت/بازیابی و تطبیق قراردادها؛ هنوز اجرا نشده |
+| ERP / ETL | قراردادها و schema پایه در مستندات/مهاجرت‌ها دیده می‌شوند | connector واقعی، mapping شناسه‌ها، outbox، retry، idempotency، sync monitoring و آزمون با ERP واقعی |
+| هوش مکانی و زون‌ها | b17: فیلدهای متنی؛ b18: مدل دامنه، polygon validation، point-in-polygon، versioning و catalog سنجه‌ها | نقشه UI، tile provider، drawing، انتساب مشتری، Heatmap متصل به داده واقعی، چاپ و عملیات وصول باقی است؛ قابلیت کامل تأیید نشده |
+| گزارش‌ها و KPIهای مشترک | semantic layer/KPI catalog در SQL scripts وجود دارد | اثبات یکسانی تعریف در همه ماژول‌ها، cross-filter، freshness/source، drill-down و تست تطبیق اعداد |
+| محصولات/تأمین/موجودی | داده‌ها و بخش‌هایی از مدل/نمونه‌ها موجود است | ERP منبع حقیقت باقی بماند؛ موجودی/رزرو/خرید واقعی بدون اتصال تأیید نشده |
+
+## 5. مشخصات کامل زیرسیستم «هوش مکانی و مدیریت زون‌ها»
+
+این بخش ثبت کامل الزام‌هاست، نه ادعای پیاده‌سازی. هر مورد باید جداگانه به backlog، آزمون و معیار پذیرش متصل شود.
+
+### 5.1 هدف و مرز محصول
+زیرسیستم مستقل «هوش مکانی و مدیریت زون‌ها» باید نقشه و زون‌های ذخیره‌شده را به تحلیل فروش و مطالبات، برنامه‌ریزی پخش، تخصیص وظیفه، پیگیری اجرای کار و گزارش عملکرد مدیران متصل کند. این زیرسیستم تصمیم‌یار است؛ صرف نزدیکی جغرافیایی نباید به‌صورت خودکار مأموریت ایجاد کند و نباید جای ERP/DMS یا منبع سند مالی را بگیرد.
+
+### 5.2 سه حالت کاری، یک نقشه و یک مدل داده
+1. **تعریف و مدیریت زون:** نقشهٔ کل ایران؛ رسم polygon با حداقل ۳ نقطه و ترجیحاً ۵ تا ۶ نقطه یا بیشتر؛ نام و کد یکتا؛ ذخیره، بازیابی، ویرایش، فعال/غیرفعال‌کردن و نسخه‌بندی محدوده. زون مرز واقعی polygon است، نه مجموعه‌ای از pinها.
+2. **تحلیل Heatmap:** در هر نما یک شاخص اصلی و یک مقیاس رنگی. مقایسهٔ دو شاخص فقط با مقایسهٔ صریح کنارهم/دو پنل انجام شود، نه ترکیب مقیاس‌های نامرتبط. Legend باید واحد، بازه و معنای بهتر/بدتر را توضیح دهد.
+3. **عملیات و تخصیص کار:** انتخاب زون، مشاهده مشتریان داخل آن و مطالبات معتبر، ساخت task وصول/پیگیری، تعیین مجری، ناظر/سرپرست، مهلت، اولویت و نتیجه مورد انتظار؛ ثبت نتیجه واقعی و شواهد مجاز.
+
+سه حالت باید نقشه و مدل مشترک داشته باشند، اما کنترل‌ها و ابزارهای صفحه بر اساس حالت انتخابی تغییر کنند؛ همه ابزارها هم‌زمان و شلوغ نمایش داده نشوند.
+
+### 5.3 فناوری نقشه و الزامات انتخاب
+گزینهٔ اولیهٔ بررسی: MapLibre GL JS + GeoJSON + ابزار رسم polygon. این انتخاب هنوز تصمیم فنی نهایی یا پیاده‌سازی‌شده نیست. پیش از تثبیت باید آزمایش شود:
+- پوشش ایران: استان، شهر، راه‌ها و برچسب مکان‌ها.
+- کیفیت و دسترسی tile provider از محیط استقرار واقعی؛ هزینه، محدودیت درخواست و شرایط مجوز.
+- گزینهٔ self-host/cache در صورت محدودیت دسترسی یا هزینه؛ عدم وابستگی به tile server نمایشی.
+- فارسی و RTL، موبایل و دسکتاپ، کارایی با تعداد زیاد مشتری و clustering.
+- ذخیره/بارگذاری GeoJSON و حفظ precision مختصات.
+- چاپ نقشه و فهرست مشتریان داخل زون و مجوزهای مربوط به داده/نقشه.
+- امکان رسم، انتخاب، ویرایش، لغو تغییر و بازگشت به نسخه قبلی.
+
+رایگان بودن کتابخانه به معنی رایگان یا در دسترس بودن tileها نیست.
+
+### 5.4 مدل داده و قواعد مالکیت
+قبل از ایجاد جدول جدید، موجودیت‌ها و ساختارهای فعلی، شناسه‌ها، audit، versioning، task، مشتری، فاکتور، پرداخت، برگشتی و salesperson بررسی شوند. از ایجاد مدل موازی خودداری شود.
+
+موجودیت‌های منطقی مورد نیاز (فقط در صورت نبود معادل معتبر):
+- `Zone`: شناسه، کد، نام، وضعیت، مالک/دامنه دسترسی.
+- `ZoneGeometryVersion`: هندسه polygon، شماره نسخه، زمان اعتبار از/تا، سازنده و دلیل تغییر.
+- `ZoneAssignment`: ارتباط مشتری یا رکورد مکانی با زون، روش تخصیص و بازه اعتبار؛ قابل محاسبه مجدد.
+- `GeoMetricDefinition`: شناسه KPI، منبع داده، واحد، فرمول، grain، aggregation، semantics بهتر/بدتر، مجوز و تازگی.
+- `ZoneMetricSnapshot`: فقط cache اختیاری؛ قابل بازسازی از منبع و هرگز منبع حقیقت مستقل نیست.
+- Task/TaskAssignment: از موتور task موجود استفاده شود؛ مجری، ناظر/مشاهده‌گر، مهلت، اولویت و وضعیت.
+- `TaskEvidence`: نتیجه، زمان و موقعیت مجاز، مبلغ وصول تأییدشده، علت عدم وصول/عدم تحویل و مرجع سند.
+- `AuditEvent`: استفاده از audit مشترک موجود برای تغییر زون، هندسه، تخصیص و عملیات.
+
+ارتباط‌ها باید با شناسه‌های واقعی Customer/Invoice/Payment/Return/Salesperson/Task باشند، نه نام‌ها یا متن‌های کپی‌شده. نسخهٔ مرز زون و تاریخ اعتبار باید برای گزارش تاریخی حفظ شود. تغییر هندسه نباید گزارش گذشته را بی‌صدا بازنویسی کند.
+
+### 5.5 تعریف دقیق شاخص‌های Heatmap
+هر شاخص باید قبل از نمایش، منبع، واحد، فرمول، grain، فیلترهای مجاز، زمان تازگی و معنای بهتر/بدتر داشته باشد:
+- **مطالبات باز:** مانده فاکتورهای معتبر در تاریخ انتخابی با لحاظ تخصیص پرداخت/اعتبار و سیاست مالی مرجع.
+- **فروش:** مبلغ اسناد فروش معتبر در بازه؛ تعریف مالیاتی/تخفیف/ابطال باید ثابت و مستند باشد.
+- **مرجوعی:** مبلغ یا تعداد اسناد برگشتی معتبر؛ واحد انتخابی واضح باشد و مبلغ با تعداد مخلوط نشود.
+- **تعداد فاکتور:** شمار فاکتورهای معتبر، نه تعداد سفارش.
+- **تراکم مشتری:** تعداد مشتریان یکتا با موقعیت معتبر در هندسه؛ مشتری فاقد مختصات معتبر از محاسبه مکانی حذف یا جداگانه نشان داده شود.
+- **وصول نقدی:** مبلغ وصول معتبر؛ پرداخت ثبت‌شده از تخصیص پرداخت به فاکتور جدا شود تا دوباره‌شماری رخ ندهد.
+- **عملکرد فروشنده:** فقط یک معیار صریح در هر نمایش، مانند فروش، وصول، پوشش مشتری یا تحقق هدف؛ ترکیب مبهم چند معیار ممنوع.
+- **توزیع/تحویل خارج از زون:** اسناد تحویل/فاکتورهای مرتبطی که با مرز معتبر زون در زمان مربوط همخوانی ندارند؛ برنامه، سفارش، فاکتور و تحویل نباید معادل فرض شوند.
+
+برای رنگ‌ها: مقدار بیشتر فروش می‌تواند مثبت، اما مقدار بیشتر بدهی معوق می‌تواند منفی باشد. legend و عبارت «بالاتر بهتر است/بدتر است» باید برای هر KPI صریح باشد.
+
+### 5.6 فیلترهای مشترک و قواعد انتساب
+فیلترهای موردنیاز، در صورت ارتباط با شاخص: بازه تاریخ، ماه/سال، مقایسه با دوره قبل، فروشنده، سرپرست، تیم، مسئول پخش، تولیدکننده، کالا، گروه کالا، زون، منطقه، مشتری، وضعیت مشتری، وضعیت فاکتور/پرداخت/مرجوعی/عملیات وصول.
+
+فیلترها فقط زمانی نمایش داده شوند که از نظر معنایی به KPI مربوط باشند. برای مثال، فیلتر تولیدکننده روی مطالبات باید از خطوط فاکتور و قواعد تخصیص مالی معتبر استفاده کند؛ نباید کل مانده مشتری به تمام تولیدکنندگان نسبت داده شود. اگر attribution دقیق ممکن نیست، نتیجه باید محدودیت را آشکار کند، نه اینکه عدد دقیق‌نما بسازد.
+
+نقشه، جدول، نمودار و KPI باید از تعریف و فیلتر مشترک استفاده کنند. انتخاب یک زون/نقطه/بازه نمودار باید نماهای مرتبط را cross-filter کند؛ تغییر فیلتر باید هم‌زمان همه نماهای مرتبط را به‌روز کند. منبع، زمان آخرین به‌روزرسانی و تعریف KPI باید قابل مشاهده باشد.
+
+### 5.7 عملیات، وصول و مسیر
+- انتخاب زون باید مشتریان واقعاً داخل polygon را با آزمون point-in-polygon و قواعد مرز معتبر پیدا کند؛ صرف برابر بودن متن `zone` کافی نیست.
+- پیشنهاد فهرست اولویت‌دار وصول باید از مانده معتبر، سررسید، سابقه تلاش، موقعیت معتبر و scope کاربر استفاده کند.
+- ایجاد task با مجری اصلی، ناظر/سرپرست، مهلت، اولویت، زون، مشتریان و نتیجه مورد انتظار.
+- ثبت نتیجه‌های مجزا: ویزیت انجام شد، تحویل موفق، تحویل ناموفق، مرجوعی، مراجعه ناموفق/عدم حضور، وصول موفق یا عدم وصول.
+- ثبت مبلغ وصول فقط با مرجع معتبر؛ ثبت علت عدم وصول/تحویل، زمان، موقعیت در صورت مجاز بودن و شواهد.
+- گزارش سرپرست/مدیر: تخصیص‌یافته، انجام‌شده، ناموفق، معوق، مبلغ وصول معتبر و نرخ نتیجه؛ drill-down از سازمان → زون → مجری → task → مشتری.
+- تطبیق برنامه با توقف‌ها/ویزیت‌های واقعی و تحلیل انحراف مسیر/زمان فقط وقتی داده واقعی معتبر وجود دارد.
+- هشدار تأخیر تحویل یا تکرار مراجعه ناموفق؛ اعلان باید قابل توضیح و قابل ممیزی باشد.
+- GPS به‌تنهایی اثبات انجام کار نیست. استفاده از موقعیت باید محدود به هدف، مجاز و دارای کنترل حریم خصوصی باشد.
+- نزدیکی جغرافیایی به‌تنهایی مجوز تخصیص خودکار کار نیست.
+
+### 5.8 نقش‌ها و دامنه دسترسی
+- فروشنده: مسیر/قلمرو و مشتریان خودش، حتی اگر در برنامه بازدید جاری نباشند.
+- سرپرست: تیم خود و مشتریانی که در scope همان تیم‌اند.
+- مدیر فروش: داده‌ها و گزارش‌های فروش در دامنه سازمانی تعریف‌شده.
+- مدیرعامل: نمای سازمانی طبق سیاست.
+- حسابدار و نقش‌های دیگر: جداسازی وظایف؛ دسترسی به داده فروش به معنی اجازه ثبت/تأیید همه اقدامات مالی نیست.
+- ساختار سازمانی و رابطه مدیر مستقیم/زیردست قابل پیکربندی باشد؛ در مقیاس فعلی ساده بماند و برای چند شعبه پیچیدگی غیرضروری ساخته نشود.
+- همان scope در نقشه، KPI، فیلتر، فهرست، task، گزارش و export اعمال شود و در لایه عملیات/داده enforce گردد.
+
+### 5.9 صفحه و تعامل
+صفحه مستقل «هوش مکانی» با سه حالت «زون‌ها»، «نقشه حرارتی»، «عملیات»؛ نوار فیلتر زمینه‌ای؛ نقشهٔ تعاملی ایران؛ نمایش زون‌های ذخیره‌شده، مشتریان و لایهٔ شاخص انتخاب‌شده؛ انتخاب زون؛ رسم/ویرایش؛ چاپ نقشه و فهرست مشتریان داخل زون؛ جدول مرتبط با مشتری، مانده معتبر، وضعیت و اقدام بعدی. طراحی باید با Solar Ember، فارسی/RTL و موبایل سازگار باشد.
+
+### 5.10 برنامه اجرا و معیار پذیرش
+**مرحله 1 — ممیزی و مدل داده:** بررسی مختصات مشتری، مدل بازدید/مسیر، مانده مالی، RBAC، audit، task و جدول‌های موجود؛ ثبت قراردادها و وابستگی‌ها؛ بدون ساخت جدول تکراری.
+
+**مرحله 2 — نقشه و زون ذخیره‌شده:** نقشه ایران، رسم/ویرایش polygon، کد/نام/نسخه، ذخیره و بارگذاری، انتخاب مشتریان داخل محدوده، چاپ فهرست. پذیرش: پس از reload زون باقی بماند؛ ویرایش و نسخه‌بندی شود؛ مجموعه مشتریان داخل polygon با موارد آزمون دستی/عددی صحیح باشد.
+
+**مرحله 3 — KPI و Heatmap:** اتصال به داده معتبر فروش/مانده/مرجوعی/فاکتور/وصول/عملکرد؛ یک شاخص در هر نما و فیلترهای مشترک. پذیرش: عدد نقشه با رکوردهای منبع و گزارش برابر باشد؛ تغییر فیلتر تمام نماهای مرتبط را به‌روزرسانی کند.
+
+**مرحله 4 — تخصیص و پیگیری:** استفاده از task engine موجود، مجری/ناظر، برنامه مسیر، یادآوری وصول، نتیجه واقعی و گزارش مدیر. پذیرش: task از زون ساخته شود؛ مجری تعیین شود؛ نتیجه و مبلغ وصول واقعی ثبت شود؛ تلاش ناموفق از وصول موفق تفکیک شود.
+
+**مرحله 5 — سخت‌سازی:** مجوزها، history، مرزهای هندسی، فیلترهای ترکیبی، چاپ، تعداد بالای مشتری، tile access، ذخیره‌سازی و عملکرد. پذیرش: تست‌های deny، reload، هندسه، KPI، cross-filter و خروجی ثبت‌شده و قابل تکرار باشند.
+
+**اولویت MVP:** زون ذخیره‌شده + Heatmap با عدد معتبر + تخصیص/پیگیری وصول + گزارش عملکرد سرپرست. شاخص‌های دیگر باید از همان موتور/تعریف مشترک استفاده کنند، نه صفحه و جدول مستقل برای هر شاخص.
+
+### 5.11 قابلیت‌های تصمیم‌یار مرتبط که نباید از نقشه راه حذف شوند
+- تحلیل مشتری ازدست‌رفته و پیشنهاد بازگرداندن مشتری.
+- پیشنهاد خرید بعدی بر اساس سابقه معتبر مشتری؛ بدون ثبت سفارش خودکار.
+- تحلیل فرصت ازدست‌رفته و مرحلهٔ از دست رفتن در قیف.
+- تشخیص ناهنجاری و ناسازگاری داده‌ها.
+- اثربخشی مسیر/ویزیت بر اساس نتیجه واقعی، نه تعداد task بسته‌شده.
+- هشدار افت فروش یا افزایش مرجوعی با مقایسه دوره و توجه به فصل/ترکیب مشتری، فقط در صورت کفایت داده.
+- ثبت اینکه چه کسی پیشنهاد را ایجاد، قبول، رد یا به task تبدیل کرده است.
+- نمایش منبع، تازگی، تعریف KPI و توضیح اصلاح/مغایرت داده.
+
+## 6. کارهای انجام‌شده در b16 (طبق شواهد موجود)
+
+این فهرست محدود به تغییرات مستند b16 است و به معنی تکمیل کل محصول نیست:
+1. ارتقای برچسب نسخه به `0.11.3` / `r11-cp9-b16`.
+2. گسترش seed مصنوعی برای مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه، فعالیت/ویزیت/تسک و داده‌های مرتبط.
+3. افزودن/گسترش KPIهای مالی، نمودار روند شش‌ماهه و تفکیک دسته‌ای هزینه در `FinanceWorkspace`.
+4. افزودن تب «خزانه و سررسید» و تب «هزینه‌ها» به‌صورت نمای تحلیلی؛ گردش کامل بانک/هزینه/چک تکمیل‌شده محسوب نمی‌شود.
+5. مستندات handoff، changelog و not-done برای b16 موجود است.
+6. طبق گزارش همراه نسخه: `npm test` با 426 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
+
+## 7. کارهای باقی‌مانده و اولویت اجرا
+
+### P0 — پیش از هر ادعای release
+- [ ] در محیط تمیز `npm install` و سپس `npm test`, `npm run lint`, `npm run build` اجرا و خروجی دقیق ثبت شود.
+- [ ] تست مرورگر دسکتاپ و Safari/iOS، RTL، ریسپانسیو و overflow.
+- [ ] تست deny/allow دسترسی برای CEO، Sales Manager، Supervisor، Salesperson، Accountant و Visitor مطابق scope واقعی؛ هر نقش فقط در محدوده مجاز.
+- [ ] اجرای regression و بررسی اینکه هیچ قابلیت/داده موجود با تغییرات بعدی حذف نشده است.
+- [ ] seed مصنوعی و داده واقعی از هم تفکیک بمانند؛ مسئله ارتقای seed قدیمی با شناسه‌های تازه تعیین تکلیف شود.
+
+### P1 — تکمیل فرانت‌اند و منطق مشترک
+- [ ] تکمیل فیلترهای مالی، drill-down از KPI به رکورد مبنا و خروجی CSV/XLSX/PDF با مجوز و آزمون.
+- [ ] گردش هزینه با validation، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit و idempotency.
+- [ ] دفتر نقد/بانک، مانده معتبر، دریافت/پرداخت، انتقال بین حساب و مغایرت‌گیری بانکی.
+- [ ] گردش کامل چک با تاریخچه وضعیت و هشدار سررسید.
+- [ ] تطبیق مطالبات و مانده با `PaymentAllocation`؛ تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
+- [ ] چرخه Quote → پذیرش → handoff سفارش خارجی → پخش/تحویل → اتصال سندی فاکتور؛ حفظ تمایز Quote/Order/Invoice.
+- [ ] تکمیل policy/override، فرم‌ها، validation و audit برای عملیات حساس.
+- [ ] تکمیل تعاریف مشترک KPI، منبع، تازگی، cross-filter و سازگاری عدد بین نقشه/جدول/نمودار.
+
+### P1 — هوش مکانی (مدل دامنه در b18 شروع شده؛ زیرسیستم کامل نشده)
+- [ ] ممیزی دقیق مختصات و کیفیت مکان مشتری، visit/route، task، مالی و RBAC.
+- [ ] تصمیم فناوری پس از آزمایش MapLibre، provider، دسترسی/هزینه tile ایران، RTL، چاپ و گزینهٔ self-host.
+- [ ] پیاده‌سازی Zone + polygon + ذخیره/reload + geometry versioning + audit.
+- [ ] point-in-polygon و تخصیص مشتری به زون با تاریخ اعتبار؛ زون متنی فعلی به‌تنهایی کافی نیست.
+- [ ] تعریف KPIها و فرمول/واحد/منبع/aggregation/معنای رنگ؛ انتساب تولیدکننده و تخصیص مالی معتبر.
+- [ ] Heatmap تک‌شاخصی، legend، فیلترهای مشترک و cross-filter.
+- [ ] اتصال به task engine برای وصول/پیگیری، نتیجه واقعی، evidence و گزارش سلسله‌مراتبی.
+- [ ] چاپ نقشه و فهرست، clustering، عملکرد در حجم بالا، تست مجوز و حریم خصوصی.
+- [ ] تکمیل پنج مرحله و ثبت evidence پذیرش هر مرحله.
+
+### P2 — پس از تثبیت فرانت‌اند و تست رگرسیون
+- [ ] طراحی/تکمیل Backend API/Auth و RBAC سمت سرور.
+- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS، امنیت، بازیابی و integrity.
+- [ ] اتصال ERP/ETL واقعی: mapping شناسه، outbox، retry، idempotency، پایش sync، خطا/تعارض و reconciliation.
+- [ ] تست end-to-end با داده و سامانه واقعی؛ هر موفقیت اتصال فقط پس از مشاهدهٔ نتیجهٔ واقعی ثبت شود.
+
+## 8. تعریف Done و شواهد الزامی
+
+یک قابلیت فقط وقتی «انجام‌شده» ثبت می‌شود که همه موارد مربوط به آن فراهم باشد:
+1. کد در سورس جاری وجود دارد و مسیر UI/عملیات واقعی به آن متصل است.
+2. دادهٔ نمایشی به‌جای دادهٔ واقعی جا زده نشده است.
+3. validation، خطاها، حالت خالی، loading، مجوز و audit مربوطه بررسی شده‌اند.
+4. آزمون واحد/قراردادی و در صورت نیاز آزمون رابط/یکپارچه اجرا شده‌اند؛ خروجی واقعی ثبت شده است.
+5. منبع حقیقت و تعریف KPI/فرمول مستند است.
+6. Diff و changelog نشان می‌دهند چه چیزی تغییر کرده و چه چیزی دست‌نخورده مانده است.
+7. معیار پذیرش مختص همان الزام پاس شده است.
+
+اگر کد وجود دارد ولی یکی از موارد بالا تأیید نشده، وضعیت باید «ناقص» یا «تأییدنشده» باشد.
+
+## 9. خروجی لازم در هر دور کاری بعدی
+
+- `BASELINE_REPORT`: مبنا، commit/hash یا نام دقیق ZIP، وضعیت Git و محدودیت دسترسی.
+- `AUDIT_CURRENT`: یافته‌های این دور با مسیر فایل و شواهد.
+- `REQUIREMENTS_TRACEABILITY`: نگاشت بندبه‌بند هر خواسته به فایل/کد/تست/وضعیت.
+- `GAP_REGISTER`: موارد باقی‌مانده با اولویت، وابستگی، ریسک و معیار پذیرش.
+- `CHANGELOG`: فایل‌های تغییرکرده و دلیل تغییر.
+- `TEST_REPORT`: دستور دقیق، محیط، خروجی واقعی و تست‌های اجرا‌نشده.
+- `NOT_DONE`: هر کار باقی‌مانده؛ موارد تأییدنشده نباید حذف شوند.
+- `STATUS` و `HANDOFF`: قدم بعدی دقیق و ترتیب مطالعه.
+- `DIFF`: اختلاف با مبنا.
+- `ZIP`: فقط پس از ایجاد واقعی و بررسی محتویات/مسیر؛ لینک ساختگی ممنوع.
+
+## 10. فرمان ادامه کار برای عامل بعدی
+
+ابتدا `../HANDOFF.md`, `../STATUS_b18.md`, `../NOT_DONE_b18.md`, `../RBAC_AUDIT_b18.md`, سپس این سند و `docs/01..05` را بخوان. سورس را دوباره ممیزی کن و هیچ ادعایی را فقط از روی این سند قطعی ندان. آخرین ZIP واقعی را مبنا قرار بده؛ وضعیت Git و diff را بررسی کن. ابتدا P0، سپس موارد P1 را بدون رگرسیون پیش ببر. برای هوش مکانی، مرحله 1 ممیزی و قراردادها را انجام بده؛ قبل از تأیید فناوری نقشه و قبل از ایجاد هر جدول، ساختار موجود را بررسی کن. Backend/SQL Server/ERP را تا پایان مرحلهٔ فرانت‌اند و تست‌های مقرر به فاز بعد موکول کن. پیش از پایان ظرفیت کاری، سورس، diff، تست، `NOT_DONE`, `STATUS`, `HANDOFF` و بستهٔ دانلودی واقعی را ذخیره و مسیر را تأیید کن.
+
+---
+
+# الحاقیهٔ اجرایی b19 — وضعیت واقعی پس از توسعهٔ صفحهٔ هوش مکانی
+
+تاریخ: 2026-10-26. این الحاقیه وضعیت جاری را به‌روزرسانی می‌کند؛ متن تاریخی b17 و فهرست جزئیات الزام‌ها در بالا عمداً حفظ شده است.
+
+## A. تغییرات کد و مسیرهای قابل ردیابی
+
+| الزام | شواهد سورس جاری | وضعیت b19 | محدودیت/پذیرش باقی‌مانده |
+|---|---|---|---|
+| صفحه مستقل هوش مکانی | `src/components/GeoIntelligenceWorkspace.tsx`; route در `src/App.tsx` | ناقص ولی به مسیر و منو وصل شده | مرورگر واقعی، طراحی کامل و نقشهٔ واقعی ایران |
+| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx`، حالت‌های `zones`, `heatmap`, `operations` | پوسته و رفتار پایه وجود دارد | حالت عملیات هنوز موتور ایجاد Task وصول نیست؛ Heatmap غیرفعال است |
+| نام و کد یکتا | فرم زون در `GeoIntelligenceWorkspace.tsx` | پیاده شده سمت کلاینت | آزمون end-to-end و قید یکتایی سمت سرور باقی است |
+| ورودی مرز polygon | `parseCoordinates`, `validateZonePolygon` در `src/lib/geoIntelligence.ts` | پیاده شده | ترسیم/ویرایش مستقیم روی نقشه و بررسی polygonهای self-intersecting باقی است |
+| پیش‌نمایش هندسه | `PolygonGeometryPreview` در `GeoIntelligenceWorkspace.tsx` | پیاده شده | این preview نقشهٔ جغرافیایی/ایران نیست |
+| ذخیره و نسخه‌بندی هندسه | `createZoneGeometryVersion`, `zoneGeometryVersions`, `currentGeometryVersionId` | پیاده شده در state محلی | آزمون reload واقعی، migration و persistence در مرورگر باقی است |
+| فعال/پیش‌نویس/بایگانی | `changeZoneStatus` | پیاده شده در UI/state | آزمون نقش/مرورگر و سیاست اثر نسخهٔ هندسه روی وضعیت فعال باقی است |
+| انتساب مشتری داخل polygon | `isPointInsideZone` و `assignCustomersInZone` | پیاده شده برای مشتریان دارای مختصات معتبر | ممیزی schema مختصات و آزمون داده واقعی باقی است |
+| تاریخچه انتساب | `zoneAssignments`؛ بستن `effectiveTo` به‌جای حذف | پیاده شده در state محلی | تراکنش اتمیک/قیود DB و rollback باقی است |
+| مجوزهای مشاهده/مدیریت geo | `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX`, `canAccessWorkspace` در `src/lib/rbac.ts` | پیاده شده و قابل تنظیم در پروفایل | تفکیک مجوزهای granular و server-side enforcement باقی است |
+| دسترسی به مسیر | `guard('geo_intelligence', ...)` در `src/App.tsx`; navigation در `src/lib/navigation.ts` | پیاده شده | آزمون مرورگر و تغییر URL/حالت واقعی باقی است |
+| scope مشتریان | `rbac.canActOnRecord('accounts','VIEW',...)` در صفحهٔ geo | پیاده شده در UI/action محلی | scope اختصاصی zone/team/territory و enforcement سرور باقی است |
+| audit تغییرات | `auditLogs` برای ایجاد/تغییر هندسه، وضعیت و انتساب | پیاده شده در state محلی | audit ضد‌دستکاری و ثبت سمت سرور باقی است |
+| سنجه‌های Heatmap | `src/lib/geoIntelligence.ts`، کاتالوگ ۸ سنجه | قرارداد/توضیح موجود، عمداً غیرفعال | اتصال منبع معتبر، فرمول، تازگی، رنگ و تطبیق عددی باقی است |
+| نقشه ایران و tile | در این نسخه provider/MapLibre متصل نیست | پیاده‌سازی نشده | انتخاب و تست provider، هزینه/licensing، دسترسی شبکه، RTL، cache/self-host |
+| task وصول و route | `createCollectionTask` در `GeoIntelligenceWorkspace.tsx`؛ `processTaskCollaborationEvents`؛ `tasks` موجود | ایجاد task برای یک مشتری با مسئول/ناظر/مهلت/اولویت پیاده شده؛ گردش نتیجه ناقص | ثبت مبلغ وصول/علت/evidence، batch assignment، گزارش عملکرد، route/visit واقعی |
+| چاپ، clustering، cross-filter | شاهد اجرایی جدید در b19 وجود ندارد | پیاده‌سازی نشده | پس از نقشه و KPI واقعی |
+
+## B. RBAC — تصمیم و ریسک
+
+- صفحه با مجوزهای `geo.view` و `geo.manage` قابل پیکربندی است. نقش‌های قدیمی با مجوز مدیریتی موجود `settings.manage` یا `roles.manage` نیز برای سازگاری دسترسی دارند.
+- مشاهدهٔ geo به‌تنهایی اجازهٔ مدیریت زون نمی‌دهد؛ `geo.manage` برای تغییرات زون/انتساب لازم است مگر اینکه کاربر از قبل مجوز مدیریت تنظیمات/نقش‌ها داشته باشد.
+- مشاهده و انتساب مشتریان از `accounts` record-scope استفاده می‌کند؛ مجوز geo نباید دسترسی مشتری را گسترش دهد.
+- کنترل‌ها هنوز client-side هستند. امنیت واقعی باید در API/DB/RLS دوباره enforce شود؛ local state و audit log محلی مرز امنیتی نیستند.
+- مجوز granular جداگانه برای ویرایش هندسه، فعال‌سازی، بایگانی، انتساب، export و مشاهدهٔ KPI هنوز باید طراحی/تست شود.
+
+## C. نتیجهٔ آزمون b19
+
+- `npm test`: PASS؛ 471 assertion مجموع suiteها (از جمله 13 تست تنظیم‌پذیری RBAC و 14 تست قراردادی صفحهٔ geo).
+- `node scripts/audit-actions.mjs`: PASS؛ 74 handler تغییردهنده، 74 guard، صفر بدون guard در تحلیل ایستا.
+- `npm run audit:contracts`: PASS ایستا؛ 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS، 5 view موردنیاز. SQL Server واقعی متصل یا اجرا نشده.
+- `transpileModule`: PASS فقط برای syntax/transpile فایل‌های تغییرکرده؛ typecheck کامل نیست.
+- `npm install --ignore-scripts --no-audit --no-fund`: در محیط فعلی به timeout 120 ثانیه رسید و dependency نصب نشد.
+- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/dependencyها.
+- `npm run build`: BLOCKED؛ `vite: not found`.
+- مرورگر، Safari/iOS، Backend/API، SQL Server runtime و ERP اجرا نشده‌اند.
+
+## D. ماتریس باقی‌مانده به ترتیب اجرا
+
+1. **P0:** دسترسی npm؛ نصب dependency؛ typecheck/lint/build؛ رفع همه خطاهای واقعی.
+2. **P0:** مرورگر دسکتاپ؛ تست CRUD زون، reload، allow/deny RBAC، scope مشتری و رگرسیون.
+3. **P0:** iPhone/Safari واقعی، RTL، لمس، performance و دسترس‌پذیری.
+4. **P1:** ممیزی مختصات واقعی مشتریان و دادهٔ مسیر/ویزیت/تحویل/مالی؛ ثبت منبع و کیفیت.
+5. **P1:** انتخاب MapLibre/tile provider پس از بررسی هزینه، مجوز، ایران، دسترسی و چاپ؛ سپس نقشهٔ واقعی و ابزار رسم.
+6. **P1:** Heatmap معتبر؛ یک شاخص در هر نما، aggregation، freshness، semantics رنگ، فیلترهای مرتبط و cross-filter؛ تطبیق با اسناد مبنا.
+7. **P1:** اتصال زون به task engine موجود؛ مسئول/ناظر/مهلت/اولویت/نتیجه و گزارش بر اساس نتیجه واقعی.
+8. **P1:** تکمیل field-level `SEE/DO/HIDDEN` و scope یکسان در map/report/task/export.
+9. **P2:** Backend/API/Auth، migrationهای SQL Server، RLS واقعی و آزمون امنیت/بازیابی.
+10. **P2:** ERP/ETL با mapping، outbox/retry/idempotency، monitoring و reconciliation.
+
+هیچ بند بالا به دلیل اشاره در roadmap یا وجود مدل داده، «انجام‌شده» محسوب نمی‌شود؛ وضعیت فقط پس از شواهد کد و معیار پذیرش اختصاصی تغییر می‌کند.
+
+
+---
+
+# الحاقیهٔ ممیزی اجرایی b20 — گردش نتیجهٔ وصول مکانی
+
+تاریخ: 2026-10-27؛ مبنا `r11-cp9-b19`؛ نسخه `0.11.6 / r11-cp9-b20`.
+
+## تغییرات و شواهد
+- `src/lib/collectionTaskOutcome.ts`: کاتالوگ ۷ نتیجه و اعتبارسنجی مستقل. نتیجهٔ `PAYMENT_RECORDED` نیازمند شناسهٔ پرداخت معتبر است؛ پرداخت باید به همان مشتری تعلق داشته باشد، `CLEARED` باشد و مبلغ مثبت داشته باشد. مبلغ از پرداخت خوانده می‌شود و ورودی دستی ندارد.
+- `src/components/GeoIntelligenceWorkspace.tsx`: فهرست taskهای وصول همین زون/مشتریان قابل مشاهده، فرم ثبت نتیجه، تاریخ پیگیری، علت، یادداشت، تاریخچه و audit. برای ویرایش از `canOn('tasks','EDIT', ...)` استفاده می‌شود.
+- `tests/collectionTaskOutcome.test.mjs`: ۱۱ assertion برای پرداخت معتبر، مشتری اشتباه، پرداخت معلق، علت و پیگیری اجباری، و محدودکردن جریان به task وصول زون.
+- `tests/geoWorkspaceContracts.test.mjs`: ۱۹ assertion برای مسیر، RBAC، scope، versioning، نتیجه و منبع پرداخت.
+
+## وضعیت پذیرش
+| معیار | نتیجه | توضیح |
+|---|---|---|
+| نتیجه‌های کنترل‌شده | پیاده‌سازی شده | ۷ نوع نتیجه |
+| علت عدم وصول | پیاده‌سازی شده | برای نتیجه‌های ناموفق مشخص اجباری است |
+| تاریخ پیگیری تعهد پرداخت | پیاده‌سازی شده | تاریخ الزامی؛ reminder خودکار هنوز نیست |
+| مبلغ وصول از منبع پرداخت | پیاده‌سازی شده در UI/helper | فقط payment CLEARED همان مشتری؛ به‌تنهایی اثبات تخصیص به invoice/ledger نیست |
+| تاریخچه و audit محلی | پیاده‌سازی شده | state محلی؛ ضد‌دستکاری نیست |
+| evidence file | باقی‌مانده | فرم فعلی یادداشت متنی است |
+| گروه‌بندی و گزارش سلسله‌مراتبی | باقی‌مانده | نیازمند توسعه روی task engine موجود |
+
+## نتایج آزمون b20
+- `npm test`: PASS؛ 487 assertion طبق جمع خروجی suiteها.
+- `node scripts/audit-actions.mjs`: PASS؛ 76 handler تغییردهنده، 76 guard، صفر unguarded در تحلیل ایستا.
+- `npm run audit:contracts`: PASS ایستا؛ 9 SQL files، 46 tables، 44 tenant-scoped tables، 44 RLS targets، 5 required views. SQL Server واقعی اجرا نشده.
+- Build/Lint و browser/Safari/iOS: تأیید نشده‌اند؛ dependencyهای Vite/types در این محیط موجود نیستند.
+
+## محدودیت امنیت و اجرا
+این تغییر RBAC client-side را دور نمی‌زند اما آن را به امنیت واقعی تبدیل نمی‌کند. پرداخت و task باید در Backend دوباره مجوزدهی و اعتبارسنجی شوند. `Payment.status=CLEARED` صرفاً وضعیت رکورد پرداخت موجود در state است؛ این توسعه، bank settlement، invoice allocation یا reconciliation واقعی ایجاد نمی‌کند.
+
+
+## الحاقیهٔ اجرایی b21 — مدرک وظیفهٔ وصول (2026-10-27)
+- نسخهٔ جاری برای این بسته `0.11.7 / r11-cp9-b21` است؛ مبنای کد b20 و تغییرات افزایشی‌اند.
+- `src/lib/collectionTaskEvidence.ts` نوع و اندازهٔ فایل را اعتبارسنجی می‌کند: JPEG/PNG/WebP/PDF، بزرگ‌تر از صفر و حداکثر ۵ MiB.
+- `GeoIntelligenceWorkspace.tsx` فایل را در `state.attachments` به همان task وصل می‌کند، با scope check دریافت فایل و audit محلی. از AttachmentManager/state موجود استفاده می‌شود؛ موتور موازی ساخته نشده.
+- تست‌ها: `collectionTaskEvidence.test.mjs` دارای ۶ assertion؛ قرارداد Geo UI دارای ۲۶ assertion؛ کل `npm test` موفق اجرا شد. `audit-actions` 76/76 و `audit:contracts` موفق در حالت static-only.
+- محدودیت: ذخیره‌سازی base64 در state محلی است. سقف مجموع storage، retention، اسکن بدافزار، دسترسی سروری و ذخیره‌سازی امن هنوز طراحی/اجرا نشده‌اند؛ بنابراین این پیاده‌سازی برای production امن اعلام نمی‌شود.
+- Build/Lint کامل، browser/iOS، SQL Server runtime/RLS و ERP هنوز تأییدنشده‌اند.
+
+- افزودهٔ b21 تکمیلی: ساخت گروهی وظایف از مشتریان انتخاب‌شده در زون، با reuse از task engine و notification collaboration، کنترل `tasks.CREATE/ASSIGN`، جلوگیری از task باز تکراری و audit. انتخاب فعلاً مکانی/دستی است؛ اولویت‌بندی بر اساس ماندهٔ مالی معتبر و گزارش سلسله‌مراتبی هنوز باقی است.
+
+
+---
+
+# b22 Addendum — Collection reporting and export (2026-10-27)
+
+## Delivered in source
+- `src/lib/geoCollectionReporting.ts`: derives report totals from zone-scoped task list passed by the UI; separates open/completed/overdue; counts latest outcome per task; recalculates collected amount from CLEARED payments belonging to the same customer; deduplicates payment IDs; attributes a repeated payment to the most recently recorded task result; groups by assignee.
+- `collectionReportToCsv`: UTF-8 BOM CSV output and neutralization of cells starting with formula-sensitive characters.
+- `GeoIntelligenceWorkspace.tsx`: report summary, outcome breakdown, assignee table and CSV export. Task visibility uses existing RBAC record scope; customer visibility remains scoped.
+- Explicitly fixed `rbac` destructuring from `useCan`; static contract asserts this wiring.
+
+## Evidence
+- `npm test`: PASS, 519 assertions based on printed suite counts.
+- `audit-actions`: 76/76 mutation handlers guarded in static audit.
+- `audit:contracts`: PASS in static-only mode.
+- Full TypeScript check remains blocked by missing `vite/client` type definitions; no claim of a passing build or browser test.
+
+## Known boundaries
+- Report is local-state, zone-scoped and client-side. It is not an official accounting statement, not multi-zone organization reporting, and not server-enforced.
+- The report relies on the payment model's `CLEARED` status and customer identity; invoice allocation/reconciliation remains a separate pending requirement.
+- API authorization, SQL Server runtime/RLS, server evidence storage, date-range filtering, detail export, real map provider and iOS/Safari testing remain open.
+
+
+---
+
+# b23 Addendum — report drill-down, detailed CSV and date range (2026-10-27)
+
+## Delivered in source
+- `CollectionReport.details` exposes task/customer rows for the currently visible tasks in the selected zone. Customer display names are resolved from the visible customer set.
+- Added detailed CSV separate from summary CSV. Both use UTF-8 BOM and formula-sensitive cell neutralization.
+- Added inclusive date filters. Latest result timestamp is used when present; task creation date is the fallback for tasks without a result. The filtered subset is passed to report aggregation and both exports.
+- Payment IDs are revalidated against `CLEARED`, positive amount, and matching customer; repeated references count once and are attributed to the most recently recorded result.
+
+## Evidence
+- `npm test`: PASS, 531 assertions based on suite output.
+- `audit-actions`: 76/76 guarded in static audit.
+- `audit:contracts`: PASS static-only.
+- Changed TypeScript/TSX syntax transpilation: PASS. Full TypeCheck remains blocked by missing `vite/client`; Vite build remains blocked because `vite` is not installed.
+
+## Remaining boundaries
+- Report is local-state and selected-zone only, not organization-wide hierarchy or official accounting.
+- The data model still lacks an authoritative credit-note source in this workspace; receivables-based prioritization remains blocked until `Invoice − PaymentAllocation − Credit` can be implemented and reconciled without double counting.
+- API authorization/RLS, backend evidence storage, real map provider, browser/iOS smoke tests and ERP end-to-end integration remain open.
+
+
+---
+
+# b24 Addendum — receivable allocation integrity diagnostics (2026-10-27)
+
+## Delivered in source
+- Added `src/lib/receivableReconciliation.ts`. It filters inactive/void/draft invoices, validates each allocation against an active invoice and payment, requires `CLEARED` payment status, checks matching customer IDs and positive amount, ignores duplicate allocation IDs, and flags overallocated payments/invoices and mismatches with stored invoice balance.
+- Geo workspace computes the diagnostic only from invoices/payments/allocations associated with customers inside the selected zone and displays issue counts/examples.
+- The helper deliberately returns `authoritative: false` and `creditSourceAvailable: false`; no Credit Note/credit-adjustment model was found in the current source. Its pre-credit outstanding values are not used for task ranking.
+
+## Evidence
+- `npm test`: PASS, 553 assertions based on suite output.
+- `audit-actions`: 76/76 guarded in static audit.
+- `audit:contracts`: PASS static-only.
+- Changed TS/TSX syntax transpilation: PASS. Full TypeCheck/Build remain blocked by missing `vite/client`/`vite`.
+
+## Required next steps
+- Model credit notes/adjustments with lifecycle, source IDs, customer/invoice mapping, reversal/audit rules and tests; then reconcile invoice minus valid allocations minus valid credits before collection prioritization.
+- Resolve dependency installation and run full TypeCheck/Build/Lint/browser smoke.
+- Continue backend authorization/RLS, real map, evidence storage and ERP integration; none is claimed complete.
+
+---
+
+## الحاقیهٔ اجرایی b25 — نقشهٔ کاشی‌ای، منبع بستانکاری و اولویت وصول
+
+### تغییرات افزایشی
+- `src/components/GeoZoneMapEditor.tsx` افزوده شد. این کامپوننت tileهای واقعی XYZ را فقط برای viewport فعلی درخواست می‌کند، مرکز اولیهٔ ایران دارد، pan/zoom، رسم polygon با pointer/touch، نمایش رأس‌ها، خروجی GeoJSON و آزمون دستی provider را فراهم می‌کند.
+- پیش‌فرض tile URL برابر `https://tile.openstreetmap.org/{z}/{x}/{y}.png` است و attribution روی نقشه قابل مشاهده است. provider سفارشی باید URL مبتنی بر HTTPS، `{z}/{x}/{y}` و متن attribution داشته باشد.
+- سیاست رسمی OSM: سرور tile عمومی best-effort و بدون SLA است؛ attribution الزامی، cache مرورگر باید محترم شمرده شود و bulk download/offline ممنوع است. منبع: https://operations.osmfoundation.org/policies/tiles/ . برای محصول تجاری پرترافیک، provider نهایی باید از نظر SLA، قیمت، محدودیت، حریم خصوصی و پوشش ایران بررسی شود.
+- بررسی سورس SQL نشان داد b24 از قبل `crm.CreditNoteMirror`، `analytics.vw_InvoiceBalance` و RLS برای `CreditNoteMirror` دارد؛ در b25 جدول SQL تکراری ایجاد نشد. مشکل قبلی در اتصال/مدل فرانت‌اند بود، نه نبود جدول SQL.
+- `CreditNote` در فرانت‌اند به‌عنوان رکورد read-only آینه‌شده از ERP تعریف شده است؛ `CreditNoteRequest` گردش محلی جداگانه است. درخواست محلی هرگز در موتور مانده وارد نمی‌شود و وضعیت APPROVED آن به معنی ثبت مالی نیست.
+- موتور reconciliation فقط رکوردهای منبع `ERP_MIRROR` با شناسهٔ خارجی و source system معتبر، وضعیت `APPROVED/POSTED` مطابق قرارداد view، فاکتور فعال و مشتری منطبق را لحاظ می‌کند؛ رکورد voided/غیرمنطبق، duplicate، تخصیص غیرمعتبر، over-allocation و مغایرت مانده باعث توقف authoritative ranking می‌شود.
+- رتبه‌بندی مشتری بر اساس ماندهٔ معتبر نزولی و سپس ماندهٔ معوق/بیشترین روز تأخیر است. هنگام ساخت task گروهی، ترتیب ساخت با رتبه هماهنگ می‌شود و اولویت task تنها در حالت authoritative از رتبه مشتق می‌شود.
+- رتبه‌بندی در برنامه فقط زمانی فعال می‌شود که `creditNoteSourceStatus === 'CONNECTED'` و reconciliation هیچ issue نداشته باشد. این وضعیت در این نسخه توسط UI قابل تغییر نیست؛ باید فقط توسط همگام‌سازی معتبر backend تنظیم شود.
+
+### نتایج آزمون b25
+- `npm test`: PASS، 587 assertion.
+- `node scripts/audit-actions.mjs`: PASS، 77/77 handler تغییردهنده guarded.
+- `npm run audit:contracts`: PASS ایستا، 9 SQL files، 46 tables، 44 tenant-scoped/RLS targets، 5 views؛ بدون اتصال SQL Server.
+- `transpileModule`: PASS برای پنج فایل تغییرکرده.
+- `tsc --noEmit`: BLOCKED به‌علت نبود `vite/client`.
+- Tile endpoint probe: BLOCKED به‌علت DNS (`Could not resolve host`). Build، browser، Safari/iPhone، SQL runtime/RLS، Backend/API و ERP end-to-end تأیید نشده‌اند.
+
+### ریسک‌ها و موارد باز
+- UI provider test به‌صورت کد موجود است، اما از این محیط با شبکهٔ DNS ناموفق اجرا نشده؛ نقشه در مرورگر واقعی باید بررسی شود.
+- OSM Standard برای هر نوع ترافیک تجاری تضمین سرویس نمی‌دهد؛ انتخاب نهایی provider برای production هنوز باز است.
+- دادهٔ واقعی `CreditNoteMirror` هنوز از SQL/API به AppState وصل نیست؛ بنابراین مانده و رتبه‌بندی وصول در نسخهٔ فعلی به‌صورت پیش‌فرض مسدود می‌ماند. هیچ عدد یا رتبهٔ نمونه به‌عنوان واقعی نمایش داده نمی‌شود.
+- درخواست بستانکاری محلی صرفاً درخواست است؛ ثبت مالی و تغییر مانده باید در ERP انجام شود و سپس از mirror خوانده شود.
+- وضعیت کلی همچنان development; production readiness اعلام نمی‌شود.
+
+---
+
+## الحاقیهٔ اجرایی b26 — دسترس‌پذیری، کیفیت گرافیک و حفظ پیش‌نویس
+
+### تغییرات افزایشی
+- `SettingsWorkspace.tsx` سه مقیاس رابط `normal/large/extra-large` را با اندازهٔ ریشهٔ 16/18/20px در تنظیمات موجود ذخیره می‌کند؛ `App.tsx` آن را روی `document.documentElement` اعمال می‌کند.
+- کیفیت گرافیک در تنظیمات `auto/high/low` است. `AtmosphereLayer.tsx` حالت کم‌حافظه را در `auto` تشخیص می‌دهد و حالت `low` افکت‌های تزئینی را سبک می‌کند. ترجیح کاهش حرکت سیستم‌عامل مستقل از انتخاب `high` رعایت می‌شود.
+- `DynamicFormRenderer.tsx` پیش‌نویس محلی را با کلید شامل کاربر/شناسه schema/شناسه رکورد نگه می‌دارد، هنگام بازگشت restore می‌کند، پس از submit موفق پاک می‌کند و در صورت خطای submit نگه می‌دارد. فرم‌هایی که نام فیلدشان credential-like باشد (password/token/secret/national code/bank account/card/OTP) به‌طور کامل از autosave مستثنا می‌شوند. گزینهٔ خاموش‌کردن autosave در Settings افزوده شده است.
+- `LiveAnnouncer.tsx` در App root نصب شده است؛ خطای اعتبارسنجی به‌صورت assertive و موفقیت validation به‌صورت polite اعلام می‌شود.
+- `LightHighwayCanvas.tsx` در دستگاه‌های کم‌حافظه/کم‌هسته یا Save Data به‌جای WebGL از fallback CSS موجود استفاده می‌کند.
+- کشیدن پنجرهٔ موبایل در `Modal.tsx` با pointer resistance و بازگشت فنری انجام می‌شود؛ آزمون واقعی iOS همچنان باقی است. این تغییر focus را جابه‌جا نمی‌کند.
+
+### محدودیت‌های مهم
+- localStorage رمزنگاری‌شده نیست و autosave پشتیبان سرور نیست؛ کاربر می‌تواند این قابلیت را خاموش کند. Storage quota/privacy mode ممکن است ذخیره را رد کند.
+- تشخیص فیلد حساس مبتنی بر نام فیلد است؛ schemaهای واقعی باید ممیزی شوند تا نام‌های حساس دیگر به الگو اضافه شوند.
+- VoiceOver/NVDA، reflow با zoom، WCAG contrast، keyboard navigation و FPS/مصرف باتری روی iPhone هنوز در دستگاه واقعی آزمون نشده‌اند.
+
+### نتایج آزمون b26
+- `npm test`: PASS، 597 assertions.
+- `audit-actions`: PASS، 77/77 guarded.
+- `audit:contracts`: PASS ایستا، 9 SQL files، 46 tables، 44 tenant-scoped/RLS targets، 5 views.
+- `transpileModule`: PASS برای 12 فایل تغییرکرده.
+- Build/TypeCheck/Browser/iOS/SQL runtime/ERP: تأییدنشده یا مسدود؛ جزئیات در `TEST_RESULTS_b26.md`.
+
+### سایر اقلام ممیزی که عمداً به‌عنوان «انجام‌نشده» ثبت می‌مانند
+- Real-time chat/WebSocket، offline queue/background sync، read receipts و Object Storage امن: backend/auth/endpoint واقعی در این محیط موجود نیست؛ ساخت کلاینت بدون سرور واقعی و آزمون چنددستگاهی نباید تکمیل‌شده اعلام شود.
+- Server-side pagination/virtualization برای حجم‌های 100k تا 1M، churn prediction، پیشنهاد خرید و تحلیل رسوب/انقضا: داده و سرویس واقعی لازم است؛ هنوز پیاده‌سازی/آزمون نشده‌اند.
+- Backend/BFF، server-driven authorization و اجرای SQL Server RLS واقعی: ممیزی SQL فعلی فقط ایستا است.
+- WCAG AAA/AA کامل، VoiceOver/NVDA، performance/thermal و Safari/iPhone: آزمون دستگاه واقعی باقی است.
+
+---
+
+## الحاقیهٔ b27 — 2026-10-27
+
+- نسخهٔ جاری سورس در b27 به `0.12.3 / r11-cp9-b27` ارتقا یافت؛ `package.json`, `metadata.json`, `src/lib/version.ts` و `VERSION.md` همگام شدند.
+- لایهٔ جوی Solar Ember با ماه کم‌نور و سه لایه ابر/مه دارای حرکت آهسته افزوده شد. این لایه صرفاً تزئینی است؛ `prefers-reduced-motion` و حالت کم‌مصرف حرکت را متوقف/سبک می‌کنند. شباهت بصری نهایی به مرجع و مصرف GPU/باتری در Safari/iPhone هنوز تأیید نشده‌اند.
+- بررسی ساختار SQL تأیید کرد `SalesOrder`, `SalesOrderLine`, `NegotiationScenario` و `DispatchPlan` در migration `008_sales_dispatch_extension.sql` از قبل تعریف شده‌اند؛ جدول تکراری ساخته نشد. اجرای SQL/RLS هنوز نیازمند SQL Server واقعی است.
+- آزمون‌های b27: `npm test` برابر 608 assertion موفق؛ `audit-actions` برابر 77/77 guarded؛ `audit:contracts` ایستا PASS. `npm run lint` و `npm run build` به‌ترتیب به‌علت dependencyهای نصب‌نشده (`vite/client`, `vite`) مسدودند.
+- بسته هنوز production-ready نیست: اتصال backend/ERP، RLS runtime، realtime server، آزمون browser/iOS، آزمون tile provider و validation انتهابه‌انتها انجام نشده‌اند. فهرست جزئیات در `../NOT_DONE_b26.md` و `../STATUS_b27.md` است.

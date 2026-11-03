@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-11-03T20:53:49.691Z",
+  "method": "static relative-import graph from src/main.tsx; dynamic/runtime registries, CSS references, tests and framework conventions may require manual review",
+  "sourceFiles": 129,
+  "reachableFiles": 121,
+  "unreachableCandidates": 8,
+  "unreachableCandidatesFiles": [
+    "src/components/ui/Progress.tsx",
+    "src/components/ui/SearchableSelect.tsx",
+    "src/components/ui/Skeleton.tsx",
+    "src/components/ui/index.ts",
+    "src/lib/erpImportService.ts",
+    "src/lib/offline.ts",
+    "src/services/erpContextService.ts",
+    "src/services/taskAccessEngine.ts"
+  ]
+}

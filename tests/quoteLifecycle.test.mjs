@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const source = fs.readFileSync(new URL('../src/components/QuotesWorkspace.tsx', import.meta.url), 'utf8');
+const acceptStart = source.indexOf("if (action === 'ACCEPT') {");
+const rejectStart = source.indexOf("if (action === 'REJECT') {", acceptStart);
+assert.ok(acceptStart >= 0 && rejectStart > acceptStart, 'مسیر پذیرش Quote وجود دارد');
+const acceptBlock = source.slice(acceptStart, rejectStart);
+assert.ok(!acceptBlock.includes('draft.invoices'), 'پذیرش پیش‌فاکتور نباید فاکتور قطعی بسازد');
+assert.ok(!acceptBlock.includes('INVOICE_GENERATED_FROM_QUOTE'), 'پذیرش پیش‌فاکتور نباید رویداد صدور فاکتور ثبت کند');
+assert.ok(source.includes('QUOTE_HANDOFF_BLOCKED_NOT_CONFIGURED'), 'ارسال خارجی بدون Connector باید صریحاً مسدود شود');
+assert.ok(!source.includes('EXT-${Date.now()'), 'شناسه خارجی ساختگی نباید ساخته شود');
+assert.ok(source.includes("?.orgConfig?.allowManualFinanceEntry === true"), 'ورود دستی فاکتور باید تابع سیاست صریح باشد');
+assert.ok(source.includes("filter(quote => canOn('quotes', 'VIEW'"), 'فهرست پیش‌فاکتور باید بر اساس scope کاربر فیلتر شود');
+const wizard = fs.readFileSync(new URL('../src/components/QuoteWizardModal.tsx', import.meta.url), 'utf8');
+assert.ok(!wizard.includes('0.10'), 'نرخ مالیات نباید هاردکد باشد');
+assert.ok(wizard.includes('configuredTaxRate'), 'نرخ مالیات باید از تنظیمات سازمان خوانده شود');
+assert.ok(wizard.includes('validUntil: validUntilDays.trim()'), 'مدت اعتبار واردشده باید در Quote ذخیره شود');
+console.log('PASS: 10 assertions (quote lifecycle contracts)');

@@ -1,0 +1,420 @@
+# دستور طراحی و پیاده‌سازی: هدر معلق، ناوبری پایین، ماژول مشتریان و منوی همبرگری
+
+تو یک مهندس ارشد فرانت‌اند و طراح UI هستی. پروژه‌ی **AKHAVAN CRM** (PWA موبایل‌محور، فارسی RTL، React + TypeScript + Tailwind + lucide-react + react-router) را در دست داری. کارهای زیر را **روی کد موجود** انجام بده. هیچ قابلیت موجودی را حذف نکن. فقط ظاهر و رفتار را ارتقا بده و قابلیت‌های ناقص را در حد کم‌هزینه کامل کن.
+
+
+> **کد مرجع پیوست است (بخش ۸ همین سند).** طراحی، ابعاد، رنگ‌ها، انیمیشن‌ها و رفتارها باید **دقیقاً مطابق همان کد** باشند. ظاهر و رفتار را حدس نزن و بازطراحی نکن؛ کد مرجع را به React + TypeScript + Tailwind و ساختار پروژه منتقل کن.
+
+## ۰. قوانین سراسری (نقض‌ناپذیر)
+
+1. **داده‌ی واقعی:** هیچ داده‌ی ثابت یا Mock داخل کامپوننت‌ها ننویس. همه‌چیز از لایه‌ی سرویس/State موجود بیاید. Seed فقط در محیط تست یا با درخواست صریح.
+2. **توکن‌ها:** از توکن‌های سند Design System استفاده کن. رنگ‌ها، radius، سایه‌ها و زمان‌بندی‌ها را hardcode نکن.
+3. **رنگ:**
+   - رنگ برند و همه‌ی عناصر تعاملی **آبی** `primary` است (`#2563EB`، اسکیل کامل `50…800`).
+   - **آلبالویی** فقط در دو جا مجاز است: (الف) کارت «پیشنهاد هوشمند یار» (نشان، دکمه‌ی اصلی، رنگ‌مایه‌ی پس‌زمینه)؛ (ب) پنل منوی همبرگری (بخش ۴).
+   - توکن‌های آلبالویی: `yar #71364B`، `yar-hover #5A2A3C`، `yar-subtle #FBF3F6`، `yar-border #F0D9E1`.
+   - Semantic: success `#16A34A`، warning `#D97706`، danger `#DC2626`، info `#2563EB`، ai `#7C3AED` (فقط آیکون‌های AI مثل لامپ فید فعالیت).
+4. **فونت:** Vazirmatn (فارسی) + Inter (لاتین)، وزن‌های ۴۰۰/۵۰۰/۶۰۰/۷۰۰. اعداد با `Intl.NumberFormat('fa-IR')`.
+5. **مقیاس تایپوگرافی (نسخه‌ی کوچک‌شده؛ جایگزین مقیاس قبلی سند):**
+
+| نقش | اندازه | وزن |
+|---|---|---|
+| Display | 30 | 700 |
+| H1 | 22 | 700 |
+| H2 | 18 | 600 |
+| H3 | 16 | 600 |
+| H4 / عنوان کارت | 14 | 600 |
+| Body (متن اصلی) | 12 | 400 |
+| Body-sm | 11 | 400 |
+| Caption / Overline | 10 | 500–600 |
+
+   - کف اندازه‌ی فونت ۱۰px است و پایین‌تر نرود. `line-height` پیش‌فرض ۱٫۶.
+   - بنابراین: متن اصلی ۱۲، عنوان کارت ۱۴، عدد KPI ‏۲۲، عنوان صفحه در هدر ۱۴، متای ریز ۱۰.
+6. **شعاع:** کارت‌ها `radius.lg = 12px`، دکمه و اینپوت `radius.md = 8px`، آیتم‌های شناور `radius.full`.
+7. **حرکت:** `duration` ‏۱۲۰/۲۰۰/۳۰۰ms، `emphasis` ‏۴۵۰ms، `easing.standard = cubic-bezier(.4,0,.2,1)`، `easing.spring = cubic-bezier(.34,1.56,.64,1)`. فقط `transform`، `opacity` و `clip-path` را انیمیت کن. `prefers-reduced-motion` را رعایت کن.
+8. **دسترسی‌پذیری:** `aria-label` روی دکمه‌های آیکونی، حلقه‌ی فوکوس ۲px ‏`primary.500`، هدف لمسی حداقل ۳۶px، Safe-area برای هدر و ناوبری.
+9. **RBAC و مسیرها:** منطق موجود (`RBACService`، `menuSections`، `filterSections`، `isActivePath`، `useNavigate`) را حفظ کن. هیچ آیتم بدون مجوز نمایش داده نشود.
+
+## ۱. هدر معلق (Floating Header)
+
+- `position: fixed; top: safe-area + 8px`، فاصله‌ی کناری ۱۶px، `z-index: 30`. هرگز در اسکرول پنهان نمی‌شود.
+- مینیمال و بدون کادر بزرگ. فقط سه المان:
+  1. **راست:** دکمه‌ی دایره‌ای ۳۶px منو (همبرگری دوخطی، خط دوم کوتاه‌تر). در صفحه‌ی جزئیات (مثلاً پروفایل مشتری) به دکمه‌ی بازگشت تبدیل می‌شود.
+  2. **وسط:** عنوان صفحه بدون کادر، ۱۴px، وزن ۷۰۰.
+  3. **چپ:** جستجو و اعلان (دایره‌ی ۳۶px). نقطه‌ی اعلان قرمز (`danger`) با تعداد.
+- سطح دکمه‌ها: `rgba(255,255,255,.9)` + `backdrop-filter: blur(14px)` + `border.default` + `shadow.md`. آیکون‌ها خطی با stroke ‏۱٫۶.
+- دسکتاپ (از ۹۰۰px): دکمه‌ی جمع‌کردن سایدبار، عنوان، جستجوی سراسری ۳۰۰×۴۰ و دکمه‌ی «یار».
+
+## ۲. ناوبری پایین (سبک اینستاگرام، ۵ تب، بدون Quick Action)
+
+تب‌ها دقیقاً به این ترتیب (راست به چپ) و با این معنی:
+
+| # | برچسب | آیکون | محتوا |
+|---|---|---|---|
+| ۱ | خانه | home | داشبورد و خلاصه‌ی وضعیت |
+| ۲ | مشتریان | users | پرونده و ارتباط با مشتری |
+| ۳ | فروش | trend | پیش‌فاکتور و مذاکرات |
+| ۴ | پیگیری | check | تسک‌ها و یادآوری‌ها |
+| ۵ | عملیات | grid | صف کارهای اجرایی و موارد نیازمند اقدام |
+
+**ظاهر:** کپسول شناور `radius.full`، عرض `min(100vw − 32px, 420px)`، ارتفاع ۶۴px، `bottom: 10px + safe-area`، سطح شیشه‌ای مثل هدر، `shadow.lg`. تب فعال یک حباب `primary.100` با آیکون `primary.700` (stroke ‏۲٫۱) دارد. آیکون‌ها ۲۲px و بدون برچسب‌اند. روی تب «عملیات» Badge قرمز تعداد موارد نیازمند اقدام نشان داده شود.
+
+**رفتار کشسان (اجباری):**
+1. **حین اسکرول** (هر تغییر بیش از ۲px): نوار کوچک شود. عرض `min(100vw − 88px, 340px)`، ارتفاع ۵۲px، آیکون‌ها `scale(.85)`. انتقال با `duration.emphasis` و `easing.spring`.
+2. **پس از ایستادن:** **۱۰۰۰ms (یک ثانیه) تأخیر** بعد از آخرین رویداد اسکرول، سپس نوار به اندازه‌ی کامل برگردد. هنگام بازگشت انیمیشن Pop اجرا شود: `scale(.94,.92) → scale(1.025,1.03) → scale(1)` در ۴۵۰ms. تایمر با هر اسکرول جدید ریست شود.
+3. **کشیدن (drag):** با لمس و کشیدن روی نوار، حباب فعال دنبال انگشت بیاید و `scale(1.14,1.08)` شود. با رها کردن به نزدیک‌ترین تب بچسبد و Pop اجرا شود.
+4. **در صفحه‌ی گفتگو (چت):** نوار با `translateY(150%)` و opacity صفر در ۳۰۰ms پنهان شود. هیچ ناوبری پایین نباشد (مثل تلگرام).
+5. در دسکتاپ نوار پایین نمایش داده نشود و سایدبار ۲۶۰px (جمع‌شده ۷۲px) جایگزین شود.
+
+## ۳. صفحه‌ی «عملیات» (تب ۵)
+
+این صفحه مرکز همه‌ی کارهای اجرایی است. ساختار:
+
+1. **نیازمند اقدام:** کارت لیستی از صف کارها (تأییدهای منتظر، جلسات امروز، چک‌ها و تعهدات سررسیدشده) با آیکون ۳۲px، عنوان ۱۲px، برچسب اولویت ۱۰px و لینک «همه».
+2. **اقدامات عملیاتی** (شبکه‌ی ۲ ستونه از دکمه-کارت‌ها): صدور درخواست سازمانی، ثبت جلسه، ثبت پیش‌فاکتور، ثبت تماس، وظیفه‌ی جدید، **گزارش‌ها و شاخص‌ها** (مشاهده‌ی عملکرد و KPIها از CRM)، **کاربران**، **گردش کار و تأییدها**.
+3. هر دکمه با RBAC فیلتر شود و به فرم/مسیر مربوط برود.
+
+صفحه‌ی «فروش» (تب ۳): دو KPI، Segmented Control «پیش‌فاکتورها / مذاکرات»، لیست با مبلغ و Pill مرحله و دکمه‌ی «پیش‌فاکتور جدید».
+
+## ۴. منوی همبرگری (NavigationDrawer) — بازطراحی بصری، با حفظ منطق ماژول
+
+فایل `NavigationDrawer.tsx` را ارتقا بده. **منطق را حفظ کن:** `role="dialog"`، `aria-modal`، بستن با Escape و کلیک بیرون، `RBACService` و `filterSections`، بخش‌های قابل‌جمع‌شدن (`openSections`)، `isActivePath`، `ThemeToggle`، `AtmosphereSwitch`، `APP_VERSION_LABEL`، خروج. **ظاهر را مطابق تصویر مرجع** (پنل شرابی با هاله) بساز.
+
+### پنل
+- کاملاً چسبیده به لبه‌ی راست: `top:0; bottom:0; right:0`. عرض `clamp(272px, 64vw, 332px)`. فقط گوشه‌های سمت چپ گرد: `border-radius: 40px 0 0 40px`.
+- پس‌زمینه (شرابی تیره با هاله):
+  - `linear-gradient(165deg, #64224A 0%, #44142F 55%, #2C0C25 100%)`
+  - هاله‌ی گرم گوشه‌ی بالا-راست: `radial-gradient(90% 40% at 100% 0%, rgba(255,150,120,.30), transparent 70%)`
+  - هاله‌ی صورتی گوشه‌ی پایین-چپ: `radial-gradient(80% 40% at 0% 100%, rgba(214,90,130,.32), transparent 70%)`
+  - `backdrop-filter: blur(30px) saturate(1.5)`
+- لبه‌ی شیشه‌ای: `border: 1px solid rgba(255,196,210,.38)` + `inset 1px 1px 0 rgba(255,220,230,.35)` + سایه‌ی `-18px 0 60px rgba(30,6,28,.55)`.
+- Overlay پشت: `rgba(58,18,48,.28)` با `blur(8px)` تا صفحه‌ی زیر محو دیده شود.
+- متن سفید، فونت آیتم‌ها ۱۲px، عنوان بخش‌ها ۱۱px/۶۰۰.
+
+### ساختار (از بالا به پایین)
+1. **لوگو:** مثلث طلایی (گرادیان `#FFD9A8 → #D9824F` با طرح پرنده‌ی سفید) + متن `AKHAVAN` سفید و `CRM` طلایی `#F0A46A`، ۱۶px.
+2. **آیتم فعال بالا «داشبورد/خانه»:** کپسول بلند با گرادیان `rgba(255,255,255,.1) → rgba(222,112,150,.5)`، border صورتی `rgba(255,190,205,.6)`، درخشش `0 0 22px rgba(224,100,140,.4)`، آیکون خانه سمت راست و آیکون گیج تزئینی سمت چپ.
+3. **بخش‌ها** (قابل جمع‌شدن، با چویرون کوچک):
+   - عنوان بخش: نقطه‌ی طلایی درخشان سمت راست، متن، سپس خط محو‌شونده تا لبه‌ی چپ.
+   - **فروش و مشتریان:** مشتریان، بازرگانی فروش و پخش هوشمند، فرصت‌های فروش، گفتگوها
+   - **امور مالی و خزانه‌داری:** دریافت و پرداخت، چک و تعهدات، گزارش‌های مالی
+   - **توزیع و عملیات:** صف عملیات، توزیع و لجستیک، بازگشت کالا
+   - **ابزارهای مدیریتی:** پیگیری و تسک‌ها، گزارش‌ها و تحلیل‌ها، گردش کار و تأییدها
+   - هر آیتم: آیکون ۱۸px سمت راست، سپس برچسب. آیتم فعال همان استایل کپسول درخشان را بگیرد.
+4. **جداکننده**، سپس: تنظیمات، درباره‌ی نرم‌افزار، تغییر تم، خروج. نسخه‌ی برنامه (`APP_VERSION_LABEL`) به‌صورت ریز و کم‌رنگ کنار این گروه.
+5. **کارت کاربر (چسبیده به پایین):** آواتار (عکس کاربر یا حرف اول)، نام ۱۲px/۶۰۰، نقش ۱۰px، فلش سمت چپ. پس‌زمینه‌ی گرادیان شیشه‌ای صورتی و border ‏`rgba(255,190,205,.45)`. کلیک: رفتن به پروفایل.
+- بخش میانی با اسکرول داخلی (بدون نوار اسکرول) و کارت کاربر ثابت باشد.
+
+### انیمیشن باز و بسته شدن (امضای منو)
+1. **افشای دایره‌ای:** `clip-path: circle(0 at 100% 7%) → circle(160% at 100% 7%)` از محل دکمه‌ی منو، ‏۴۵۰ms، `easing.standard`.
+2. هم‌زمان `translateX(18%) → 0` با `easing.spring`.
+3. آیتم‌ها با تأخیر پلکانی `140ms + n × 35ms` از `translateX(22px)` و opacity صفر وارد شوند (۳۰۰ms).
+4. محتوای پشت: `translateX(-6vw) scale(.97)`.
+5. بستن: Overlay، Escape، کشیدن به راست بیش از ۷۰px، یا انتخاب آیتم. زمان‌بندی معکوس ۳۰۰ms.
+
+## ۵. ماژول مشتریان
+
+### لیست
+- جستجو (Search Input با فوکوس ۲px `primary.500`)، چیپ‌های فیلتر فعال، Segmented Control نما (کارت/جدول) و مرتب‌سازی.
+- ردیف مشتری: آواتار، نام ۱۴px/۶۰۰، آدرس/شهر ۱۰–۱۱px، Pill وضعیت (مشتری/سرنخ) و Health Score رنگی (سبز ≥۷۰، نارنجی ≥۴۵، قرمز زیر آن).
+- حالت‌های Loading (Skeleton)، Empty و Error با پیام فارسی روشن. لیست طولانی با Virtualization.
+
+### پروفایل مشتری (قلب سیستم)
+- **هدر چسبان:** آواتار ۶۴px، نام ۱۴px/۶۰۰، Pill وضعیت، نوار Health Score، تلفن/ایمیل/آدرس با آیکون، چهار دکمه‌ی عمل گرد (تماس، پیام، موقعیت، ویرایش).
+- **تب‌های زیرخط‌دار** (اسکرول افقی در موبایل): خلاصه | Timeline | فرصت‌ها | وظایف | ارتباطات.
+  - خلاصه: گروه، سطح اعتبار، میزان خرید سالانه، وضعیت، نمودار میله‌ای فروش ماهانه (`primary.500`) و کارت پیشنهاد یار.
+  - Timeline: فعالیت‌ها با گروه‌بندی روزانه، فیلتر نوع فعالیت و افزودن یادداشت مستقیم.
+  - فرصت‌ها: کارت‌های فرصت با مبلغ و مرحله.
+  - وظایف: لیست تسک‌های مرتبط با چک‌باکس ۱۸px (radius ‏۵) و برچسب اولویت (فوری/متوسط).
+  - ارتباطات: گفتگو (سبک تلگرام، در بخش بعد) و تماس‌ها.
+- در دسکتاپ: دو ستون، هدر چسبان در یک ستون و تب‌ها در ستون دیگر.
+
+### گفتگو (سبک تلگرام)
+- لیست: Segmented «همه / خوانده‌نشده n»، جستجو، ردیف‌های بدون کارت با آواتار ۵۲px، سنجاق‌شده‌ها بالا، Badge تعداد `primary.600`.
+- باز شدن گفتگو تمام‌صفحه (`translateX(104%) → 0`، ۴۵۰ms) و **بدون ناوبری پایین**. بازگشت با دکمه یا کشیدن از لبه (≥۹۰px).
+- هدر سه‌تکه‌ی شناور و `direction:ltr`: Pill بازگشت با شمارنده، Pill نام و وضعیت، آواتار.
+- حباب‌ها: `radius 16`، گوشه‌ی دم ۴px، حداکثر ۸۰٪ عرض، متن ۱۲px، ساعت ۱۰px و تیک دوبل. خروجی `primary.600` با متن سفید در راست؛ ورودی سفید با border در چپ. چیپ تاریخ وسط.
+- Composer: گیره، Pill پیام، و دکمه‌ی میکروفونی که با تایپ به «ارسال» تبدیل می‌شود.
+
+## ۶. معیار پذیرش
+
+- هیچ فونتی کوچک‌تر از ۱۰px و بزرگ‌تر از مقیاس بخش ۰ نیست. عنوان کارت‌ها ۱۴ و متن‌ها ۱۲ یا کمتر است.
+- ناوبری پایین دقیقاً ۵ تب دارد؛ حین اسکرول کوچک می‌شود، **یک ثانیه** پس از ایستادن با Pop بزرگ می‌شود و با drag تب عوض می‌کند. در چت دیده نمی‌شود.
+- منو کاملاً چسبیده به راست، با افشای دایره‌ای باز می‌شود و ظاهر آن مطابق تصویر مرجع است. منطق RBAC، Escape و بخش‌های جمع‌شونده کار می‌کند.
+- آلبالویی فقط روی کارت یار و پنل منو دیده می‌شود. هیچ داده‌ی ثابتی در کامپوننت‌ها نیست.
+- در عرض ۳۷۵px و ۱۴۴۰px اسکرول افقی وجود ندارد.
+
+## ۷. خروجی مورد انتظار
+
+۱. فهرست فایل‌های تغییرکرده و جدید.
+۲. کد کامل `NavigationDrawer.tsx`، `FloatingHeader`، `BottomTabBar`، صفحه‌های مشتریان، فروش و عملیات (با Tailwind و توکن‌ها).
+۳. توضیح کوتاه هر تصمیم طراحی که از کد مرجع فاصله دارد و دلیلش. (به‌جز موارد ضروری، فاصله نگیر.)
+
+## ۸. کد مرجع (الزامی؛ طراحی دقیقاً مطابق این کد)
+
+یک فایل HTML تک‌صفحه‌ای است که طراحی نهایی تأییدشده را اجرا می‌کند. نحوه‌ی استفاده:
+
+| بخش مرجع | کجای کد |
+|---|---|
+| توکن‌ها (رنگ، radius، سایه، حرکت، مقیاس فونت) | بلوک `:root` و `[data-t=dark]` در ابتدای `<style>` |
+| هدر معلق | `#hd`، `.cb`، `#ttl` و تابع `header()` |
+| ناوبری پایین (کوچک‌شدن، تأخیر ۱ ثانیه، Pop، drag) | `.nav`، `.nav.mini`، `.ind`، `@keyframes np` و در JS: `scroll` با `setTimeout(...,1000)`، `pointerdown/move/up`، `pop()`، `navLay()` |
+| منوی همبرگری (پنل شرابی، افشای دایره‌ای، stagger) | `.dr`، `.pn` (دو بلوک؛ بلوک دوم با عنوان «Drawer v6» نهایی است) و در JS: `buildDrawer()`، `drawer()`، `togSec()` |
+| داشبورد و کارت یار | `.kp`، `.ch`، `.rw`، `.yar` و تابع `home()` |
+| فروش و عملیات | توابع `sales()` و `ops()` |
+| مشتریان و پروفایل | تابع `cust()`، `.tabs`، `.tl`، `.hs` |
+| گفتگوی تلگرامی | `.conv`، `.cvh`، `.bub`، `.comp`، `.tc`، `.seg` و توابع `chat()`، `openChat()`، `closeChat()`، `sendMsg()` |
+
+**قوانین استفاده از کد مرجع:**
+- عددهای فونت در این کد همان مقیاس نهایی هستند (کف ۱۰px).
+- شیء `DEMO` فقط برای نمایش است. **آن را کپی نکن.** داده را از لایه‌ی سرویس و State پروژه بخوان.
+- رفتارها و زمان‌بندی‌ها (۱۰۰۰ms تأخیر ناوبری، ۴۵۰ms افشای منو، stagger ‏`140ms + n×35ms`) بدون تغییر منتقل شوند.
+- منطق ماژول (RBAC، `menuSections`، `isActivePath`، Escape، `ThemeToggle`، `AtmosphereSwitch`، `APP_VERSION_LABEL`، خروج) باید روی همین ظاهر سوار شود.
+
+~~~~html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AKHAVAN CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--neutral-0:#FFFFFF;--neutral-50:#F8FAFC;--neutral-100:#F1F5F9;--neutral-200:#E2E8F0;--neutral-300:#CBD5E1;--neutral-400:#94A3B8;--neutral-500:#64748B;--neutral-600:#475569;--neutral-700:#334155;--neutral-800:#1E293B;--neutral-900:#0F172A;--neutral-950:#020617;
+--primary-50:#EFF6FF;--primary-100:#DBEAFE;--primary-500:#3B82F6;--primary-600:#2563EB;--primary-700:#1D4ED8;--primary-800:#1E40AF;
+--success:#16A34A;--warning:#D97706;--danger:#DC2626;--info:#2563EB;--ai:#7C3AED;--ai-subtle:#F3E8FF;--yar:#2563EB;--yar-hover:#5A2A3C;--yar-subtle:#FBF3F6;--yar-border:#F0D9E1;
+--bg-app:var(--neutral-50);--bg-surface:var(--neutral-0);--bg-surface-secondary:var(--neutral-100);--bg-overlay:rgba(15,23,42,.4);--glass:rgba(255,255,255,.9);
+--border-default:var(--neutral-200);--border-strong:var(--neutral-300);--text-primary:var(--neutral-900);--text-secondary:var(--neutral-600);--text-tertiary:var(--neutral-400);
+--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;--radius-full:9999px;
+--shadow-xs:0 1px 2px rgba(15,23,42,.05);--shadow-sm:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);--shadow-md:0 4px 6px -1px rgba(15,23,42,.08),0 2px 4px -2px rgba(15,23,42,.05);--shadow-lg:0 10px 15px -3px rgba(15,23,42,.08),0 4px 6px -4px rgba(15,23,42,.05);--shadow-xl:0 20px 25px -5px rgba(15,23,42,.1),0 8px 10px -6px rgba(15,23,42,.08);
+--dur-fast:120ms;--dur-normal:200ms;--dur-slow:300ms;--dur-emph:450ms;--ease:cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.34,1.56,.64,1)}
+[data-t=dark]{--bg-app:var(--neutral-950);--bg-surface:var(--neutral-900);--bg-surface-secondary:var(--neutral-800);--border-default:var(--neutral-800);--border-strong:var(--neutral-700);--text-primary:var(--neutral-50);--text-secondary:var(--neutral-400);--text-tertiary:var(--neutral-500);--glass:rgba(15,23,42,.9);--primary-50:#172554;--primary-100:#1E3A8A;--ai-subtle:#2E1065;--primary-600:#3B82F6;--yar-subtle:#2A1620;--yar-border:#4A2535}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Vazirmatn,Inter,system-ui,sans-serif;background:var(--bg-app);color:var(--text-primary);font-size:12px;line-height:20px;overflow-x:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--primary-500);outline-offset:2px}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.t-h1{font-size:22px;line-height:32px;font-weight:700}.t-h2{font-size:18px;line-height:28px;font-weight:600}.t-h4{font-size:14px;line-height:24px;font-weight:600}.t-cap{font-size:10px;line-height:16px;font-weight:500;color:var(--text-secondary)}
+.fl{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--border-default);box-shadow:var(--shadow-md)}
+.card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:16px}
+.row{display:flex;align-items:center;gap:12px}.sp{justify-content:space-between}.grid{display:grid;gap:12px}
+#hd{position:fixed;z-index:30;top:0;left:0;right:0;padding:calc(8px + env(safe-area-inset-top,0px)) 16px 4px;display:flex;align-items:center;gap:8px;transition:transform var(--dur-emph) var(--ease)}
+#ttl{flex:1;font-size:16px;line-height:26px;font-weight:600;padding:0 4px}
+.cb{width:40px;height:40px;border-radius:var(--radius-full);display:grid;place-items:center;position:relative;flex:none;transition:transform var(--dur-fast) var(--ease)}.cb:active{transform:scale(.94)}
+.cb em{position:absolute;top:-2px;left:-2px;min-width:16px;height:16px;border-radius:8px;background:var(--danger);color:#fff;font:600 10px/16px Vazirmatn;text-align:center;font-style:normal}
+.av{background:var(--primary-600);color:#fff;font-weight:600}
+main{padding:calc(60px + env(safe-area-inset-top,0px)) 16px 112px;max-width:1280px;margin:auto;transform-origin:100% 50%;transition:transform var(--dur-emph) var(--ease-spring)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--radius-md);background:var(--primary-600);color:#fff;font-weight:600;font-size:12px;box-shadow:var(--shadow-xs);transition:transform var(--dur-fast),background var(--dur-fast)}.btn:hover{background:var(--primary-700)}.btn:active{transform:scale(.98)}
+.btn.sec{background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-strong)}
+.dash{display:grid;grid-template-columns:1fr 1fr;gap:12px}.dash>.full{grid-column:1/-1}
+.kpi b{display:block;font-size:22px;line-height:32px;font-weight:700;margin-top:12px;font-family:Vazirmatn,Inter}.up{color:var(--success)}.dn{color:var(--danger)}
+.ico{width:36px;height:36px;border-radius:var(--radius-lg);display:grid;place-items:center;background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c)}
+.aic{background:var(--ai-subtle);border:1px solid color-mix(in srgb,var(--ai) 22%,transparent);border-radius:var(--radius-xl);padding:16px}
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:10px;font-weight:500}.qa button{display:grid;justify-items:center;gap:8px;padding:12px 4px;border-radius:var(--radius-lg);background:var(--bg-surface-secondary);transition:transform var(--dur-fast)}.qa button:active{transform:scale(.98)}
+.chip{height:36px;padding:0 16px;border-radius:var(--radius-full);font-weight:500;font-size:11px;white-space:nowrap;background:var(--bg-surface);border:1px solid var(--border-default);transition:var(--dur-normal) var(--ease)}.chip.on{background:var(--primary-600);border-color:var(--primary-600);color:#fff}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.in{width:100%;border:0;outline:0;background:none;font:inherit;color:inherit;padding:10px 4px}
+.sr{display:flex;align-items:center;gap:8px;padding:0 12px;height:44px;border-radius:var(--radius-lg);background:var(--bg-surface);border:1px solid var(--border-default);color:var(--text-tertiary)}.sr:focus-within{border:2px solid var(--primary-500)}
+.li{display:flex;gap:12px;align-items:center;padding:12px;border-radius:var(--radius-lg);cursor:pointer;transition:background var(--dur-fast)}.li:hover{background:var(--bg-surface-secondary)}
+.tg{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c)}
+.ck{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--neutral-300);flex:none;display:grid;place-items:center;transition:var(--dur-fast)}.ck.d{background:var(--primary-600);border-color:var(--primary-600);color:#fff}.done .t{text-decoration:line-through;opacity:.5}
+.donut{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;flex:none}.donut span{width:80px;height:80px;border-radius:50%;background:var(--bg-surface);display:grid;place-items:center;font-weight:700;font-size:14px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:104px}.bars i{flex:1;border-radius:6px 6px 2px 2px;background:var(--primary-500);transform-origin:bottom;animation:gr var(--dur-emph) var(--ease) both}@keyframes gr{from{transform:scaleY(0)}}
+.pf{width:64px;height:64px;border-radius:50%;font-size:22px;display:grid;place-items:center;flex:none}
+.act{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:10px;font-weight:500;margin-top:16px}.act button{display:grid;justify-items:center;gap:6px}.act .cb{width:48px;height:48px;border-radius:var(--radius-xl);background:var(--primary-50);color:var(--primary-700);border:1px solid var(--primary-100)}
+.hs{height:6px;border-radius:3px;background:var(--neutral-200);overflow:hidden;margin-top:6px}.hs i{display:block;height:100%;background:var(--success)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border-default);margin:16px -4px 12px}.tabs button{padding:10px 14px;font-weight:500;color:var(--text-secondary);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:var(--dur-normal)}.tabs button.on{color:var(--primary-700);border-color:var(--primary-600);font-weight:600}
+.kv{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-default)}.kv:last-child{border:0}.kv span:first-child{color:var(--text-secondary)}
+.tl{position:relative;padding-right:20px}.tl:before{content:"";position:absolute;right:15px;top:6px;bottom:6px;width:1px;background:var(--border-default)}.tl .ev{position:relative;display:flex;gap:12px;padding:8px 0}.tl .ev i{position:absolute;right:-20px;top:8px;width:30px;height:30px;border-radius:50%;background:var(--primary-50);color:var(--primary-700);display:grid;place-items:center;border:2px solid var(--bg-app)}.tl .ev>div{margin-right:20px}
+.fab{position:fixed;z-index:25;left:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;color:#fff;display:grid;place-items:center;background:var(--primary-600);box-shadow:var(--shadow-lg);transition:transform var(--dur-slow) var(--ease-spring),opacity var(--dur-normal)}
+body.mini .fab{transform:translateY(8px) scale(.9)}body.inchat .fab{opacity:0;pointer-events:none}
+.nav{position:fixed;z-index:40;left:0;right:0;margin:0 auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100vw - 32px),420px);height:64px;padding:6px;border-radius:var(--radius-full);touch-action:none;box-shadow:var(--shadow-lg);transition:width var(--dur-emph) var(--ease-spring),height var(--dur-emph) var(--ease-spring),transform var(--dur-slow) var(--ease),opacity var(--dur-normal)}
+.nav.mini{width:min(calc(100vw - 88px),340px);height:52px}.nav.pop{animation:np var(--dur-emph) var(--ease-spring)}@keyframes np{0%{transform:scale(.94,.92)}55%{transform:scale(1.025,1.03)}100%{transform:none}}
+body.inchat .nav{transform:translateY(150%);opacity:0;pointer-events:none}
+.tr{position:relative;display:flex;height:100%}.tr button{flex:1;display:grid;place-items:center;position:relative;z-index:2;color:var(--text-secondary);transition:color var(--dur-normal)}
+.tr button svg{width:24px;height:24px;transition:transform var(--dur-emph) var(--ease-spring)}.nav.mini .tr button svg{transform:scale(.85)}.tr button.on{color:var(--primary-700)}.tr button.on svg{stroke-width:2.1}
+[data-t=dark] .tr button.on{color:#fff}
+.ind{position:absolute;top:0;bottom:0;right:calc(var(--i,0)*20%);width:20%;border-radius:var(--radius-full);background:var(--primary-100);transition:right var(--dur-emph) var(--ease-spring),transform var(--dur-slow)}.ind.drag{transition:transform var(--dur-slow);transform:scale(1.14,1.08)}
+.av2{width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:600;display:grid;place-items:center;color:#fff;background:var(--primary-600);transition:transform var(--dur-emph) var(--ease-spring)}.nav.mini .av2{transform:scale(.85)}
+.bd{position:absolute;top:6px;right:calc(50% - 18px);min-width:16px;height:16px;border-radius:8px;background:var(--danger);color:#fff;font:600 10px/16px Vazirmatn;text-align:center;padding:0 4px}
+.dr{position:fixed;inset:0;z-index:60;pointer-events:none}.dr .sc{position:absolute;inset:0;background:var(--bg-overlay);opacity:0;transition:opacity var(--dur-slow)}
+.dr .pn{position:absolute;top:0;bottom:0;right:0;width:clamp(168px,44vw,300px);border-radius:28px 0 0 28px;padding:calc(18px + env(safe-area-inset-top,0px)) 12px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:2px;color:#fff;overflow:hidden;background:radial-gradient(120% 50% at 100% 100%,rgba(255,170,150,.2),transparent 60%),linear-gradient(165deg,#7d3b55,#5A2A3C 50%,#451F2E);clip-path:circle(0 at 100% 7%);transform:translateX(18%);transition:clip-path var(--dur-emph) var(--ease),transform var(--dur-emph) var(--ease-spring);box-shadow:var(--shadow-xl)}
+.dr.on{pointer-events:auto}.dr.on .sc{opacity:1}.dr.on .pn{clip-path:circle(160% at 100% 7%);transform:none}
+.pn .lg{display:flex;align-items:center;gap:8px;direction:ltr;justify-content:center;font-weight:700;font-size:11px;padding:0 0 14px}.pn .lg i{width:26px;height:26px;border-radius:var(--radius-md);display:grid;place-items:center;background:rgba(255,255,255,.18)}.pn .lg svg{width:15px;height:15px}
+.pn .it{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-radius:var(--radius-lg);font-size:11px;font-weight:500;color:rgba(255,255,255,.88);border:1px solid transparent;opacity:0;transform:translateX(22px);transition:opacity var(--dur-slow) var(--ease),transform var(--dur-slow) var(--ease),background var(--dur-fast)}
+.dr.on .it{opacity:1;transform:none;transition-delay:calc(var(--n)*35ms + 140ms)}.pn .it svg{width:19px;height:19px;stroke-width:1.5}.pn .it:active{background:rgba(255,255,255,.12)}
+.pn .it.on{background:linear-gradient(135deg,rgba(255,255,255,.26),rgba(255,255,255,.08));border-color:rgba(255,255,255,.25);font-weight:600}
+.pn .us{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16)}.pn .us b{font-size:10px;display:block}.pn .us small{font-size:10px;opacity:.7}
+body.dopen main,body.dopen #hd{transform:translateX(-14vw) scale(.94)}
+.seg{position:relative;display:flex;border-radius:var(--radius-lg);padding:3px;background:var(--bg-surface-secondary);margin-bottom:12px}.seg button{flex:1;padding:8px;z-index:1;font-weight:500;font-size:11px}.seg i{position:absolute;top:3px;bottom:3px;width:calc(50% - 3px);right:3px;border-radius:var(--radius-md);background:var(--bg-surface);box-shadow:var(--shadow-sm);transition:transform var(--dur-slow) var(--ease-spring)}
+.tc{display:flex;gap:12px;padding:10px 4px;cursor:pointer;align-items:center}.tc .a{width:52px;height:52px;border-radius:50%;font-size:16px;display:grid;place-items:center;flex:none}.tc .bx{flex:1;min-width:0;border-bottom:1px solid var(--border-default);padding-bottom:10px}.tc:last-child .bx{border:0}
+.ub{min-width:20px;height:20px;border-radius:10px;background:var(--primary-600);color:#fff;font:600 10px/20px Vazirmatn;text-align:center;padding:0 6px}
+.conv{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:var(--bg-app);transform:translateX(104%);transition:transform var(--dur-emph) var(--ease);overflow:hidden}.conv.on{transform:none}
+.conv:before{content:"";position:absolute;inset:0;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cg fill='none' stroke='%23DBEAFE' stroke-width='1.5'%3E%3Ccircle cx='22' cy='26' r='8'/%3E%3Cpath d='M78 20l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z'/%3E%3Crect x='30' y='84' width='20' height='14' rx='4'/%3E%3Cpath d='M92 90q9-13 18 0'/%3E%3C/g%3E%3C/svg%3E")}
+.cvh{position:absolute;z-index:3;top:0;left:0;right:0;direction:ltr;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 6px}
+.cbk{height:40px;border-radius:20px;display:flex;align-items:center;gap:2px;padding:0 12px 0 6px;font-weight:600;font-size:12px}.ct{flex:1;border-radius:var(--radius-xl);padding:4px 10px;text-align:center;min-width:0}.ct b{display:block;font-size:13px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ct small{color:var(--text-secondary);font-size:10px}
+.msgs{position:relative;flex:1;overflow:auto;padding:calc(68px + env(safe-area-inset-top,0px)) 12px 88px;display:flex;flex-direction:column;gap:3px;direction:ltr}
+.dc{align-self:center;margin:8px 0;padding:2px 12px;border-radius:var(--radius-full);font-size:10px;font-weight:500;color:var(--text-secondary)}
+.bub{max-width:80%;padding:6px 12px;border-radius:var(--radius-xl);font-size:13px;line-height:24px;direction:rtl}.bub small{display:inline-flex;gap:3px;align-items:center;opacity:.7;font-size:10px;margin-right:8px;float:left;padding-top:8px}.bub small svg{width:14px;height:14px}
+.me{align-self:flex-end;background:var(--primary-600);color:#fff;border-bottom-right-radius:4px}.th{align-self:flex-start;background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:var(--shadow-xs);border-bottom-left-radius:4px;margin-top:4px}
+.comp{position:absolute;z-index:3;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:12px;right:12px;display:flex;gap:8px;align-items:flex-end;direction:ltr}.comp .pill{flex:1;border-radius:22px;display:flex;align-items:center;padding:0 12px;min-height:44px;direction:rtl}.comp .pill .in{padding:10px 4px}
+.sb{display:none}
+@media(min-width:900px){
+ .nav,.fab,.dr,#mb0{display:none}
+ .sb{display:flex;flex-direction:column;position:fixed;z-index:35;top:0;bottom:0;right:0;width:260px;background:var(--bg-surface);border-left:1px solid var(--border-default);padding:16px 12px;gap:4px;transition:width var(--dur-slow) var(--ease)}
+ .sb .lg{display:flex;align-items:center;gap:12px;padding:4px 8px 16px;font-weight:700}.sb .lg i{width:36px;height:36px;border-radius:var(--radius-lg);background:var(--primary-600);color:#fff;display:grid;place-items:center;flex:none}
+ .sb .it{display:flex;gap:12px;align-items:center;height:44px;padding:0 12px;border-radius:var(--radius-lg);font-weight:500;color:var(--text-secondary);transition:var(--dur-fast);white-space:nowrap;overflow:hidden}.sb .it:hover{background:var(--bg-surface-secondary)}.sb .it.on{background:var(--primary-50);color:var(--primary-700);font-weight:600}
+ .sb .it .ub{margin-right:auto}body.sbc .sb{width:72px}body.sbc .sb .it span,body.sbc .sb .lg b,body.sbc .sb .ub{display:none}
+ #hd{right:276px;left:16px;transition:right var(--dur-slow) var(--ease)}body.sbc #hd{right:88px}
+ main{margin-right:260px;padding:76px 24px 40px;max-width:none;transition:margin var(--dur-slow) var(--ease)}body.sbc main{margin-right:72px}
+ .dash{grid-template-columns:repeat(4,1fr);gap:16px}.dash>.s2{grid-column:span 2}
+ .conv{position:relative;inset:auto;transform:none;height:74vh;border-radius:var(--radius-xl);border:1px solid var(--border-default)}.cvh{position:absolute}.xb{display:none!important}
+ .chatgrid{display:grid;grid-template-columns:360px 1fr;gap:16px}.twoc{display:grid;grid-template-columns:1fr 1fr;gap:16px}#ttl{font-size:18px}
+}
+@media(max-width:899px){.dash>.s2{grid-column:1/-1}.dsk{display:none}}
+.lc{padding:0;overflow:hidden}.ch{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-default)}.ch b{font-size:15px;line-height:24px;font-weight:600}.ch button{color:var(--primary-600);font-weight:500;font-size:12px}
+.rw{display:flex;gap:12px;align-items:center;padding:16px 20px;position:relative;cursor:pointer}.rw+.rw:before{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;background:var(--border-default)}
+.at{width:40px;height:40px;border-radius:var(--radius-lg);display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c)}.rw .tx{flex:1;font-size:12px;line-height:22px;min-width:0}.rw .tx strong{font-weight:600}.rw .tt{font-size:13px;font-weight:500;line-height:24px}
+.kp{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:20px 16px}.kl{font-size:11px;color:var(--text-tertiary)}.kv2{font:700 26px/36px Inter,Vazirmatn,sans-serif;margin:8px 0}.kd{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500}.kd svg{width:14px;height:14px;stroke-width:2.2}.kd.up{color:var(--success)}.kd.dn{color:var(--danger)}
+.yar{background:linear-gradient(135deg,var(--yar-subtle),var(--bg-surface));border:1px solid var(--yar-border);border-radius:var(--radius-xl);padding:20px}.yar p{color:var(--text-secondary);font-size:12px;line-height:26px;margin:12px 0 16px}.yb{background:var(--yar);color:#fff;font-size:10px;font-weight:600;padding:3px 12px;border-radius:var(--radius-full)}.btn.yr,.btn.ai{background:var(--yar)}.btn.yr:hover,.btn.ai:hover{background:var(--yar-hover)}
+.tg2{font-size:10px;font-weight:500;padding:2px 10px;border-radius:var(--radius-md);background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}.stg{font-size:10px;font-weight:500;padding:2px 12px;border-radius:var(--radius-full);background:var(--primary-50);color:var(--primary-700)}
+/* ---- Typography & density aligned to dashboard-layout.html ---- */
+body{font-size:12px;line-height:1.6}
+.card{border-radius:12px}.cti{font-size:12px;font-weight:600;line-height:1.6}
+.kp{border-radius:12px;padding:18px 20px}.kl{font-size:10px;font-weight:500;margin-bottom:6px}.kv2{font:700 22px/1.2 Vazirmatn,Inter,sans-serif;margin:0}.kd{font-size:10px;margin-top:6px}.kd svg{width:12px;height:12px}
+.ch{padding:16px 20px}.ch b{font-size:12px;font-weight:600;line-height:1.6}.ch button{font-size:10px;font-weight:500}
+.rw{padding:12px 20px;gap:12px}.ch+.rw{padding-top:16px}.rw:last-child{padding-bottom:16px}.rw+.rw:before{background:var(--neutral-100)}[data-t=dark] .rw+.rw:before{background:var(--neutral-800)}
+.at{width:32px;height:32px;border-radius:8px}.at svg{width:16px;height:16px}
+.rw .tx{font-size:11px;line-height:1.6}.rw .tx .t-cap{font-size:10px;color:var(--text-tertiary);line-height:1.6}.rw .tt{font-size:11px;font-weight:500;line-height:1.6;margin-bottom:3px}
+.ck{width:18px;height:18px;border-width:2px;border-radius:5px}
+.tg2{font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:color-mix(in srgb,var(--c) 14%,#fff)}[data-t=dark] .tg2{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.stg{font-size:10px;padding:2px 8px}.ov{font-size:11px;font-weight:600;color:var(--text-primary);white-space:nowrap}
+.yar{padding:18px 20px;border-radius:12px}.yar p{font-size:11px;line-height:1.7;margin:0 0 12px;color:var(--neutral-700)}.yar>.row:first-child{gap:8px;margin-bottom:10px}.yar .row{gap:8px!important}.yb{font-size:10px;font-weight:700;padding:2px 8px}.yt{font-size:11px;font-weight:600;color:var(--neutral-800)}
+.btn{height:32px;padding:0 14px;font-size:10.5px;font-weight:600;border-radius:8px;gap:6px}.btn.sec{background:transparent;border:1px solid var(--neutral-200);color:var(--neutral-600)}.btn.sec:hover{background:var(--bg-surface-secondary)}
+#hd .cb{width:36px;height:36px}#ttl{font-size:14px;font-weight:700;line-height:1.6}.sr .in,.sr input{font-size:11px}
+.tr button svg{width:22px;height:22px}.t-h2{font-size:18px;line-height:28px;font-weight:600}
+.kv{font-size:11px}.tabs button{font-size:11px}.bub{font-size:12px;line-height:1.6}.bub small{font-size:10px}.ct b{font-size:12px}.dc{font-size:10px}
+.pn .it{font-size:11.5px}.sb .it{height:auto;padding:10px 12px;font-size:11.5px;font-weight:500;border-radius:8px}.sb .it svg{width:20px;height:20px}.sb .lg b{font-size:14px;font-weight:700}.sb .lg i{width:36px;height:36px;border-radius:10px}.sb .ub{font-size:10px;font-weight:600;height:auto;line-height:1.6;padding:1px 7px}
+/* ---- Drawer v6: AKHAVAN reference style ---- */
+.dr .sc{background:rgba(58,18,48,.28)}.dr.on .sc{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dr .pn{width:clamp(272px,64vw,332px);border-radius:40px 0 0 40px;padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(12px + env(safe-area-inset-bottom,0px));gap:0;color:#fff;border:1px solid rgba(255,196,210,.38);border-right:0;background:radial-gradient(90% 40% at 100% 0%,rgba(255,150,120,.3),transparent 70%),radial-gradient(80% 40% at 0% 100%,rgba(214,90,130,.32),transparent 70%),linear-gradient(165deg,#64224a 0%,#44142f 55%,#2c0c25 100%);backdrop-filter:blur(30px) saturate(1.5);-webkit-backdrop-filter:blur(30px) saturate(1.5);box-shadow:-18px 0 60px rgba(30,6,28,.55),inset 1px 1px 0 rgba(255,220,230,.35),inset 0 0 40px rgba(255,140,170,.08)}
+.pn .lg{direction:ltr;justify-content:flex-start;gap:10px;padding:2px 6px 14px;font-size:16px;letter-spacing:.3px;font-family:Inter,Vazirmatn,sans-serif}.pn .lg svg{width:40px;height:40px;stroke:none;fill:none}.pn .lg span{color:#F0A46A}
+.pn .mid{flex:1;overflow-y:auto;scrollbar-width:none;margin:0 -4px;padding:0 4px}.pn .mid::-webkit-scrollbar{display:none}
+.pn .it{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;padding:9px 10px;border-radius:14px;font-size:12px;font-weight:500;color:rgba(255,255,255,.9);text-align:right;border:1px solid transparent}
+.pn .it svg{width:18px;height:18px;stroke-width:1.6;opacity:.95}.pn .it span{flex:1}
+.pn .it.on{min-height:46px;background:linear-gradient(90deg,rgba(255,255,255,.1),rgba(222,112,150,.5));border-color:rgba(255,190,205,.6);font-weight:600;box-shadow:0 0 22px rgba(224,100,140,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.pn .sh{display:flex;align-items:center;gap:8px;width:100%;padding:14px 6px 6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.92)}.pn .sh:before{content:"";order:-1;width:6px;height:6px;border-radius:50%;background:#F0A46A;box-shadow:0 0 8px #F0A46A}.pn .sh i{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.28),transparent)}.pn .sh svg{width:13px;height:13px;transition:transform var(--dur-normal);opacity:.7}.pn .sh.cl svg{transform:rotate(90deg)}
+.pn .sec{display:grid;gap:1px}.pn .sec[hidden]{display:none}.pn hr{border:0;height:1px;background:rgba(255,255,255,.16);margin:10px 4px}
+.pn .us{margin-top:8px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(222,112,150,.28));border:1px solid rgba(255,190,205,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.3);cursor:pointer;line-height:1.5}.pn .us b{font-size:12px;font-weight:600}.pn .us small{font-size:10px;opacity:.75}.pn .us>svg{width:18px;height:18px;flex:none}.pn .us .cb{background:linear-gradient(135deg,#F0A46A,#C96F55);color:#fff}
+body.dopen main,body.dopen #hd{transform:translateX(-6vw) scale(.97)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<aside class="sb" id="sb"></aside>
+<header id="hd"></header>
+<main id="v"></main>
+<button class="fab" id="fab" aria-label="جدید"></button>
+<nav class="nav fl" id="nav"><div class="tr" id="tr"><div class="ind" id="ind"></div></div></nav>
+<div class="dr" id="dr"><div class="sc" onclick="drawer(0)"></div><aside class="pn" id="pn"></aside></div>
+<section class="conv" id="conv"></section>
+<script>
+/* ===== DEMO SEED — prototype placeholder only. Replace with service-layer/API data. ===== */
+const DEMO={user:{name:'عباس',full:'عباس اخوان',role:'مدیر سیستم'},
+ai:{t:'۳ مشتری در ۷ روز گذشته پاسخی نداده‌اند و احتمال از دست رفتن فرصت وجود دارد. پیشنهاد می‌کنم امروز با «شرکت آریا تدبیر» و «گروه صنعتی پارسه» تماس بگیرید.'},
+salesKpi:[['پیش‌فاکتورهای باز','12','۳ مورد جدید'],['ارزش مذاکرات','۲.۶ میلیارد','۱۱٪ رشد']],
+pre:[['پیش‌فاکتور ۱۰۲۴','شرکت نگین پارس','۱۲۰٬۰۰۰٬۰۰۰ تومان','در انتظار تأیید'],['پیش‌فاکتور ۱۰۲۵','فروشگاه رفاه','۴۵٬۰۰۰٬۰۰۰ تومان','ارسال‌شده']],
+neg:[['قرارداد سالانه','زنجیره‌ای گلستان','۹۱۰٬۰۰۰٬۰۰۰ تومان','مذاکره'],['سفارش فصلی','فروشگاه رفاه','۸۰٬۰۰۰٬۰۰۰ تومان','پیشنهاد']],
+queue:[['تأیید درخواست تخفیف نگین پارس','نیازمند تأیید شما','فوری','#DC2626','req'],['جلسه بررسی قرارداد گلستان','امروز ۱۶:۰۰','متوسط','#D97706','cal'],['پیگیری چک برگشتی فاکتور ۵۲۱','امور مالی','بالا','#DC2626','card']],
+acts:[['mail','#2563EB','ایمیل پیگیری برای <strong>شرکت آریا تدبیر</strong> ارسال شد','۲۰ دقیقه پیش · شما'],['okc','#16A34A','فرصت <strong>پروژه ERP پارسه</strong> به مرحله مذاکره منتقل شد','۱ ساعت پیش · سارا احمدی'],['cal','#D97706','جلسه دمو با <strong>گروه صنعتی کاوه</strong> برای فردا ثبت شد','۳ ساعت پیش · سیستم'],['bulb','#7C3AED','یار پیشنهاد تماس با <strong>۳ مشتری غیرفعال</strong> را داد','۵ ساعت پیش · سیستم یار']],
+hot:[['پروژه ERP پارسه','گروه صنعتی پارسه','۱.۸ میلیارد','مذاکره'],['سیستم CRM آریا','شرکت آریا تدبیر','۹۲۰ میلیون','پیشنهاد'],['اتوماسیون فروش کاوه','گروه صنعتی کاوه','۱.۲ میلیارد','دمو']],
+kpis:[['فرصت‌های باز','24','۱۲٪ نسبت به ماه قبل',1],['ارزش کل Pipeline','۴.۲ میلیارد','۸٪ رشد',1],['وظایف امروز','7','۲ مورد معوق',-1],['نرخ تبدیل این ماه','۳۴٪','۵٪ بهتر از میانگین',1]],
+sales:[3.1,2.8,3.4,3.9,3.6,4.2,4.8,5.6,5.1,6.2,6.9,7.48],regions:[['تهران',42,'#2563EB'],['اصفهان',26,'#16A34A'],['مشهد',18,'#D97706'],['سایر',14,'#7C3AED']],months:[3,4,5,4,6,7,9,10],
+tasks:[['تماس پیگیری با شرکت آریا تدبیر','شرکت آریا تدبیر','فوری','#DC2626',0,'تا ساعت ۱۲:۰۰'],['ارسال پیشنهاد قیمت پروژه ERP','پروژه ERP پارسه','متوسط','#D97706',0,'تا ساعت ۱۶:۰۰'],['آماده‌سازی دمو برای گروه کاوه','گروه صنعتی کاوه','متوسط','#D97706',0,'تا فردا ۱۰:۰۰'],['پیگیری پرداخت','فاکتور ۵۲۱','بالا','#DC2626',0,'تا فردا'],['ارسال پیام گروهی','مشتریان فعال','کم','#16A34A',1,'تکمیل‌شده']],
+customers:[{n:'شرکت نگین پارس',s:'مشتری',hs:82,ph:'۰۲۱-۸۸۷۷۶۵۴۳',em:'info@neginpars.com',ad:'تهران، خیابان ولیعصر، پلاک ۱۲۳',lv:'فروشگاه‌های زنجیره‌ای',cr:'سطح ۴',bal:'۴۵۰٬۰۰۰٬۰۰۰ تومان',st:'فعال'},{n:'فروشگاه رفاه',s:'سرنخ',hs:56,ph:'۰۳۱-۳۲۲۱۱۰۰',em:'info@refah.ir',ad:'اصفهان، چهارباغ',lv:'سوپرمارکت',cr:'سطح ۳',bal:'۱۸۰٬۰۰۰٬۰۰۰ تومان',st:'فعال'},{n:'زنجیره‌ای گلستان',s:'مشتری',hs:34,ph:'۰۵۱-۳۸۴۴۵۵۶',em:'sales@golestan.ir',ad:'مشهد، بلوار وکیل‌آباد',lv:'زنجیره‌ای',cr:'سطح ۵',bal:'۹۱۰٬۰۰۰٬۰۰۰ تومان',st:'پیگیری'}],
+tl:[['امروز',[['تماس تلفنی با مشتری','۱۰:۲۰','phone'],['ارسال فاکتور','۰۹:۰۵','file']]],['دیروز',[['جلسه حضوری','۱۶:۰۰','users'],['یادداشت: درخواست تخفیف','۱۱:۳۰','edit']]]],
+opps:[['قرارداد سالانه','۲۵۰٬۰۰۰٬۰۰۰ تومان','مذاکره','#D97706'],['سفارش فصلی','۸۰٬۰۰۰٬۰۰۰ تومان','پیشنهاد','#2563EB']],
+chats:[{n:'شرکت نگین پارس',on:1,u:2,t:'۱۰:۳۵',pin:1,m:[['th','سلام، فاکتور امروز ارسال شد.','۱۰:۲۵'],['me','ممنون، رسید دریافت شد.','۱۰:۳۲'],['th','در صورت نیاز به محصولات بیشتر در خدمت شما هستم.','۱۰:۳۵']]},{n:'زنجیره‌ای گلستان',on:1,u:5,t:'۰۸:۱۰',pin:0,m:[['th','جلسه فردا ساعت ۱۱ هماهنگ شد؟','۰۸:۱۰']]},{n:'فروشگاه رفاه',on:0,u:0,t:'دیروز',pin:0,m:[['th','پیشنهاد قیمت را بررسی می‌کنیم.','۱۶:۴۰']]}]};
+const fa=n=>(+n).toLocaleString('fa-IR'),$=s=>document.querySelector(s);
+const P={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',trend:'M3 17l6-6 4 4 8-8M15 7h6v6',req:'M6 3h8l4 4v14H6zM14 3v4h4M12 11v6M9 14h6',wallet:'M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a1 1 0 0 1-1-1zM4 7l12-3v3M16 13h4',card:'M3 6h18v12H3zM3 10h18M7 15h4',pie:'M12 3v9h9a9 9 0 1 1-9-9zM15 3a9 9 0 0 1 6 6h-6z',truck:'M3 6h11v10H3zM14 9h4l3 3v4h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4M17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',flow:'M9 3h6v5H9zM3 16h6v5H3zM15 16h6v5h-6zM12 8v4M6 16v-4h12v4',info:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01',arr:'M5 12h14M13 6l6 6-6 6',gauge:'M4 16a8 8 0 1 1 16 0M12 16l4-5',logout:'M10 4H5v16h5M15 8l4 4-4 4M19 12H9',chev:'M6 9l6 6 6-6',cup:'M6 15l6-6 6 6',cdn:'M6 9l6 6 6-6',cal:'M5 5h14v15H5zM5 10h14M9 3v4M15 3v4',bulb:'M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11v2h6v-2a6 6 0 0 0-3-11z',okc:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12l3 3 5-6',home:'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',users:'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M21 20v-1a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',check:'M4 5h16v14H4zM8 12l3 3 5-6',chat:'M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z',bell:'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4',search:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5',plus:'M12 5v14M5 12h14',phone:'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z',mail:'M3 6h18v12H3zM3 7l9 7 9-7',pin:'M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4',edit:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',back:'M9 5l7 7-7 7',lback:'M15 5l-7 7 7 7',send:'M3 11l18-8-8 18-2-8z',moon:'M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z',sun:'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',file:'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6',target:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',clip:'M20 11l-8 8a5 5 0 0 1-7-7l8-8a3.5 3.5 0 0 1 5 5l-8 8a2 2 0 0 1-3-3l7-7',alert:'M12 8v5M12 17h.01M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',clock:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',ban:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM6 6l12 12',menu:'M4 8h16M4 16h10',mic:'M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM6 11a6 6 0 0 0 12 0M12 17v4',user:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21a8 8 0 0 1 16 0',chart:'M4 20V10M10 20V4M16 20v-8M22 20H2',cog:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15l1.6 1-2 3.4-1.8-.7a7 7 0 0 1-1.7 1L15 21h-6l-.5-2.3a7 7 0 0 1-1.7-1l-1.8.7-2-3.4 1.6-1a7 7 0 0 1 0-2l-1.6-1 2-3.4 1.8.7a7 7 0 0 1 1.7-1L9 3h6l.5 2.3a7 7 0 0 1 1.7 1l1.8-.7 2 3.4-1.6 1a7 7 0 0 1 0 2z',tick:'M3 12l4 4 6-8M10 16l1 1 8-9',spark:'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',panel:'M3 5h18v14H3zM15 5v14'};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24"><path d="${P[n]}"/></svg>`;
+const TABS=[['home','خانه','home'],['cust','مشتریان','users'],['sales','فروش','trend'],['task','پیگیری','check'],['ops','عملیات','grid']];
+const NAMES={home:'خانه',cust:'مشتریان',sales:'فروش',task:'پیگیری',ops:'عملیات',chat:'گفتگوها',me:'پروفایل'};
+const S={tab:'home',cust:null,ct:0,flt:'all',q:'',chat:null,cf:'all',dark:matchMedia('(prefers-color-scheme:dark)').matches};
+function spark(a,w=420,h=150){const mx=Math.max(...a)*1.1,x=i=>10+i*(w-20)/(a.length-1),y=v=>h-14-(v/mx)*(h-34);let d=`M${x(0)},${y(a[0])}`;a.forEach((v,i)=>{if(i){const cx=(x(i)+x(i-1))/2;d+=` C${cx},${y(a[i-1])} ${cx},${y(v)} ${x(i)},${y(v)}`}});const L=a.length-1;return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;display:block"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".22"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs><path d="${d} L${x(L)},${h} L${x(0)},${h}Z" fill="url(#ag)"/><path d="${d}" fill="none" stroke="#2563EB" stroke-width="2.4" stroke-linecap="round"/><circle cx="${x(L)}" cy="${y(a[L])}" r="5" fill="#fff" stroke="#2563EB" stroke-width="3"/></svg>`}
+function home(){const D=DEMO,conic='conic-gradient('+(()=>{let c=0;return D.regions.map(r=>{const s=c;c+=r[1];return`${r[2]} ${s}% ${c}%`}).join(',')})()+')',dt=new Date().toLocaleDateString('fa-IR',{weekday:'long',day:'numeric',month:'long'}),
+ch=(t,l,fn,b)=>`<div class="card lc"><div class="ch"><b>${t}</b><button onclick="${fn}">${l}</button></div>${b}</div>`;
+return`<div class="dash"><div class="full"><div class="t-cap">سلام ${D.user.name} · ${dt}</div></div>
+<div class="yar full"><div class="row" style="gap:10px"><span class="yb">یار</span><b class="yt">پیشنهاد هوشمند امروز</b></div><p>${D.ai.t}</p><div class="row" style="gap:12px"><button class="btn yr" onclick="toast()">مشاهده لیست</button><button class="btn sec" onclick="toast()">بعداً یادآوری کن</button></div></div>
+${D.kpis.map(k=>`<div class="kp"><div class="kl">${k[0]}</div><div class="kv2">${k[1]}</div><div class="kd ${k[3]>0?'up':'dn'}">${ic(k[3]>0?'cup':'cdn')}${k[2]}</div></div>`).join('')}
+<div class="s2">${ch('فعالیت‌های اخیر','مشاهده همه','toast()',D.acts.map(a=>`<div class="rw"><span class="at" style="--c:${a[1]}">${ic(a[0])}</span><div class="tx">${a[2]}<div class="t-cap">${a[3]}</div></div></div>`).join(''))}</div>
+<div class="s2">${ch('وظایف امروز','همه وظایف',"go('task')",D.tasks.slice(0,3).map(t=>`<div class="rw" onclick="DEMO.tasks[${D.tasks.indexOf(t)}][4]^=1;draw()"><span class="ck ${t[4]?'d':''}">${t[4]?ic('check').replace('class="i"','class="i" style="width:14px;height:14px"'):''}</span><div class="tx"><div class="tt">${t[0]}</div><div class="row" style="gap:8px;margin-top:4px"><span class="tg2" style="--c:${t[3]}">${t[2]}</span><span class="t-cap">${t[5]}</span></div></div></div>`).join(''))}</div>
+<div class="s2">${ch('فرصت‌های داغ','Pipeline','toast()',D.hot.map(o=>`<div class="rw"><div class="tx"><div class="tt" style="font-weight:600">${o[0]}</div><div class="t-cap">${o[1]}</div></div><div style="text-align:left;display:grid;gap:4px;justify-items:end"><b class="ov">${o[2]}</b><span class="stg">${o[3]}</span></div></div>`).join(''))}</div>
+<div class="card s2"><div class="row sp"><b class="cti">روند فروش</b><span class="tg" style="--c:#2563EB">ماه</span></div>${spark(D.sales)}</div>
+<div class="card s2"><b class="cti">توزیع مشتریان</b><div class="row" style="margin-top:12px;gap:20px"><div class="donut" style="background:${conic}"><span>${fa(1288)}</span></div><div class="grid" style="flex:1;gap:8px;font-size:11px">${D.regions.map(r=>`<div class="row sp"><span class="row" style="gap:8px"><i style="width:8px;height:8px;border-radius:50%;background:${r[2]}"></i>${r[0]}</span><b>${fa(r[1])}٪</b></div>`).join('')}</div></div></div>
+<div class="card s2"><b class="cti">عملیات سریع</b><div class="qa" style="margin-top:12px">${[['ثبت مشتری','users','#16A34A'],['فرصت جدید','target','#2563EB'],['ثبت فاکتور','file','#D97706'],['وظیفه جدید','check','#DC2626']].map(q=>`<button style="--c:${q[2]}" onclick="toast()"><span class="ico">${ic(q[1])}</span>${q[0]}</button>`).join('')}</div></div></div>`}
+function task(){const D=DEMO,T=D.tasks.filter(t=>(S.flt=='all'||(S.flt=='done'?t[4]:!t[4]))&&(t[0]+t[1]).includes(S.q)),st=[['مهلت گذشته',1,'alert','#DC2626'],['در آستانه تأخیر',5,'clock','#D97706'],['متوقف / نیازمند رفع مانع',0,'ban','#475569'],['بدون مهلت معتبر',0,'target','#2563EB']];
+return`<div class="row sp" style="margin-bottom:16px"><div><div class="t-h2">مدیریت وظایف</div><div class="t-cap">پیگیری‌ها، ارجاعات و فایل‌های ضمیمه</div></div><button class="btn" onclick="toast()">${ic('plus')}وظیفه جدید</button></div>
+<div class="dash" style="margin-bottom:16px">${st.map(s=>`<div class="card" style="--c:${s[3]}"><div class="row sp"><span class="ico">${ic(s[2])}</span><span class="t-cap" style="text-align:left">${s[0]}</span></div><div style="margin-top:12px;font-size:22px;line-height:1.2;font-weight:700;color:${s[3]}">${fa(s[1])}</div></div>`).join('')}</div>
+<div class="chips" style="margin-bottom:12px">${[['all','همه وظایف'],['wait','در انتظار'],['done','تکمیل‌شده']].map(c=>`<button class="chip ${S.flt==c[0]?'on':''}" onclick="S.flt='${c[0]}';draw()">${c[1]}</button>`).join('')}</div>
+<div class="sr" style="margin-bottom:12px">${ic('search')}<input class="in" id="q" placeholder="جستجو..." value="${S.q}" oninput="S.q=this.value;clearTimeout(window.qt);window.qt=setTimeout(()=>{draw();$('#q').focus();$('#q').setSelectionRange(99,99)},250)"></div>
+<div class="card grid" style="gap:2px;padding:8px">${T.map(t=>`<div class="li ${t[4]?'done':''}" onclick="DEMO.tasks[${D.tasks.indexOf(t)}][4]^=1;draw()"><span class="ck ${t[4]?'d':''}">${t[4]?ic('check').replace('class="i"','class="i" style="width:14px;height:14px"'):''}</span><div style="flex:1"><div class="t" style="font-weight:500">${t[0]}</div><div class="t-cap">${t[1]}</div></div><span class="tg" style="--c:${t[3]}">${t[2]}</span></div>`).join('')||'<div class="t-cap" style="padding:24px;text-align:center">وظیفه‌ای پیدا نشد. فیلتر یا عبارت جستجو را تغییر دهید.</div>'}</div>`}
+function cust(){const D=DEMO;if(S.cust!=null){const c=D.customers[S.cust],hc=c.hs>=70?'var(--success)':c.hs>=45?'var(--warning)':'var(--danger)',T=['خلاصه','Timeline','فرصت‌ها','وظایف','ارتباطات'];
+const body=[`<div class="card"><div class="kv"><span>گروه</span><b>${c.lv}</b></div><div class="kv"><span>سطح اعتبار</span><b>${c.cr}</b></div><div class="kv"><span>میزان خرید سالانه</span><b>${c.bal}</b></div><div class="kv"><span>وضعیت</span><span class="tg" style="--c:#16A34A">${c.st}</span></div></div><div class="card" style="margin-top:12px"><b class="cti">فروش ماهانه</b><div class="bars" style="margin-top:12px">${D.months.map((m,i)=>`<i style="height:${m*10}%;animation-delay:${i*60}ms"></i>`).join('')}</div></div>`,
+`<div class="card">${D.tl.map(g=>`<div class="t-cap" style="margin:8px 0">${g[0]}</div><div class="tl">${g[1].map(e=>`<div class="ev"><i>${ic(e[2]).replace('class="i"','class="i" style="width:15px;height:15px"')}</i><div><div style="font-weight:500">${e[0]}</div><div class="t-cap">${e[1]}</div></div></div>`).join('')}</div>`).join('')}</div>`,
+`<div class="grid">${D.opps.map(o=>`<div class="card row sp"><div><b>${o[0]}</b><div class="t-cap">${o[1]}</div></div><span class="tg" style="--c:${o[3]}">${o[2]}</span></div>`).join('')}</div>`,
+`<div class="card grid" style="gap:2px;padding:8px">${D.tasks.slice(0,3).map(t=>`<div class="li"><span class="ck"></span><div style="flex:1;font-weight:500">${t[0]}</div><span class="tg" style="--c:${t[3]}">${t[2]}</span></div>`).join('')}</div>`,
+`<div class="card" style="text-align:center"><div class="t-cap" style="margin-bottom:12px">گفتگو با مشتری</div><button class="btn" onclick="go('chat');openChat(${S.cust})">${ic('chat')}باز کردن گفتگو</button></div>`][S.ct];
+return`<div class="${innerWidth>=900?'twoc':''}" style="align-items:start"><div class="card" style="position:sticky;top:64px;z-index:5"><div class="row"><div class="pf av">${c.n[0]==='ش'?'ن':c.n[0]}</div><div style="flex:1"><div class="t-h4">${c.n}</div><span class="tg" style="--c:#2563EB">${c.s}</span></div><div style="width:92px"><div class="t-cap">Health ${fa(c.hs)}</div><div class="hs"><i style="width:${c.hs}%;background:${hc}"></i></div></div></div><div class="grid t-cap" style="gap:6px;margin-top:12px"><div class="row" style="gap:8px">${ic('phone')}${c.ph}</div><div class="row" style="gap:8px">${ic('mail')}${c.em}</div><div class="row" style="gap:8px">${ic('pin')}${c.ad}</div></div><div class="act">${[['تماس','phone'],['پیام','chat'],['موقعیت','pin'],['ویرایش','edit']].map(a=>`<button onclick="${a[1]=='chat'?`go('chat');openChat(${S.cust})`:'toast()'}"><span class="cb">${ic(a[1])}</span>${a[0]}</button>`).join('')}</div></div><div><div class="tabs">${T.map((t,i)=>`<button class="${i==S.ct?'on':''}" onclick="S.ct=${i};draw()">${t}</button>`).join('')}</div>${body}</div></div>`}
+return`<div class="sr" style="margin-bottom:12px">${ic('search')}<input class="in" placeholder="جستجو در مشتریان..."></div><div class="grid" style="gap:12px">${D.customers.map((c,i)=>`<div class="li card" onclick="S.cust=${i};S.ct=0;draw();scrollTo(0,0)"><div class="cb av" style="width:44px;height:44px">${c.n[0]}</div><div style="flex:1"><div style="font-weight:600">${c.n}</div><div class="t-cap">${c.ad}</div></div><span class="tg" style="--c:#2563EB">${c.s}</span></div>`).join('')}</div>`}
+function chat(){const un=DEMO.chats.reduce((a,c)=>a+c.u,0),L=DEMO.chats.filter(c=>S.cf=='all'||c.u).sort((a,b)=>b.pin-a.pin);
+return`<div class="chatgrid"><div><div class="seg"><i style="transform:translateX(${S.cf=='all'?0:'-100%'})"></i><button onclick="S.cf='all';draw()">همه</button><button onclick="S.cf='unread';draw()">خوانده‌نشده ${fa(un)}</button></div><div class="sr" style="margin-bottom:8px">${ic('search')}<input class="in" placeholder="جستجو"></div><div>${L.map(c=>`<div class="tc" onclick="openChat(${DEMO.chats.indexOf(c)})"><div class="a av">${c.n[0]}</div><div class="bx"><div class="row sp"><b style="font-size:12px">${c.n}</b><span class="t-cap">${c.t}</span></div><div class="row sp" style="margin-top:2px"><span class="t-cap" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%">${c.m.at(-1)[1]}</span>${c.u?`<span class="ub">${fa(c.u)}</span>`:c.pin?`<span style="color:var(--text-tertiary)">${ic('pin')}</span>`:''}</div></div></div>`).join('')}</div></div><div class="xb" id="slot" style="display:block"></div></div>`}
+function me(){return`<div class="card" style="text-align:center;padding:24px 16px"><div class="cb av" style="width:80px;height:80px;font-size:28px;margin:auto">ع</div><div class="t-h2" style="margin-top:12px">${DEMO.user.full}</div><div class="t-cap">${DEMO.user.role}</div></div><div class="card grid" style="gap:2px;margin-top:12px;padding:8px">${[['تم '+(S.dark?'روشن':'تیره'),S.dark?'sun':'moon','theme()'],['گزارش‌ها','chart','toast()'],['اعلان‌ها','bell','toast()'],['تنظیمات','cog','toast()']].map(r=>`<div class="li" onclick="${r[2]}"><span class="ico" style="--c:#2563EB">${ic(r[1])}</span><b style="font-weight:500">${r[0]}</b></div>`).join('')}</div>`}
+function sales(){const D=DEMO,L=S.sf?D.neg:D.pre;
+return`<div class="row sp" style="margin-bottom:16px"><div><div class="t-h2">فروش</div><div class="t-cap">پیش‌فاکتور و مذاکرات</div></div><button class="btn" onclick="toast()">${ic('plus')}پیش‌فاکتور جدید</button></div>
+<div class="dash" style="margin-bottom:16px">${D.salesKpi.map(k=>`<div class="kp"><div class="kl">${k[0]}</div><div class="kv2">${k[1]}</div><div class="kd up">${ic('cup')}${k[2]}</div></div>`).join('')}</div>
+<div class="seg"><i style="transform:translateX(${S.sf?'-100%':0})"></i><button onclick="S.sf=0;draw()">پیش‌فاکتورها</button><button onclick="S.sf=1;draw()">مذاکرات</button></div>
+<div class="card lc">${L.map(o=>`<div class="rw"><div class="tx"><div class="tt" style="font-weight:600">${o[0]}</div><div class="t-cap">${o[1]}</div></div><div style="display:grid;gap:4px;justify-items:end"><b class="ov">${o[2]}</b><span class="stg">${o[3]}</span></div></div>`).join('')}</div>`}
+function ops(){const D=DEMO,A=[['صدور درخواست سازمانی','req','#2563EB'],['ثبت جلسه','cal','#D97706'],['ثبت پیش‌فاکتور','file','#16A34A'],['ثبت تماس','phone','#2563EB'],['گزارش‌ها و شاخص‌ها','chart','#7C3AED'],['کاربران','users','#475569'],['گردش کار و تأییدها','flow','#D97706'],['وظیفه جدید','check','#DC2626']];
+return`<div style="margin-bottom:16px"><div class="t-h2">عملیات</div><div class="t-cap">صف کارهای اجرایی و موارد نیازمند اقدام</div></div>
+<div class="card lc" style="margin-bottom:16px"><div class="ch"><b>نیازمند اقدام</b><button onclick="toast()">همه</button></div>${D.queue.map(q=>`<div class="rw" onclick="toast()"><span class="at" style="--c:${q[3]}">${ic(q[4])}</span><div class="tx"><div class="tt">${q[0]}</div><div class="row" style="gap:8px"><span class="tg2" style="--c:${q[3]}">${q[2]}</span><span class="t-cap">${q[1]}</span></div></div></div>`).join('')}</div>
+<div class="t-cap" style="margin:0 4px 8px;font-weight:600">اقدامات عملیاتی</div>
+<div class="dash">${A.map(a=>`<button class="kp row" style="--c:${a[2]};text-align:right;gap:12px" onclick="toast()"><span class="at">${ic(a[1])}</span><span style="font-size:12px;font-weight:500">${a[0]}</span></button>`).join('')}</div>`}
+
+const PG={home,cust,sales,task,ops,chat,me};
+function header(){const sub=S.tab=='cust'&&S.cust!=null,d=innerWidth>=900;$('#hd').innerHTML=(d?`<button class="cb fl" onclick="document.body.classList.toggle('sbc')" aria-label="جمع کردن">${ic('panel')}</button>`:`<button class="cb fl" id="mb0" onclick="${sub?`S.cust=null;draw()`:'drawer(1)'}" aria-label="منو">${ic(sub?'back':'menu')}</button>`)+`<div id="ttl">${sub?'جزئیات مشتری':NAMES[S.tab]}</div>`+(d?`<div class="sr fl" style="width:300px;height:40px;border-radius:var(--radius-lg)">${ic('search')}<input class="in" placeholder="جستجوی سراسری..."></div><button class="btn ai" onclick="toast()">${ic('spark')}یار</button>`:`<button class="cb fl">${ic('search')}</button>`)+`<button class="cb fl">${ic('bell')}<em>۳</em></button>`}
+function draw(){$('#v').innerHTML=PG[S.tab]();header();$('#fab').innerHTML=ic('plus');$('#fab').style.display=S.tab=='task'?'':'none';$('#sb').querySelectorAll('.it').forEach(b=>b.classList.toggle('on',b.dataset.k==S.tab));navLay();if(innerWidth>=900&&S.tab=='chat')openChat(S.chat??0)}
+function go(t){drawer(0);if(S.tab!=t){S.tab=t;S.cust=null;draw();scrollTo({top:0,behavior:'smooth'});pop()}}
+function theme(){S.dark=!S.dark;document.documentElement.dataset.t=S.dark?'dark':'';draw();buildDrawer()}
+function toast(){const t=document.createElement('div');t.className='fl';t.style.cssText='position:fixed;z-index:99;top:76px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:12px;font-size:11px;white-space:nowrap';t.textContent='این بخش در نسخه اجرایی به API متصل می‌شود.';document.body.append(t);setTimeout(()=>t.remove(),2200)}
+function buildDrawer(){const it=[['داشبورد','home',"go('home')",S.tab=='home'],['مشتریان','users',"go('cust')",S.tab=='cust'],['فروش','target','toast()'],['گزارش‌ها','chart','toast()'],['وظایف','check',"go('task')",S.tab=='task'],['پیام‌ها','chat',"go('chat')",S.tab=='chat'],['تنظیمات','cog','toast()'],['تم '+(S.dark?'روشن':'تیره'),S.dark?'sun':'moon','theme()']];
+$('#pn').innerHTML=`<div class="lg"><i>${ic('home')}</i>AKHAVAN CRM</div>`+it.map((i,n)=>`<button class="it ${i[3]?'on':''}" style="--n:${n}" onclick="${i[2]}"><span>${i[0]}</span>${ic(i[1])}</button>`).join('')+`<div class="us"><div class="cb av" style="width:36px;height:36px;font-size:12px;background:rgba(255,255,255,.2)">ع</div><div style="flex:1;min-width:0"><b>${DEMO.user.full}</b><small>${DEMO.user.role}</small></div>${ic('lback')}</div>`}
+function togSec(b){b.classList.toggle('cl');b.nextElementSibling.hidden=!b.nextElementSibling.hidden}
+function buildDrawer(){let n=0;const MENU=[['فروش و مشتریان',[['مشتریان','users','cust'],['بازرگانی فروش و پخش هوشمند','target','sales'],['فرصت‌های فروش','trend','sales'],['گفتگوها','chat','chat']]],['امور مالی و خزانه‌داری',[['دریافت و پرداخت','wallet'],['چک و تعهدات','card'],['گزارش‌های مالی','pie']]],['توزیع و عملیات',[['صف عملیات','grid','ops'],['توزیع و لجستیک','truck'],['بازگشت کالا','undo']]],['ابزارهای مدیریتی',[['پیگیری و تسک‌ها','check','task'],['گزارش‌ها و تحلیل‌ها','chart','ops'],['گردش کار و تأییدها','flow','ops']]]];
+const it=(l,i,r,x)=>`<button class="it ${r&&r==S.tab&&!x?'on':''}" style="--n:${n++}" onclick="${r?`go('${r}')`:'toast()'}">${ic(i)}<span>${l}</span></button>`;
+$('#pn').innerHTML=`<div class="lg"><svg viewBox="0 0 48 48"><defs><linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD9A8"/><stop offset="1" stop-color="#D9824F"/></linearGradient></defs><path d="M24 5l19 34H5z" fill="url(#gd)" stroke="#FFE7C9" stroke-width="2" stroke-linejoin="round"/><path d="M15 33c6-1 12-6 16-14 1 7-2 13-8 16z" fill="#fff" opacity=".92"/></svg><b>AKHAVAN <span>CRM</span></b></div><div class="mid">`+it('داشبورد','home','home').replace('</span></button>','</span>'+ic('gauge')+'</button>')+MENU.map(m=>`<button class="sh" onclick="togSec(this)"><span>${m[0]}</span><i></i>${ic('chev')}</button><div class="sec">${m[1].map(x=>it(x[0],x[1],x[2],x[0]=='فرصت‌های فروش'||x[0]=='گزارش‌ها و تحلیل‌ها'||x[0]=='گردش کار و تأییدها')).join('')}</div>`).join('')+`<hr>`+it('تنظیمات','cog')+it('درباره نرم‌افزار','info')+`<button class="it" style="--n:${n++}" onclick="theme()">${ic(S.dark?'sun':'moon')}<span>تغییر تم</span></button>`+it('خروج','logout')+`</div><div class="us" onclick="go('me')"><div class="cb av" style="width:38px;height:38px;font-size:13px">ع</div><div style="flex:1;min-width:0"><b>${DEMO.user.full}</b><br><small>${DEMO.user.role}</small></div>${ic('arr')}</div>`}
+function drawer(o){if(o)buildDrawer();$('#dr').classList.toggle('on',!!o);document.body.classList.toggle('dopen',!!o)}
+function openChat(i){S.chat=i;const c=DEMO.chats[i],cv=$('#conv'),un=DEMO.chats.reduce((a,x)=>a+x.u,0);cv.innerHTML=`<div class="cvh"><button class="cbk fl xb" onclick="closeChat()">${ic('lback')}<span>${fa(un)}</span></button><div class="ct fl"><b>${c.n}</b><small>${c.on?'آنلاین':'اخیراً آنلاین'}</small></div><div class="cb av" style="width:44px;height:44px;font-size:15px">${c.n[0]}</div></div><div class="msgs" id="ms"><div class="dc">امروز</div>${c.m.map(m=>bub(m[0],m[1],m[2])).join('')}</div><div class="comp"><button class="cb fl" style="width:44px;height:44px">${ic('clip')}</button><div class="pill fl"><input class="in" id="ci" placeholder="پیام" oninput="$('#mb').innerHTML=ic(this.value?'send':'mic')" onkeydown="event.key=='Enter'&&sendMsg()"><span style="color:var(--text-tertiary)">${ic('clock')}</span></div><button class="cb av" id="mb" style="width:44px;height:44px" onclick="sendMsg()">${ic('mic')}</button></div>`;
+if(innerWidth>=900){$('#slot').append(cv);cv.classList.add('on')}else{document.body.classList.add('inchat');requestAnimationFrame(()=>cv.classList.add('on'))}$('#ms').scrollTop=1e5}
+const bub=(k,t,h)=>`<div class="bub ${k}">${t}<small>${h}${k=='me'?ic('tick'):''}</small></div>`;
+function closeChat(){$('#conv').classList.remove('on');document.body.classList.remove('inchat');pop()}
+function sendMsg(){const v=$('#ci').value.trim();if(!v)return;const t=new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});DEMO.chats[S.chat].m.push(['me',v,t]);$('#ms').insertAdjacentHTML('beforeend',bub('me',v.replace(/</g,'&lt;'),t));$('#ci').value='';$('#mb').innerHTML=ic('mic');$('#ms').scrollTop=1e5}
+let tx=0;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(document.body.classList.contains('inchat')&&Math.abs(d)>90&&(tx<30||tx>innerWidth-30))closeChat();if(document.body.classList.contains('dopen')&&d>70)drawer(0)},{passive:true});
+const nav=$('#nav'),tr=$('#tr'),ind=$('#ind');
+tr.insertAdjacentHTML('beforeend',TABS.map(t=>`<button data-k="${t[0]}" aria-label="${t[1]}">${ic(t[2])}${t[0]=='ops'?`<span class="bd">${fa(DEMO.queue.length)}</span>`:''}</button>`).join(''));
+$('#sb').innerHTML=`<div class="lg"><i>${ic('home')}</i><b>AKHAVAN CRM</b></div>`+TABS.concat([['chat','گفتگوها','chat']]).map(t=>`<button class="it" data-k="${t[0]}" onclick="go('${t[0]}')">${ic(t[2])}<span>${t[1]}</span>${t[0]=='chat'?`<em class="ub">${fa(DEMO.chats.reduce((a,c)=>a+c.u,0))}</em>`:''}</button>`).join('')+`<button class="it" style="margin-top:auto" onclick="theme()">${ic('moon')}<span>تغییر تم</span></button>`;
+const idx=()=>TABS.findIndex(t=>t[0]==S.tab);
+function navLay(){tr.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k==S.tab));ind.style.setProperty('--i',Math.max(0,idx()));ind.style.opacity=idx()<0?0:1}
+function pop(){nav.classList.remove('pop');void nav.offsetWidth;nav.classList.add('pop')}
+let lastY=0,idle;addEventListener('scroll',()=>{if(innerWidth>=900)return;if(Math.abs(scrollY-lastY)>2&&!nav.classList.contains('mini')){nav.classList.add('mini');document.body.classList.add('mini')}lastY=scrollY;clearTimeout(idle);idle=setTimeout(()=>{if(nav.classList.contains('mini')){nav.classList.remove('mini');document.body.classList.remove('mini');pop()}},1000)},{passive:true});
+let drag=false;const fx=e=>{const r=tr.getBoundingClientRect();return Math.max(0,Math.min(4,(r.right-e.clientX)/r.width*5-.5))};
+nav.addEventListener('pointerdown',e=>{drag=true;nav.setPointerCapture(e.pointerId);ind.classList.add('drag');ind.style.setProperty('--i',fx(e))});
+nav.addEventListener('pointermove',e=>{if(drag)ind.style.setProperty('--i',fx(e))});
+nav.addEventListener('pointerup',e=>{if(!drag)return;drag=false;ind.classList.remove('drag');const k=Math.round(fx(e));ind.style.setProperty('--i',k);go(TABS[k][0]);navLay();pop()});
+addEventListener('resize',()=>{header();if(innerWidth>=900)drawer(0)});
+$('#fab').onclick=toast;document.documentElement.dataset.t=S.dark?'dark':'';draw();buildDrawer();
+</script>
+</body>
+</html>
+
+~~~~

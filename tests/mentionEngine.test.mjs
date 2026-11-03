@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { findMentionToken, searchMentions, createMentionReference } from '../src/services/mentionEngine.ts';
+assert.deepEqual(findMentionToken('برو با @عابدینی', 15), {start:7,end:15,query:'عابدینی'});
+const state = { accounts:[{id:'a1',name:'فروشگاه رفاه',code:'10425'},{id:'a2',name:'فروشگاه قدیمی',isDeleted:true}], users:[{id:'u1',name:'آقای عابدینی'}], cheques:[{id:'c1',number:'CHK-402',bankName:'ملت'}], invoices:[], externalProducts:[], tasks:[], quotes:[], opportunities:[{id:'o1',title:'فرصت فروش شرق',status:'OPEN'}], cases:[{id:'case1',subject:'شکایت تحویل',status:'OPEN'}], requests:[{id:'r1',title:'درخواست مرخصی',status:'PENDING'}], warehouses:[{id:'w1',name:'انبار مرکزی',code:'WH-01'}] };
+assert.equal(searchMentions(state,'رفاه')[0].entityType,'CUSTOMER');
+assert.equal(searchMentions(state,'عابدینی')[0].entityType,'STAFF');
+assert.equal(searchMentions(state,'CHK-402')[0].entityType,'CHECK');
+assert.equal(searchMentions(state,'قدیمی').length,0);
+assert.equal(searchMentions(state,'شرق')[0].entityType,'OPPORTUNITY');
+assert.equal(searchMentions(state,'شکایت')[0].entityType,'CASE');
+assert.equal(searchMentions(state,'مرخصی')[0].entityType,'REQUEST');
+assert.equal(searchMentions(state,'WH-01')[0].entityType,'WAREHOUSE');
+assert.deepEqual(createMentionReference(searchMentions(state,'عابدینی')[0]),{entityType:'STAFF',entityId:'u1',displayText:'آقای عابدینی',source:'CRM'});
+console.log('mentionEngine.test.mjs: PASS');

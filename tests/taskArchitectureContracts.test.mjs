@@ -1,0 +1,11 @@
+import fs from 'node:fs'; import assert from 'node:assert/strict';
+const taskUi=fs.readFileSync('src/components/TasksWorkspace.tsx','utf8');
+const form=fs.readFileSync('src/components/shared/DynamicFormRenderer.tsx','utf8');
+const migration=fs.readFileSync('database/sqlserver/v1/012_task_intelligence_and_mentions.sql','utf8');
+const service=fs.readFileSync('src/services/erpContextService.ts','utf8');
+assert.match(taskUi,/proposeOverflow/); assert.match(taskUi,/انتقال به اولین نوبت پیشنهادی/); assert.match(taskUi,/can\('tasks', 'ASSIGN'\)/);
+assert.match(taskUi,/useDebouncedValue/); assert.match(form,/searchMentions/); assert.match(form,/createMentionReference/);
+for (const name of ['TaskWorkloadConfig','TaskAccessGrant','TaskMention','ContextCache']) assert.match(migration,new RegExp(name));
+assert.match(migration,/ManagerUserId/); assert.match(migration,/ALTER SECURITY POLICY security\.TenantIsolationPolicy ADD FILTER PREDICATE/);
+assert.match(service,/forceRefresh/); assert.match(service,/allowStaleOnError/); assert.match(service,/آداپتور ERP پیکربندی نشده است/);
+console.log('taskArchitectureContracts.test.mjs: PASS (13 architecture assertions)');

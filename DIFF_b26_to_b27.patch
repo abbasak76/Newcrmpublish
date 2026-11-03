@@ -1,0 +1,283 @@
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,7 @@
++# CHANGELOG — AKHAVAN CRM b27
++
++- نسخه محصول: `0.12.3`؛ بسته `r11-cp9-b27`؛ مبنا b26. تغییرات افزایشی‌اند و فایل‌های تاریخی b26 حفظ می‌شوند.
++- هالهٔ جوی: افزودن ماه کم‌نور و سه لایه ابر/مه با حرکت بسیار آهسته (۹۶ و ۱۳۲ ثانیه) برای نزدیک‌شدن به حس عمق آسمان در مرجع iOS Weather؛ افکت‌ها decorative و پشت محتوا هستند.
++- کاهش مصرف: حرکت ابر فقط در حالت `auto/high` و وقتی `prefers-reduced-motion` فعال نیست؛ حالت low افکت‌ها را کم می‌کند و reduced motion حرکت را متوقف می‌کند. عملکرد واقعی GPU/دما/باتری در iPhone هنوز اندازه‌گیری نشده.
++- رفع ناسازگاری نسخه: `package.json`, `metadata.json`, `src/lib/version.ts`, `VERSION.md` و handoff همگام می‌شوند.
++- ممیزی ساختار: جدول‌های `crm.SalesOrder`, `crm.NegotiationScenario`, `crm.DispatchPlan` و `crm.SalesOrderLine` از قبل در migration `008_sales_dispatch_extension.sql` وجود داشتند؛ جدول موازی ایجاد نشد. این migration همچنان باید روی SQL Server واقعی اجرا و اعتبارسنجی شود.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,11 @@
++diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
++--- a/akhavan_dev_b26
+++++ b/akhavan_dev_b27
++@@ -0,0 +1,7 @@
+++# CHANGELOG — AKHAVAN CRM b27
+++
+++- نسخه محصول: `0.12.3`؛ بسته `r11-cp9-b27`؛ مبنا b26. تغییرات افزایشی‌اند و فایل‌های تاریخی b26 حفظ می‌شوند.
+++- هالهٔ جوی: افزودن ماه کم‌نور و سه لایه ابر/مه با حرکت بسیار آهسته (۹۶ و ۱۳۲ ثانیه) برای نزدیک‌شدن به حس عمق آسمان در مرجع iOS Weather؛ افکت‌ها decorative و پشت محتوا هستند.
+++- کاهش مصرف: حرکت ابر فقط در حالت `auto/high` و وقتی `prefers-reduced-motion` فعال نیست؛ حالت low افکت‌ها را کم می‌کند و reduced motion حرکت را متوقف می‌کند. عملکرد واقعی GPU/دما/باتری در iPhone هنوز اندازه‌گیری نشده.
+++- رفع ناسازگاری نسخه: `package.json`, `metadata.json`, `src/lib/version.ts`, `VERSION.md` و handoff همگام می‌شوند.
+++- ممیزی ساختار: جدول‌های `crm.SalesOrder`, `crm.NegotiationScenario`, `crm.DispatchPlan` و `crm.SalesOrderLine` از قبل در migration `008_sales_dispatch_extension.sql` وجود داشتند؛ جدول موازی ایجاد نشد. این migration همچنان باید روی SQL Server واقعی اجرا و اعتبارسنجی شود.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -160,3 +160,22 @@
+ - Full tests: 553 assertions PASS; action audit 76/76; SQL contract audit static-only PASS; changed-file syntax transpilation PASS.
+ - Build/TypeCheck remain blocked by missing `vite` and `vite/client`.
+ - Next: define/test credit note and adjustment source, reconcile full receivables before prioritization, then resolve dependencies and run full build/lint/browser smoke.
++
++
++# HANDOFF — AKHAVAN CRM b27
++
++## مبنای ادامه
++- آخرین بسته: `r11-cp9-b27` / `0.12.3`; مبنا سورس b26. ادامه باید از همین سورس باشد و تغییرات قبلی حفظ شوند.
++- این مرحله افکت جوی Solar Ember را با ماه کم‌نور و سه لایه ابر با حرکت ۹۶/۱۳۲ ثانیه‌ای بهبود داد. `prefers-reduced-motion` و کیفیت گرافیک low باید بر حرکت اولویت داشته باشند. ظاهر و مصرف واقعی روی iPhone/Safari هنوز تست نشده‌اند.
++- نسخه در `package.json`, `metadata.json`, `src/lib/version.ts` و `VERSION.md` به‌روزرسانی شده است.
++- جدول‌های SalesOrder، NegotiationScenario، DispatchPlan و SalesOrderLine در `database/sqlserver/v1/008_sales_dispatch_extension.sql` از قبل موجود بودند؛ از ایجاد جدول موازی خودداری شود. اجرای migration در SQL Server واقعی هنوز لازم است.
++
++## وضعیت آزمون
++- `npm test` شامل suite قراردادهای افکت جوی جدید است؛ نتیجهٔ دقیق در `TEST_RESULTS_b27.md` درج شود.
++- تا وقتی dependencies نصب نشده‌اند، lint/build کامل را PASS اعلام نکن. SQL Server/RLS/API/ERP و Safari/iPhone همچنان نیازمند محیط واقعی‌اند.
++
++## اولویت بعدی
++1. اجرای test/build/lint در محیط دارای registry.
++2. ممیزی روابط مشتری→Quote/Negotiation→SalesOrder→DispatchPlan→ERP/InvoiceMirror→Finance/Tasks/Audit و تکمیل traceability بر اساس شواهد سورس.
++3. اجرای migrationهای 008/009 و RLS در SQL Server تستی، سپس اتصال API/ERP واقعی با idempotency و outbox.
++4. آزمون بصری iOS/Safari و سنجش عملکرد واقعی؛ هیچ موفقیت بیرونی را فرض نکن.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -57,3 +57,10 @@
+ - [ ] پیش‌بینی ریزش مشتری، پیشنهاد خرید بعدی، anomaly detection و تحلیل رسوب/انقضای کالا؛ نیازمند تاریخچهٔ واقعی خرید، موجودی و اسناد مرجع متصل است.
+ - [ ] ممیزی کنتراست WCAG AAA/AA، focus order، keyboard-only navigation و تست screen reader در دستگاه واقعی؛ فقط کنترل‌ها و اعلام خطای پایه افزوده شده‌اند.
+ - [ ] بررسی WebGL fallback، انیمیشن‌ها و CSS `backdrop-filter` در Safari/iPhone با ابزار performance واقعی؛ فقط fallback کم‌مصرف پیاده شده است.
++
++## افزوده‌های باقی‌مانده برای b27
++- [ ] مشاهدهٔ بصری افکت ماه/ابر در iPhone Safari و بررسی تضاد/خوانایی محتوا در همه صفحات؛ CSS و کاهش حرکت بدون آزمون دستگاه، تأیید نهایی محسوب نمی‌شود.
++- [ ] اندازه‌گیری واقعی GPU/باتری/حرارت و بررسی scroll/fps روی iPhone ضعیف و قوی.
++- [ ] اجرای migrationهای `008_sales_dispatch_extension.sql` و `009_sales_dispatch_preflight.sql` در SQL Server تستی؛ کنترل FK، RLS، tenant isolation، rowversion و idempotency.
++- [ ] تکمیل و اعتبارسنجی اتصال end-to-end مشتری → Quote/Negotiation → SalesOrder → DispatchPlan → ERP/InvoiceMirror و task/audit/finance با شناسه‌های مرجع واقعی؛ رابط محلی یا دادهٔ seed معادل اتصال واقعی نیست.
++- [ ] بررسی build/lint و کل تست‌ها پس از نصب dependencyها در محیط دارای registry.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,23 @@
++# موارد باقی‌مانده — AKHAVAN CRM b27
++
++این فایل ادامهٔ بدون حذف `NOT_DONE_b26.md` است؛ برای فهرست کامل همهٔ موارد باز، فایل b26 را هم بخوانید.
++
++## P0 — تأیید فنی پیش از انتشار
++- [ ] نصب dependencyها در محیط دارای registry؛ رفع خطاهای واقعی TypeScript و اجرای `npm run lint`, `npm run build`.
++- [ ] Smoke test واقعی Chromium و Safari/iPhone، شامل RTL، safe area، keyboard، touch، zoom/reflow و فرم‌ها.
++- [ ] بررسی بصری هالهٔ جدید در دستگاه واقعی؛ ماه/ابر با تصویر مرجع مقایسه شود و خوانایی همهٔ صفحه‌ها تأیید شود.
++- [ ] سنجش GPU/FPS/باتری/حرارت در حالت auto/high/low و reduced motion.
++- [ ] اجرای migrationهای 008/009 و تست RLS منفی، tenant isolation و rowversion روی SQL Server تستی.
++
++## P1 — یکپارچگی دامنه
++- [ ] ممیزی موردبه‌مورد روابط Customer → Quote/NegotiationScenario → SalesOrder/Lines → DispatchPlan → ERP/InvoiceMirror → Invoice/PaymentAllocation/Receivable → Tasks/Notifications/Audit.
++- [ ] برای هر رابطه، FK/شناسه مرجع، وضعیت مجاز، مالکیت، idempotency، رویداد audit، رفتار لغو/رد/ویرایش و معیار پذیرش ثبت شود.
++- [ ] API/BFF و اتصال واقعی ERP، outbox/retry، mapping شناسه‌ها و تطبیق مانده/اقلام پیاده‌سازی و end-to-end تست شوند.
++- [ ] Realtime chat/notifications فقط پس از وجود endpoint امن و احراز هویت سرور؛ offline queue و object storage همچنان باز هستند.
++- [ ] Virtualization و تحلیل churn/next purchase/stock aging تنها پس از اتصال منبع واقعی و آزمون کارایی.
++
++## P2 — دسترس‌پذیری و امنیت
++- [ ] VoiceOver/NVDA، keyboard-only، کنتراست WCAG و storage quota/privacy mode.
++- [ ] بازبینی امنیتی localStorage draft، retention، attachment scanning و server authorization.
++
++هیچ‌یک از موارد بالا صرفاً به‌دلیل وجود رابط یا قرارداد استاتیک، انجام‌شده تلقی نمی‌شوند.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,7 @@
++# وضعیت — AKHAVAN CRM b27
++
++- نسخه: `0.12.3` — `r11-cp9-b27`، مبنا b26.
++- انجام‌شده در این مرحله: افزودن لایه‌های ماه/ابر با حرکت بسیار آهسته، رعایت reduced-motion و حالت گرافیک کم‌مصرف؛ همگام‌سازی منبع نسخه؛ ثبت وضعیت تغییر در changelog و handoff.
++- آزمون‌های اجراشده: `npm test` برابر 608 assertion PASS؛ `audit-actions` برابر 77/77 guarded؛ `audit:contracts` ایستا PASS. Lint و build به علت dependencyهای نصب‌نشده BLOCKED هستند.
++- SQL/مدل‌های SalesOrder، NegotiationScenario، DispatchPlan و SalesOrderLine در migration موجود `008_sales_dispatch_extension.sql` هستند؛ در این مرحله جدول تکراری اضافه نشده است.
++- محدودیت مهم: ظاهر دقیق روی Safari/iPhone، مصرف واقعی GPU/باتری، build کامل، SQL Server runtime، API/ERP و realtime server هنوز آزمایش نشده‌اند.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,12 @@
++# TEST RESULTS — b27
++
++Execution performed on the b27 working tree, 2026-10-27.
++
++- `npm test`: PASS; 608 assertions across the existing suites plus 11 new assertions for atmosphere motion, reduced-motion, low graphics and release metadata.
++- `node scripts/audit-actions.mjs`: PASS; 77 mutating handlers, 77 guarded, 0 unguarded (static audit).
++- `npm run audit:contracts`: PASS static-only; 9 SQL files, 46 tables, 44 tenant-scoped tables, 44 RLS targets, 5 required views. No SQL Server connection was made.
++- `npm run lint`: BLOCKED, `TS2688: Cannot find type definition file for 'vite/client'` because dependencies are not installed in this environment.
++- `npm run build`: BLOCKED, `vite: not found`.
++- iPhone/Safari rendering, GPU/thermal/battery performance, map tile availability, SQL Server runtime/RLS, API integration and ERP end-to-end: not executed.
++
++Static tests do not prove visual fidelity or device-level performance. Do not treat this build as production-ready.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -1,7 +1,7 @@
+ # VERSION
+ 
+-- نسخه محصول: **0.12.2**
+-- شناسه بسته: **r11-cp9-b26**
++- نسخه محصول: **0.12.3**
++- شناسه بسته: **r11-cp9-b27**
+ - مبنا: **r11-cp9-b24**؛ تغییرات افزایشی هستند.
+ 
+ ## تاریخچه
+@@ -18,4 +18,6 @@
+ - b25: نقشهٔ کاشی‌ای با رسم لمسی زون، مدل آینهٔ بستانکاری ERP در فرانت‌اند، گردش جداگانهٔ درخواست بستانکاری و اولویت وصول مشروط به تطبیق معتبر.
+ - b26: تنظیم اندازهٔ رابط، کیفیت گرافیک دستی/خودکار، ذخیرهٔ خودکار پیش‌نویس فرم‌های پویا با استثنای فیلدهای credential-like، و اعلان خطاهای فرم برای screen reader.
+ 
+-گزارش جاری: `STATUS_b26.md`, `NOT_DONE_b26.md`, `CHANGELOG_b26.md`, `TEST_RESULTS_b26.md`, `RBAC_AUDIT_b26.md`, `REQUIREMENTS_TRACEABILITY_b26.md`, `HANDOFF.md` و `docs/08_MASTER_AUDIT_AND_TRACEABILITY_b26.md`.
++گزارش جاری: `STATUS_b27.md`, `NOT_DONE_b26.md`, `CHANGELOG_b27.md`, `TEST_RESULTS_b27.md`, `RBAC_AUDIT_b26.md`, `REQUIREMENTS_TRACEABILITY_b26.md`, `HANDOFF.md` و `docs/09_MASTER_AUDIT_AND_TRACEABILITY_b27.md`.
++
++- b27: لایهٔ ماه/ابر با حرکت بسیار آهسته، رعایت reduced-motion و حالت کم‌مصرف؛ بررسی و همگام‌سازی نسخهٔ محصول.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -497,3 +497,13 @@
+ - Server-side pagination/virtualization برای حجم‌های 100k تا 1M، churn prediction، پیشنهاد خرید و تحلیل رسوب/انقضا: داده و سرویس واقعی لازم است؛ هنوز پیاده‌سازی/آزمون نشده‌اند.
+ - Backend/BFF، server-driven authorization و اجرای SQL Server RLS واقعی: ممیزی SQL فعلی فقط ایستا است.
+ - WCAG AAA/AA کامل، VoiceOver/NVDA، performance/thermal و Safari/iPhone: آزمون دستگاه واقعی باقی است.
++
++---
++
++## الحاقیهٔ b27 — 2026-10-27
++
++- نسخهٔ جاری سورس در b27 به `0.12.3 / r11-cp9-b27` ارتقا یافت؛ `package.json`, `metadata.json`, `src/lib/version.ts` و `VERSION.md` همگام شدند.
++- لایهٔ جوی Solar Ember با ماه کم‌نور و سه لایه ابر/مه دارای حرکت آهسته افزوده شد. این لایه صرفاً تزئینی است؛ `prefers-reduced-motion` و حالت کم‌مصرف حرکت را متوقف/سبک می‌کنند. شباهت بصری نهایی به مرجع و مصرف GPU/باتری در Safari/iPhone هنوز تأیید نشده‌اند.
++- بررسی ساختار SQL تأیید کرد `SalesOrder`, `SalesOrderLine`, `NegotiationScenario` و `DispatchPlan` در migration `008_sales_dispatch_extension.sql` از قبل تعریف شده‌اند؛ جدول تکراری ساخته نشد. اجرای SQL/RLS هنوز نیازمند SQL Server واقعی است.
++- آزمون‌های b27: `npm test` برابر 608 assertion موفق؛ `audit-actions` برابر 77/77 guarded؛ `audit:contracts` ایستا PASS. `npm run lint` و `npm run build` به‌ترتیب به‌علت dependencyهای نصب‌نشده (`vite/client`, `vite`) مسدودند.
++- بسته هنوز production-ready نیست: اتصال backend/ERP، RLS runtime، realtime server، آزمون browser/iOS، آزمون tile provider و validation انتهابه‌انتها انجام نشده‌اند. فهرست جزئیات در `../NOT_DONE_b26.md` و `../STATUS_b27.md` است.
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -1,8 +1,8 @@
+ {
+   "name": "AKHAVAN CRM",
+-  "version": "0.11.7",
+-  "release": "r11-cp9-b21",
+-  "description": "AKHAVAN CRM — RBAC قابل تنظیم و مدیریت زون، انتساب مشتری و ثبت نتیجهٔ وظیفه وصول بر پایه پرداخت معتبر",
++  "version": "0.12.3",
++  "release": "r11-cp9-b27",
++  "description": "AKHAVAN CRM — RBAC قابل تنظیم و ارتقای افزایشی افکت جوی iOS-style و همگام‌سازی نسخه",
+   "requestFramePermissions": [],
+   "majorCapabilities": [
+     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -1,7 +1,7 @@
+ {
+   "name": "react-example",
+   "private": true,
+-  "version": "0.12.2",
++  "version": "0.12.3",
+   "type": "module",
+   "scripts": {
+     "dev": "vite --port=3000 --host=0.0.0.0",
+@@ -10,7 +10,7 @@
+     "clean": "rm -rf dist server.js",
+     "lint": "tsc --noEmit",
+     "audit:contracts": "node scripts/audit-sqlserver-contracts.mjs",
+-    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs && node --experimental-strip-types tests/collectionTaskEvidence.test.mjs && node --experimental-strip-types tests/geoCollectionReporting.test.mjs && node --experimental-strip-types tests/receivableReconciliation.test.mjs && node --experimental-strip-types tests/receivableCredits.test.mjs && node tests/creditNoteSqlContracts.test.mjs && node tests/accessibilityContracts.test.mjs"
++    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs && node --experimental-strip-types tests/collectionTaskOutcome.test.mjs && node --experimental-strip-types tests/collectionTaskEvidence.test.mjs && node --experimental-strip-types tests/geoCollectionReporting.test.mjs && node --experimental-strip-types tests/receivableReconciliation.test.mjs && node --experimental-strip-types tests/receivableCredits.test.mjs && node tests/creditNoteSqlContracts.test.mjs && node tests/accessibilityContracts.test.mjs && node tests/atmosphereContracts.test.mjs"
+   },
+   "dependencies": {
+     "@google/genai": "^2.4.0",
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -13,6 +13,9 @@
+     <div className="se-atmosphere-root" aria-hidden="true" data-time={atmosphere} data-reduced={reduced ? 'true' : 'false'} data-performance={mode}>
+       <div className="se-noise-overlay" />
+       <div className="se-aurora se-aurora-1" /><div className="se-aurora se-aurora-2" /><div className="se-aurora se-aurora-3" />
++      {/* لایه‌های کم‌کنتراست آسمان؛ تزئینی‌اند و زیر محتوای اصلی باقی می‌مانند. */}
++      <div className="se-sky-moon" />
++      <div className="se-sky-clouds"><span className="se-sky-cloud se-sky-cloud-1" /><span className="se-sky-cloud se-sky-cloud-2" /><span className="se-sky-cloud se-sky-cloud-3" /></div>
+       <svg className="se-stars" viewBox="0 0 100 60" preserveAspectRatio="xMidYMin slice"><g fill="var(--se-honey-gold)" opacity=".5"><circle cx="12" cy="14" r=".4" /><circle cx="28" cy="8" r=".3" /><circle cx="46" cy="18" r=".5" /><circle cx="78" cy="16" r=".4" /><circle cx="84" cy="32" r=".25" /><circle cx="62" cy="6" r=".3" /></g></svg>
+     </div>
+   );
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -258,6 +258,19 @@
+ /* شب = فقط فضای نوری (نه تم تیره): زمینه از تم می‌آید، لایه کم‌نور شرابی/اسلیت روی آن */
+ .se-atmosphere-root[data-time="night"]::before { content: ""; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, rgba(57, 42, 48, .16), rgba(104, 114, 128, .05)); }
+ .se-atmosphere-root[data-time="night"] .se-aurora-1 { opacity: .1; } .se-atmosphere-root[data-time="night"] .se-aurora-2 { opacity: .15; } .se-atmosphere-root[data-time="night"] .se-aurora-3 { opacity: .3; transform: scale(1.3); }
++/* آسمان سینمایی الهام‌گرفته از Weather در iOS؛ کنتراست پایین و حرکت بسیار آهسته */
++.se-sky-moon { position:absolute; z-index:0; top:clamp(5rem, 13vh, 10rem); inset-inline-end:clamp(2rem, 13vw, 11rem); width:clamp(42px, 6vw, 76px); aspect-ratio:1; border-radius:50%; opacity:0; transform:translate3d(0,8px,0) scale(.96); background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.98),rgba(242,233,222,.92) 45%,rgba(205,190,179,.76) 72%,rgba(255,255,255,.1) 100%); box-shadow:0 0 22px rgba(255,244,226,.18),0 0 58px rgba(225,215,221,.12); transition:opacity 2s ease,transform 4s ease; }
++.se-sky-clouds { position:absolute; z-index:0; inset:0; overflow:hidden; opacity:0; transition:opacity 2s ease; -webkit-mask-image:linear-gradient(to bottom, #000 0%,rgba(0,0,0,.8) 34%,transparent 78%); mask-image:linear-gradient(to bottom, #000 0%,rgba(0,0,0,.8) 34%,transparent 78%); }
++.se-sky-cloud { position:absolute; display:block; height:clamp(70px,13vh,150px); width:140%; inset-inline-start:-20%; border-radius:50%; filter:blur(19px); background:linear-gradient(176deg,transparent 0%,rgba(255,255,255,.035) 24%,rgba(223,222,236,.15) 39%,rgba(255,255,255,.07) 48%,transparent 69%); transform:rotate(-9deg); will-change:transform; }
++.se-sky-cloud-1 { top:4%; }
++.se-sky-cloud-2 { top:13%; opacity:.72; transform:translateX(-8%) rotate(-7deg) scale(.86); }
++.se-sky-cloud-3 { top:22%; opacity:.5; transform:translateX(6%) rotate(-12deg) scale(.72); }
++.se-atmosphere-root[data-time="night"] .se-sky-moon,.se-atmosphere-root[data-time="twilight"] .se-sky-moon { opacity:.8; transform:translate3d(0,0,0) scale(1); }
++.se-atmosphere-root[data-time="night"] .se-sky-clouds,.se-atmosphere-root[data-time="twilight"] .se-sky-clouds,.se-atmosphere-root[data-time="sunset"] .se-sky-clouds { opacity:1; }
++.se-atmosphere-root[data-time="sunset"] .se-sky-moon { opacity:.42; }
++.se-atmosphere-root[data-performance="high"][data-reduced="false"] .se-sky-cloud-1,.se-atmosphere-root[data-performance="auto"][data-reduced="false"] .se-sky-cloud-1 { animation:se-cloud-drift 96s ease-in-out infinite alternate; }
++.se-atmosphere-root[data-performance="high"][data-reduced="false"] .se-sky-cloud-2,.se-atmosphere-root[data-performance="auto"][data-reduced="false"] .se-sky-cloud-2 { animation:se-cloud-drift 132s ease-in-out infinite alternate-reverse; }
++@keyframes se-cloud-drift { from { translate:-1.5% 0; } to { translate:1.5% 5px; } }
+ .se-stars { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 2s ease; }
+ .se-atmosphere-root[data-time="night"] .se-stars { opacity: 1; }
+ @media (prefers-reduced-motion: no-preference) {
+@@ -266,14 +279,18 @@
+ }
+ @keyframes se-fluid-morph { 0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(0) scale(1); } 34% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(120deg) scale(1.05); } 67% { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; transform: rotate(240deg) scale(.95); } 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(360deg) scale(1); } }
+ @keyframes se-noise-shift { 0%, 100% { transform: translate(0, 0); } 10% { transform: translate(-1%, -1%); } 20% { transform: translate(1%, 1%); } 30% { transform: translate(-2%, 1%); } 40% { transform: translate(1%, -1%); } 50% { transform: translate(-1%, 2%); } 60% { transform: translate(2%, -1%); } 70% { transform: translate(-1%, -2%); } 80% { transform: translate(1%, 1%); } 90% { transform: translate(-2%, -1%); } }
+-.se-atmosphere-root[data-reduced="true"] .se-aurora, .se-atmosphere-root[data-reduced="true"] .se-noise-overlay { animation: none !important; filter: blur(60px); }
++.se-atmosphere-root[data-reduced="true"] .se-aurora, .se-atmosphere-root[data-reduced="true"] .se-noise-overlay, .se-atmosphere-root[data-reduced="true"] .se-sky-cloud { animation: none !important; filter: blur(60px); }
+ .se-atmosphere-root[data-reduced="true"] .se-noise-overlay { display: none; }
+ /* User-selectable graphics quality; accessibility reduced-motion always wins. */
+ html[data-performance-mode="low"] .se-atmosphere-root .se-aurora { animation: none !important; filter: none !important; opacity: .12 !important; will-change: auto; }
+ html[data-performance-mode="low"] .se-atmosphere-root .se-noise-overlay { display: none !important; animation: none !important; }
+ html[data-performance-mode="low"] .se-atmosphere-root .se-stars { opacity: 0 !important; }
++html[data-performance-mode="low"] .se-atmosphere-root .se-sky-clouds { opacity: .22 !important; }
++html[data-performance-mode="low"] .se-atmosphere-root .se-sky-cloud { animation: none !important; filter: blur(10px); will-change: auto; }
++html[data-performance-mode="low"] .se-atmosphere-root .se-sky-moon { box-shadow: none; }
+ html[data-performance-mode="low"] .se-atmosphere-root { transition: none !important; }
+ .se-atmosphere-root[data-performance="high"][data-reduced="false"] .se-aurora { filter: blur(72px); }
++@media (prefers-reduced-motion: reduce) { .se-sky-cloud, .se-aurora, .se-noise-overlay { animation:none !important; } .se-sky-moon { transition:none !important; } }
+ 
+ 
+ /* ---------- ناوبری پایین: کپسول چهارآیکونی + کپسول + مستقل ---------- */
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -1,4 +1,4 @@
+ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
+-export const APP_VERSION = '0.12.0';
+-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b24', base: 'r11-cp9-b23' } as const;
++export const APP_VERSION = '0.12.3';
++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b27', base: 'r11-cp9-b26' } as const;
+ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
+diff -ruN --label a/akhavan_dev_b26 --label b/akhavan_dev_b27 a/akhavan_dev_b26 b/akhavan_dev_b27
+--- a/akhavan_dev_b26
++++ b/akhavan_dev_b27
+@@ -0,0 +1,19 @@
++import fs from 'node:fs';
++import assert from 'node:assert/strict';
++const component = fs.readFileSync('src/components/AtmosphereLayer.tsx','utf8');
++const css = fs.readFileSync('src/index.css','utf8');
++const version = fs.readFileSync('src/lib/version.ts','utf8');
++const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
++const metadata = JSON.parse(fs.readFileSync('metadata.json','utf8'));
++assert.match(component,/se-sky-moon/,'moon atmospheric layer exists');
++assert.match(component,/se-sky-cloud-1/,'cloud drift layers exist');
++assert.match(css,/@keyframes se-cloud-drift/,'slow cloud drift animation exists');
++assert.match(css,/prefers-reduced-motion:\s*reduce/,'system reduced-motion preference is respected');
++assert.match(css,/data-performance-mode="low"[\s\S]*?se-sky-clouds/,'low-performance mode reduces cloud layer');
++assert.match(css,/96s ease-in-out/,'cloud motion is slow and non-distracting');
++assert.equal(pkg.version,'0.12.3','package version synchronized');
++assert.match(version,/APP_VERSION = '0\.12\.3'/,'app version synchronized');
++assert.match(version,/r11-cp9-b27/,'app release label synchronized');
++assert.equal(metadata.version,'0.12.3','metadata version synchronized');
++assert.equal(metadata.release,'r11-cp9-b27','metadata release synchronized');
++console.log('PASS: 11 assertions (iOS-style atmosphere, reduced motion, low graphics and release metadata)');

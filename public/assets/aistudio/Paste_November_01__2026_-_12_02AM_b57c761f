@@ -1,0 +1,625 @@
+بسیار عالی. با توجه به حجم بالای فایل‌ها و محدودیت طول پیام، من کدها را در ۲ یا ۳ مرحله برای شما ارسال می‌کنم تا هیچ کدی جا نیفتد و تمام قابلیت‌ها (Actions, RBAC, Forms) دقیقاً حفظ شوند.
+
+در این مرحله اول (زیرساخت و پوسته اصلی)، من قلب تپنده برنامه را بازنویسی می‌کنم:
+
+1. سیستم طراحی (CSS و Tailwind)
+2. هدر معلق و ناوبری ۵ گانه (Layout)
+3. منوی همبرگری (NavigationDrawer)
+4. کامپوننت‌های پایه (Modal به Bottom Sheet، دکمه‌ها، کارت‌ها)
+5. تقویم اسکرولی (Wheel Picker)
+
+---
+
+۱. فایل src/index.css
+
+(اعمال دقیق توکن‌های دیزاین سیستم، پالت زرشکی/پلوم، هاله‌های نوری، و شیشه‌ای ایمن)
+
+```css
+@import "tailwindcss";
+
+/* فونت محلی Vazirmatn UI */
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-ExtraBold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+
+/* ==========================================================================
+   AKHAVAN CRM — Design System (Based on User Tokens + Burgundy Primary)
+   ========================================================================== */
+
+@theme {
+  /* Primary Brand - Burgundy/Cherry Plum */
+  --color-primary-50: #FDF8FA;
+  --color-primary-100: #F5E6EC;
+  --color-primary-500: #9C5573;
+  --color-primary-600: #71364B; /* Main Primary */
+  --color-primary-700: #5E293D;
+  --color-primary-800: #4B2031;
+  
+  --color-primary: var(--color-primary-600);
+  --color-primary-hover: var(--color-primary-700);
+  --color-primary-dark: var(--color-primary-800);
+
+  /* Semantic */
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-info: #2563EB;
+  --color-ai: #7C3AED;
+
+  --color-success-soft: #DCFCE7;
+  --color-warning-soft: #FEF3C7;
+  --color-danger-soft: #FEE2E2;
+  --color-info-soft: #DBEAFE;
+
+  /* Neutral */
+  --color-canvas: #F8FAFC; /* bg-app */
+  --color-surface: #FFFFFF; /* bg-surface */
+  --color-surface-secondary: #F1F5F9;
+  
+  --color-ink: #0F172A;
+  --color-ink-soft: #64748B;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(15,23,42,0.1), 0 8px 10px -6px rgba(15,23,42,0.08);
+  --shadow-floating: 0 12px 32px rgba(113, 54, 75, 0.12); /* Soft Burgundy glow */
+
+  /* Font */
+  --font-sans: "Vazirmatn", Tahoma, sans-serif;
+  --font-premium: "Vazirmatn", Tahoma, sans-serif;
+}
+
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-emphasis: 300ms;
+  --z-base: 0; --z-sticky: 20; --z-overlay: 40; --z-modal: 50; --z-toast: 60;
+  
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.6);
+}
+
+html { direction: rtl; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; font-family: var(--font-sans); background: var(--color-canvas); color: var(--color-ink);
+  line-height: 1.7; font-size: 15px; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+
+/* Inputs iOS Zoom Fix */
+input, select, textarea { font-size: 16px !important; }
+
+/* Typography Scale */
+.se-display { font-size: 32px; font-weight: 700; line-height: 40px; }
+.se-h1 { font-size: 24px; font-weight: 700; line-height: 32px; }
+.se-h2 { font-size: 20px; font-weight: 600; line-height: 28px; }
+.se-h3 { font-size: 18px; font-weight: 600; line-height: 26px; }
+.se-body { font-size: 14px; font-weight: 400; line-height: 20px; }
+.se-caption { font-size: 12px; font-weight: 500; line-height: 16px; color: var(--color-ink-soft); }
+
+/* Components */
+.se-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--motion-base), box-shadow var(--motion-base);
+}
+.se-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Aurora Background */
+.se-atmosphere-root { position: fixed; inset: 0; z-index: var(--z-base); pointer-events: none; overflow: hidden; background: var(--color-canvas); }
+.se-aurora { position: absolute; filter: blur(100px); opacity: 0.15; }
+.se-aurora-1 { top: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, var(--color-primary-500) 0%, transparent 70%); }
+.se-aurora-2 { bottom: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, var(--color-info) 0%, transparent 70%); }
+
+/* Hide Scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Wheel Picker */
+.se-wheel-picker {
+  perspective: 1000px;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.se-wheel-item {
+  scroll-snap-align: center;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  opacity: 0.4;
+  transform: scale(0.9);
+}
+.se-wheel-item.active {
+  opacity: 1;
+  transform: scale(1.1);
+  font-weight: 800;
+  color: var(--color-primary);
+}
+```
+
+---
+
+۲. فایل tailwind.config.js (یا tailwind.config.ts)
+
+(برای هماهنگ‌سازی رنگ‌ها با Tailwind)
+
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: { 50: '#FDF8FA', 100: '#F5E6EC', 500: '#9C5573', 600: '#71364B', 700: '#5E293D', 800: '#4B2031', DEFAULT: '#71364B' },
+        canvas: '#F8FAFC',
+        surface: '#FFFFFF',
+        ink: { DEFAULT: '#0F172A', soft: '#64748B' },
+        success: { DEFAULT: '#16A34A', soft: '#DCFCE7' },
+        warning: { DEFAULT: '#D97706', soft: '#FEF3C7' },
+        danger: { DEFAULT: '#DC2626', soft: '#FEE2E2' },
+        info: { DEFAULT: '#2563EB', soft: '#DBEAFE' }
+      },
+      borderRadius: { sm: '6px', md: '8px', lg: '12px', xl: '16px', '2xl': '24px' },
+      boxShadow: {
+        xs: '0 1px 2px rgba(15,23,42,0.05)',
+        sm: '0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04)',
+        md: '0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.05)',
+        lg: '0 10px 15px -3px rgba(15,23,42,0.08), 0 4px 6px -4px rgba(15,23,42,0.05)',
+        floating: '0 12px 32px rgba(113,54,75,0.12)'
+      }
+    }
+  },
+  plugins: []
+}
+```
+
+---
+
+۳. فایل src/components/Layout.tsx
+
+(هدر معلق، حذف اکشن شناور، ناوبری ۵ گانه اینستاگرامی، دکمه اکشن مستقل)
+
+```tsx
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Search, Bell, Menu, X, Home, Users, CheckSquare, MessagesSquare, UserRound, Plus, Settings } from 'lucide-react';
+import { cn } from '../lib/utils';
+import { AppState } from '../types';
+import { Avatar } from './ui/Avatar';
+import { NavigationDrawer } from './NavigationDrawer';
+import { Sidebar } from './Sidebar';
+import { AtmosphereLayer } from './AtmosphereLayer';
+import { RBACService } from '../lib/rbac';
+import { menuSections, filterSections } from '../lib/navigation';
+import { ThemeToggle } from './ThemeToggle';
+
+const NAV_ITEMS = [
+  { id: 'home', path: '/', label: 'خانه', icon: Home },
+  { id: 'accounts', path: '/accounts', label: 'مشتریان', icon: Users },
+  { id: 'tasks', path: '/tasks', label: 'وظایف', icon: CheckSquare },
+  { id: 'groups', path: '/groups', label: 'پیام‌ها', icon: MessagesSquare },
+  { id: 'profile', path: '/profile', label: 'پروفایل', icon: UserRound },
+] as const;
+
+export function Layout({ children, onOpenSearch, unreadNotificationsCount = 0, onOpenNotifications, state, updateState }: any) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
+  const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
+  const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
+  const canAccess = (tab: string) => (rbac ? rbac.canAccessWorkspace(tab as any) : true);
+
+  const seg = location.pathname === '/' ? 'home' : location.pathname.split('/')[1];
+  const activeTab = seg === 'accounts' ? 'accounts' : seg === 'groups' ? 'groups' : seg;
+  const isDetailPage = /^\/(accounts|tasks|groups)\/.+/.test(location.pathname);
+  
+  const activePageLabel = NAV_ITEMS.find(i => i.id === activeTab)?.label || 'AKHAVAN CRM';
+
+  useEffect(() => {
+    const mainEl = document.getElementById('main-scroll-container');
+    const handleScroll = () => setIsScrolled(mainEl ? mainEl.scrollTop > 20 : false);
+    mainEl?.addEventListener('scroll', handleScroll);
+    return () => mainEl?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-canvas font-premium" dir="rtl">
+      <AtmosphereLayer />
+      
+      <div className={cn('relative z-10 flex h-full w-full overflow-hidden', navDrawerOpen ? 'scale-[0.98] opacity-80' : 'scale-100 transition-all duration-300')}>
+        <Sidebar sections={[]} user={currentUser} roleName={currentRole?.name} />
+        
+        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+          
+          {/* هدر معلق سراسری */}
+          <header className="fixed top-0 inset-x-0 z-40 px-4 pt-[calc(var(--safe-top)+12px)] pb-2 pointer-events-none">
+            <div className={cn("mx-auto max-w-3xl flex items-center justify-between px-4 h-14 rounded-full transition-all duration-300 pointer-events-auto", isScrolled ? "glass shadow-floating" : "bg-transparent")}>
+              
+              <div className="flex items-center gap-3">
+                {isDetailPage ? (
+                  <button onClick={() => navigate(-1)} className="p-2 -mr-2 text-ink"><Menu size={20} className="rotate-180" /></button>
+                ) : (
+                  <button onClick={() => setNavDrawerOpen(true)} className="p-2 -mr-2 text-ink"><Menu size={20} /></button>
+                )}
+                <div className="flex items-center gap-2">
+                   <Avatar name={currentUser?.name || 'کاربر'} size="sm" />
+                   <span className="text-sm font-bold text-ink hidden sm:block">{activePageLabel}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button onClick={onOpenSearch} className="p-2 text-ink hover:bg-black/5 rounded-full"><Search size={20} /></button>
+                <button onClick={onOpenNotifications} className="p-2 text-ink hover:bg-black/5 rounded-full relative">
+                  <Bell size={20} />
+                  {unreadNotificationsCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full ring-2 ring-white" />}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* محتوای اصلی */}
+          <main id="main-scroll-container" className="w-full flex-1 overflow-y-auto pb-[calc(var(--safe-bottom)+90px)]">
+            <div className="mx-auto min-h-full w-full max-w-3xl pt-[calc(var(--safe-top)+72px)]">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {/* دکمه عملیات سریع (مستقل در پایین چپ) */}
+        <button 
+          onClick={() => navigate('/tasks?new=1')} 
+          className="fixed bottom-[calc(var(--safe-bottom)+80px)] left-6 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-floating hover:scale-105 transition-transform"
+        >
+          <Plus size={24} />
+        </button>
+
+        {/* ناوبری پایین (۵ گانه) */}
+        <div className="fixed bottom-0 inset-x-0 z-40 px-4 pb-[calc(var(--safe-bottom)+12px)] pointer-events-none">
+          <nav className="mx-auto max-w-md flex items-center justify-between bg-white/90 backdrop-blur-xl border border-white/50 shadow-floating rounded-full px-2 py-2 pointer-events-auto">
+            {NAV_ITEMS.map(item => {
+              const active = activeTab === item.id || (item.id === 'profile' && seg === 'profile');
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={item.id} 
+                  onClick={() => navigate(item.path)} 
+                  className={cn("relative flex flex-col items-center justify-center w-14 h-12 rounded-full transition-all duration-300", active ? "text-primary" : "text-ink-soft hover:bg-black/5")}
+                >
+                  <Icon size={22} strokeWidth={active ? 2.5 : 1.8} className={active ? "animate-in zoom-in-50 duration-200" : ""} />
+                  <span className="text-[10px] font-bold mt-1">{item.label}</span>
+                  {active && <span className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full" />}
+                </button>
+              )
+            })}
+          </nav>
+        </div>
+
+      </div>
+      <NavigationDrawer isOpen={navDrawerOpen} onClose={() => setNavDrawerOpen(false)} state={state} />
+    </div>
+  );
+}
+```
+
+---
+
+۴. فایل src/components/NavigationDrawer.tsx
+
+(منوی همبرگری با پس‌زمینه زرشکی، هاله نوری، و کارت پروفایل)
+
+```tsx
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { X, ChevronLeft, LogOut, Settings } from 'lucide-react';
+import { Avatar } from './ui/Avatar';
+import { menuSections, filterSections, isActivePath } from '../lib/navigation';
+import { RBACService } from '../lib/rbac';
+import { cn } from '../lib/utils';
+
+export function NavigationDrawer({ isOpen, onClose, state }: any) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
+  const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const sections = filterSections(menuSections, id => (state ? new RBACService(state).canAccessWorkspace(id) : true));
+  const go = (path: string) => { navigate(path); onClose(); };
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" dir="rtl">
+      <div onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
+      
+      {/* پنل منو با گرادیان زرشکی */}
+      <div className="relative w-[85vw] max-w-[340px] h-full bg-gradient-to-b from-[#4B2031] via-[#71364B] to-[#2B1F24] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+        
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500 rounded-full blur-[80px] opacity-30 pointer-events-none" />
+
+        {/* هدر منو */}
+        <div className="relative z-10 flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white font-black text-xl border border-white/20">A</div>
+            <div>
+              <h2 className="text-white font-bold tracking-tight">AKHAVAN CRM</h2>
+              <p className="text-white/60 text-[10px]">سیستم جامع مدیریت</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition"><X size={18} /></button>
+        </div>
+
+        {/* لیست منوها */}
+        <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar px-4 py-2 space-y-6">
+          {sections.map(section => (
+            <div key={section.id}>
+              <h3 className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-2 px-3">{section.title}</h3>
+              <div className="space-y-1">
+                {section.items.map(item => {
+                  const active = isActivePath(location.pathname, item.path);
+                  const Icon = item.icon;
+                  return (
+                    <button key={item.id} onClick={() => go(item.path)} 
+                      className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300", active ? "bg-white/15 text-white shadow-sm border border-white/10" : "text-white/70 hover:bg-white/5 hover:text-white")}>
+                      <Icon size={18} className={active ? "text-white" : "text-white/50"} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* کارت پروفایل پایین */}
+        <div className="relative z-10 p-4 mt-auto">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/15 transition" onClick={() => go('/profile')}>
+            <div className="flex items-center gap-3">
+              <Avatar name={currentUser?.name || 'کاربر'} size="md" className="ring-2 ring-white/20" />
+              <div>
+                <div className="text-white text-xs font-bold">{currentUser?.name || 'کاربر سیستم'}</div>
+                <div className="text-white/60 text-[10px] mt-0.5">{currentRole?.name || 'مدیر سیستم'}</div>
+              </div>
+            </div>
+            <ChevronLeft size={16} className="text-white/50" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+۵. فایل src/components/ui/Modal.tsx
+
+(تبدیل کامل به Bottom Sheet شناور با انیمیشن)
+
+```tsx
+import React, { useEffect, useRef } from 'react';
+import { cn } from '../../lib/utils';
+import { X } from 'lucide-react';
+
+export const Modal = ({ isOpen, onClose, title, subtitle, children, footer, maxWidth = 'lg' }: any) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const widthClasses: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl', '2xl': 'max-w-2xl', '3xl': 'max-w-3xl' };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" dir="rtl">
+      <div onClick={onClose} className="fixed inset-0 bg-ink/40 backdrop-blur-sm animate-in fade-in" />
+      
+      <div ref={modalRef} className={cn(
+        "relative w-full bg-surface shadow-2xl flex flex-col z-10",
+        "rounded-t-3xl sm:rounded-3xl max-h-[90dvh] sm:max-h-[85vh]",
+        "animate-in slide-in-from-bottom sm:zoom-in-95 duration-300",
+        widthClasses[maxWidth]
+      )}>
+        {/* هندرل کشیدن (موبایل) */}
+        <div className="w-full flex justify-center py-3 sm:hidden" onClick={onClose}>
+          <div className="w-12 h-1.5 bg-border-strong rounded-full" />
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+          <div>
+            <h3 className="text-lg font-bold text-ink">{title}</h3>
+            {subtitle && <p className="text-xs text-ink-soft mt-1">{subtitle}</p>}
+          </div>
+          <button onClick={onClose} className="p-2 bg-canvas rounded-full text-ink-soft hover:text-ink"><X size={18} /></button>
+        </div>
+
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {children}
+        </div>
+
+        {footer && (
+          <div className="p-4 border-t border-border bg-surface shrink-0 sticky bottom-0 z-20 flex justify-end gap-2">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+```
+
+---
+
+۶. فایل src/components/ui/CustomDatePicker.tsx
+
+(تقویم به شکل چرخ اسکرولی در Bottom Sheet)
+
+```tsx
+import React, { useState, useRef, useEffect } from 'react';
+import { getJalaliDate, jalaliToGregorianISO, JALALI_MONTH_NAMES, getJalaliMonthDays, toPersianDigits } from '../../lib/jalali';
+import { Calendar as CalendarIcon, ChevronDown, X } from 'lucide-react';
+import { Modal } from './Modal';
+
+export const CustomDatePicker = ({ value, onChange, placeholder = 'انتخاب تاریخ', className = '' }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const activeDate = value ? new Date(value) : new Date();
+  const initial = getJalaliDate(activeDate);
+  
+  const [year, setYear] = useState(initial.jy);
+  const [month, setMonth] = useState(initial.jm);
+  const [day, setDay] = useState(initial.jd);
+
+  const daysInMonth = getJalaliMonthDays(year, month);
+  const years = Array.from({ length: 11 }, (_, i) => 1400 + i);
+
+  const handleConfirm = () => {
+    const safeDay = Math.min(day, daysInMonth);
+    onChange(jalaliToGregorianISO(year, month, safeDay));
+    setIsOpen(false);
+  };
+
+  const display = value ? `${toPersianDigits(day)} ${JALALI_MONTH_NAMES[month - 1]} ${toPersianDigits(year)}` : placeholder;
+
+  return (
+    <div className={className}>
+      <button onClick={() => setIsOpen(true)} className="w-full bg-surface border border-border rounded-xl p-3 text-sm font-medium text-ink flex items-center justify-between shadow-sm hover:border-primary transition">
+        <div className="flex items-center gap-2"><CalendarIcon size={18} className="text-primary" /><span>{display}</span></div>
+        <ChevronDown size={16} className="text-ink-soft" />
+      </button>
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="انتخاب تاریخ" footer={<button onClick={handleConfirm} className="w-full py-3 bg-primary text-white rounded-xl font-bold">تایید تاریخ</button>}>
+        <div className="flex justify-between gap-4 h-64 relative">
+          {/* ستون روز */}
+          <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory text-center" style={{ scrollSnapType: 'y mandatory' }}>
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => (
+              <div key={d} onClick={() => setDay(d)} className={`py-3 snap-center cursor-pointer text-lg transition-all ${day === d ? 'text-primary font-black scale-110' : 'text-ink-soft opacity-50'}`}>{toPersianDigits(d)}</div>
+            ))}
+          </div>
+          {/* ستون ماه */}
+          <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory text-center" style={{ scrollSnapType: 'y mandatory' }}>
+            {JALALI_MONTH_NAMES.map((m, i) => (
+              <div key={i} onClick={() => setMonth(i + 1)} className={`py-3 snap-center cursor-pointer text-lg transition-all ${month === i + 1 ? 'text-primary font-black scale-110' : 'text-ink-soft opacity-50'}`}>{m}</div>
+            ))}
+          </div>
+          {/* ستون سال */}
+          <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory text-center" style={{ scrollSnapType: 'y mandatory' }}>
+            {years.map(y => (
+              <div key={y} onClick={() => setYear(y)} className={`py-3 snap-center cursor-pointer text-lg transition-all font-mono ${year === y ? 'text-primary font-black scale-110' : 'text-ink-soft opacity-50'}`}>{toPersianDigits(y)}</div>
+            ))}
+          </div>
+          
+          {/* خط انتخاب‌گر وسط */}
+          <div className="absolute top-1/2 inset-x-0 h-12 border-y-2 border-primary/20 bg-primary/5 pointer-events-none -translate-y-1/2 rounded-lg" />
+        </div>
+      </Modal>
+    </div>
+  );
+};
+```
+
+---
+
+۷. کامپوننت‌های پایه (Button, Input, Card)
+
+(همه بر اساس Radius و رنگ‌های جدید)
+
+src/components/ui/Button.tsx
+
+```tsx
+import React from 'react';
+import { cn } from '../../lib/utils';
+
+export const Button = ({ variant = 'primary', size = 'md', className, ...props }: any) => {
+  const base = "inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
+  const variants: any = {
+    primary: "bg-primary text-white hover:bg-primary-hover shadow-sm",
+    secondary: "bg-primary-50 text-primary hover:bg-primary-100",
+    outline: "border border-border text-ink hover:bg-canvas",
+    ghost: "text-ink hover:bg-black/5",
+    danger: "bg-danger text-white hover:bg-red-700 shadow-sm"
+  };
+  const sizes: any = { sm: "h-9 px-4 text-xs", md: "h-11 px-6 text-sm", lg: "h-14 px-8 text-base", icon: "h-11 w-11 p-0" };
+  return <button className={cn(base, variants[variant], sizes[size], className)} {...props} />;
+};
+```
+
+src/components/ui/Input.tsx
+
+```tsx
+import React from 'react';
+import { cn } from '../../lib/utils';
+
+export const Input = ({ label, error, className, ...props }: any) => (
+  <div className="space-y-1.5" dir="rtl">
+    {label && <label className="block text-xs font-bold text-ink">{label}</label>}
+    <input className={cn("w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-ink outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm", error ? "border-danger" : "", className)} {...props} />
+    {error && <span className="text-xs text-danger">{error}</span>}
+  </div>
+);
+```
+
+src/components/ui/Card.tsx
+
+```tsx
+import React from 'react';
+import { cn } from '../../lib/utils';
+
+export const Card = ({ className, padding = 'md', ...props }: any) => {
+  const pads: any = { none: 'p-0', sm: 'p-3', md: 'p-5', lg: 'p-6' };
+  return <div className={cn("bg-surface border border-border rounded-xl shadow-sm transition-all", pads[padding], className)} {...props} />;
+};
+```
+
+---
+
+🎯 گام بعدی:
+
+فایل‌های بالا زیرساخت و پوسته اصلی هستند. شما باید این ۷ فایل را جایگزین کنی.
+به محض اینکه این کار را کردی و برنامه را اجرا کردی، من در پیام بعدی، تمام ۱۰ صفحه اصلی (مشتریان، 360، وظایف، داشبورد، مالی و...) را با همین استایل بازنویسی می‌کنم تا کل برنامه یکپارچه شود.
+
+لطفاً فایل‌های بالا را جایگزین کن و بگو «پوسته اوکی است، برو سراغ صفحات» تا ادامه دهم.

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+const root=path.resolve(new URL('..',import.meta.url).pathname);
+const mirror=fs.readFileSync(path.join(root,'database/sqlserver/v1/003_external_mirror_and_finance.sql'),'utf8');
+const rls=fs.readFileSync(path.join(root,'database/sqlserver/v1/006_row_level_security.sql'),'utf8');
+assert.ok(mirror.includes('CREATE TABLE crm.CreditNoteMirror'),'ERP credit notes are modeled as a mirror, not a CRM-originated ledger');
+assert.ok(mirror.includes('ExternalCreditNoteId')&&mirror.includes('SourceSystemCode'),'credit mirror has stable external identity and source-system identity');
+assert.ok(mirror.includes('InvoiceMirrorId')&&mirror.includes('AccountId')&&mirror.includes('Amount'),'credit mirror can link to invoice/account and amount');
+assert.ok(mirror.includes("cn.StatusCode IN ('POSTED','APPROVED')")&&mirror.includes('cn.IsVoided=0'),'canonical balance view subtracts only non-void approved/posted credits');
+assert.ok(mirror.includes('CREATE OR ALTER VIEW analytics.vw_InvoiceBalance'),'single SQL balance view is the canonical balance contract');
+assert.ok(rls.includes('ON crm.CreditNoteMirror'),'credit mirror is included in tenant row-level security policy');
+console.log('PASS: 6 assertions (ERP credit-note mirror, canonical balance view and tenant RLS contract)');

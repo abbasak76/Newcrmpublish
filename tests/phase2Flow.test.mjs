@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { evaluateOrderCpq, applyErpChangeResponse, classifyInvoiceDistribution, externalIdentityKey, isNegotiableErpOrder, makeErpChangeRequest, upsertExternalRecords, validateOrderForCpq } from '../src/lib/phase2Flow.ts';
+
+assert.equal(classifyInvoiceDistribution({ id: 'i1', status: 'UNPAID' }, []), 'NOT_YET_IN_DISTRIBUTION');
+assert.equal(classifyInvoiceDistribution({ id: 'i1', status: 'UNPAID' }, [{ invoiceIds: ['i1'], distributionOutputNumber: 'OUT-1' }]), 'IN_DISTRIBUTION');
+assert.equal(classifyInvoiceDistribution({ id: 'i1', status: 'UNPAID' }, [{ invoiceIds: ['i1'] }]), 'NOT_YET_IN_DISTRIBUTION');
+assert.equal(classifyInvoiceDistribution({ id: 'i1', status: 'VOID' }, [{ invoiceIds: ['i1'], distributionOutputNumber: 'OUT-1' }]), 'UNKNOWN');
+assert.equal(isNegotiableErpOrder({ externalOrderId: 'e1', status: 'OPEN' }), true);
+assert.equal(isNegotiableErpOrder({ externalOrderId: 'e1', status: 'CANCELLED' }), false);
+assert.equal(isNegotiableErpOrder({ externalOrderId: 'e1', status: 'OPEN', externalInvoiceId: 'inv1' }), false);
+assert.notEqual(externalIdentityKey({tenantId:'t',sourceSystemCode:'erp-a',entityType:'invoice',externalId:'1'}), externalIdentityKey({tenantId:'t',sourceSystemCode:'erp-b',entityType:'invoice',externalId:'1'}));
+const old = [{ tenantId:'t', sourceSystemCode:'ERP', entityType:'INVOICE', externalId:'1', sourceModifiedAtUtc:'2026-01-02T00:00:00Z', notes:'CRM note', totalAmount:10 }];
+const same = { tenantId:'t', sourceSystemCode:'ERP', entityType:'INVOICE', externalId:'1', sourceModifiedAtUtc:'2026-01-03T00:00:00Z', totalAmount:12 };
+let result = upsertExternalRecords(old, [same]);
+assert.equal(result.records.length, 1); assert.equal(result.updated, 1); assert.equal(result.records[0].notes, 'CRM note'); assert.equal(result.records[0].totalAmount, 12);
+result = upsertExternalRecords(result.records, [same]); assert.equal(result.records.length, 1); assert.equal(result.inserted, 0);
+result = upsertExternalRecords(old, [{...same, sourceModifiedAtUtc:'2026-01-01T00:00:00Z'}]); assert.equal(result.skippedStale, 1); assert.equal(result.records[0].totalAmount, 10);
+result = upsertExternalRecords([], [{tenantId:'t', sourceSystemCode:'ERP', entityType:'INVOICE', totalAmount:2}]); assert.equal(result.conflicts, 1);
+const request = makeErpChangeRequest({id:'r1', entityType:'SALES_ORDER', entityId:'o1', sourceSystemCode:'ERP-A', operation:'CANCEL'});
+assert.equal(request.status, 'PENDING');
+assert.equal(applyErpChangeResponse(request, {confirmed:false, message:'not accepted'}).status, 'FAILED');
+assert.equal(applyErpChangeResponse(request, {confirmed:true, externalRequestId:'req-1'}).status, 'SUCCEEDED');
+assert.equal(evaluateOrderCpq({lines:[]}).ok, false);
+assert.equal(evaluateOrderCpq({lines:[{id:'l1', productId:'p1', quantity:2, unitPrice:5}]}).totalNetAmount, 10);
+console.log('phase2Flow tests passed');

@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { appendTaskActivity, getLatestTaskActivity } from '../src/services/taskActivity.ts';
+const task = { id: 'T-1', activityHistory: [] };
+const created = appendTaskActivity(task, { id: 'event-1', action: 'CREATED', actorId: 'U-1', at: '2026-10-28T10:00:00.000Z', summary: 'ایجاد شد' });
+assert.equal(created.activityHistory.length, 1);
+assert.equal(created.activityHistory[0].actorId, 'U-1');
+assert.equal(task.activityHistory.length, 0, 'helper does not mutate original task');
+const duplicate = appendTaskActivity(created, { id: 'event-1', action: 'CREATED', actorId: 'U-1', at: '2026-10-28T10:00:00.000Z', summary: 'تکراری' });
+assert.equal(duplicate.activityHistory.length, 1, 'event idempotency prevents duplicate append');
+const updated = appendTaskActivity(created, { id: 'event-2', action: 'REASSIGNED', actorId: 'U-2', at: '2026-10-28T11:00:00.000Z', summary: 'ارجاع شد', details: 'مسئول جدید' });
+assert.equal(updated.activityHistory.length, 2);
+assert.equal(getLatestTaskActivity(updated).id, 'event-2');
+assert.equal(getLatestTaskActivity({ id: 'empty' }), null);
+const unordered = { id: 'T-2', activityHistory: [{ id: 'new', at: '2026-10-28T12:00:00.000Z', action: 'UPDATED', actorId: 'U', summary: 'جدید' }, { id: 'old', at: '2026-10-28T09:00:00.000Z', action: 'CREATED', actorId: 'U', summary: 'قدیمی' }] };
+assert.equal(getLatestTaskActivity(unordered).id, 'new');
+console.log('taskActivity.test.mjs: PASS (7 assertions)');

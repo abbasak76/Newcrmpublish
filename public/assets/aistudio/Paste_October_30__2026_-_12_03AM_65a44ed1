@@ -1,0 +1,1286 @@
+دریافت شد. تمامی ۵۰+ فایل سورس را با دقت بررسی کردم و آن‌ها را به عنوان مرجع اصلی ثبت کردم.
+
+با توجه به درخواست شما برای اعمال تغییرات به صورت پشت سر هم و بدون حذف هیچ قابلیتی، من در این مرحله ۵ فایل هسته (Core) را به طور کامل بازنویسی کرده‌ام. این فایل‌ها پایه‌ی کل برنامه را تشکیل می‌دهند و با جایگزینی آن‌ها، ظاهر و ساختار کل سیستم به «Aurora Ember 2026» ارتقا می‌یابد.
+
+لیست فایل‌های بازنویسی‌شده (به ترتیب اولویت):
+
+1. src/index.css (پایه سیستم طراحی، هدر معلق، شیشه‌ای ایمن، حذف زردی)
+2. src/components/Layout.tsx (هدر سراسری، حذف اکشن سریع شناور، ناوبری پایین شیشه‌ای)
+3. src/components/HomeWorkspace.tsx (شبکه Bento، بدون ارجاع به دکمه + شناور)
+4. src/components/TasksWorkspace.tsx (کارت‌های شیشه‌ای، حفظ کامل منطق SLA و فرم‌ها)
+5. src/components/CustomersWorkspace.tsx (لیست شیشه‌ای، حفظ کامل منطق جستجو و Customer360)
+
+---
+
+۱. فایل src/index.css
+
+(تم زردی حذف شد، هاله‌های خنک جایگزین شدند، هدر و نوار پایین به صورت شیشه‌ای و معلق طراحی شدند)
+
+```css
+@import "tailwindcss";
+
+/* فونت محلی Vazirmatn UI */
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-ExtraBold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+
+/* ==========================================================================
+   AKHAVAN CRM — AURORA EMBER Design System (نسخه ۲۰۲۶)
+   ========================================================================== */
+
+@theme {
+  /* پالت خام اصلاح‌شده (حذف زردی و بژ سنگین) */
+  --se-base-canvas: #F8F9FA; /* سفید مرواریدی */
+  --se-cherry-plum: #71364B;
+  --se-plum-hover: #5E293D;
+  --se-plum-pressed: #4B2031;
+  --se-terracotta-coral: #C96F55;
+  --se-coral-hover: #B95E46;
+  --se-honey-gold: #D5A15E;
+  --se-sage: #667D68;
+  --se-white: #FFFFFF;
+  --se-cloud: #F1F3F5;
+  --se-ink: #2C2A2B;
+  --se-muted: #6B6B6B;
+  --se-border: #E5E7EB;
+  --se-border-strong: #D1D5DB;
+  --se-focus: #956078;
+
+  /* توکن‌های معنایی */
+  --color-canvas: var(--se-base-canvas);
+  --color-bg: var(--se-base-canvas);
+  --color-surface: var(--se-white);
+  --color-card: var(--se-white);
+  --color-surface-muted: var(--se-cloud);
+
+  --color-text-main: var(--se-ink);
+  --color-text-secondary: var(--se-muted);
+  --color-ink: var(--se-ink);
+  --color-ink-soft: var(--se-muted);
+
+  --color-primary: var(--se-cherry-plum);
+  --color-primary-hover: var(--se-plum-hover);
+  --color-primary-dark: var(--se-plum-pressed);
+  --color-brand: var(--se-cherry-plum);
+
+  --color-accent: var(--se-focus);
+  --color-coral: var(--se-terracotta-coral);
+  --color-gold: var(--se-honey-gold);
+  --color-sage: var(--se-sage);
+
+  --color-border: var(--se-border);
+  --color-border-strong: var(--se-border-strong);
+
+  /* سایه‌ها */
+  --shadow-subtle: 0 2px 10px rgba(0, 0, 0, .03);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, .04);
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, .06);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, .08);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, .12);
+
+  /* انیمیشن‌ها */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+
+  /* تایپوگرافی */
+  --font-sans: "Vazirmatn", Tahoma, sans-serif;
+  --font-premium: "Vazirmatn", Tahoma, sans-serif;
+}
+
+:root {
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-emphasis: 280ms;
+  --motion-spring: 400ms;
+  --z-base: 0; --z-sticky: 20; --z-dropdown: 30; --z-overlay: 40; --z-modal: 50; --z-toast: 60;
+  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-safe-top: env(safe-area-inset-top, 0px);
+  
+  /* شیشه ایمن (Safe Glass) */
+  --glass-bg: rgba(255, 255, 255, .82);
+  --glass-bg-strong: rgba(255, 255, 255, .92);
+  --glass-border: rgba(255, 255, 255, .6);
+  --glass-border-dark: rgba(229, 231, 235, .8);
+}
+
+html { direction: rtl; -webkit-text-size-adjust: 100%; }
+html[lang="en"], html[dir="ltr"] { direction: ltr; }
+body {
+  margin: 0; font-family: var(--font-sans); background: var(--color-canvas); color: var(--color-text-main);
+  line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+
+::selection { background: var(--se-cherry-plum); color: #fff; }
+:focus-visible { outline: 2px solid var(--se-focus); outline-offset: 2px; }
+
+/* ---------- سطوح و شیشه‌ای (Safe Glass) ---------- */
+.se-card {
+  background: var(--color-surface); border: 1px solid var(--glass-border-dark); border-radius: 1.25rem;
+  box-shadow: var(--shadow-card); color: var(--color-text-main);
+  transition: transform var(--motion-emphasis) var(--ease-spring), box-shadow var(--motion-emphasis) var(--ease-standard);
+}
+@media (hover: hover) { .se-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-float); } }
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,.03);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-strong { background: var(--color-surface); }
+}
+
+/* ---------- هاله جوی جدید (Aurora - بدون زردی) ---------- */
+.se-atmosphere-root { position: fixed; inset: 0; z-index: var(--z-base); pointer-events: none; overflow: hidden; background: var(--color-bg); }
+.se-aurora { position: absolute; filter: blur(100px); opacity: .25; mix-blend-mode: multiply; will-change: transform; }
+/* آبی اقیانوسی (خنک) */
+.se-aurora-1 { top: -15%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #E0F2FE 0%, transparent 70%); }
+/* مرجانی محو (گرم) */
+.se-aurora-2 { bottom: -10%; left: -15%; width: 50vw; height: 50vw; background: radial-gradient(circle, #FFE4E6 0%, transparent 70%); }
+/* بنفش بسیار ملایم */
+.se-aurora-3 { top: 30%; left: 20%; width: 40vw; height: 40vw; background: radial-gradient(circle, #F3E8FF 0%, transparent 70%); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .se-aurora-1 { animation: se-fluid-morph 25s ease-in-out infinite alternate; }
+  .se-aurora-2 { animation: se-fluid-morph 30s ease-in-out infinite alternate-reverse; }
+}
+@keyframes se-fluid-morph { 0% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; transform: rotate(0) scale(1); } 100% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(45deg) scale(1.1); } }
+
+/* ---------- هدر معلق سراسری (Global Floating Header) ---------- */
+.se-floating-header {
+  position: fixed;
+  top: calc(var(--mobile-safe-top) + 12px);
+  inset-inline: 16px;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding-inline: 16px;
+  border-radius: 999px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-soft);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  transition: all var(--motion-base) var(--ease-standard);
+}
+.se-floating-header.scrolled {
+  background: var(--glass-bg-strong);
+  box-shadow: var(--shadow-float);
+}
+
+/* ---------- ناوبری پایین (Floating Pill) ---------- */
+.se-bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--mobile-safe-bottom) + 16px);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.se-nav-capsule {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+.se-nav-item {
+  position: relative;
+  width: 56px;
+  height: 46px;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: all var(--motion-base) var(--ease-spring);
+}
+.se-nav-item[aria-current="page"] {
+  color: var(--color-primary);
+  background: rgba(113, 54, 75, 0.08);
+}
+.se-nav-item[aria-current="page"] svg { animation: se-bounce-in 400ms var(--ease-spring); }
+@keyframes se-bounce-in { 0% { transform: scale(.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* ---------- تایپوگرافی ---------- */
+.se-display { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem); font-weight: 900; line-height: 1.25; letter-spacing: -.01em; }
+.se-title   { font-size: 1.125rem; font-weight: 800; line-height: 1.3; }
+.se-body    { font-size: 0.875rem; font-weight: 500; line-height: 1.7; }
+.se-label   { font-size: 0.75rem; font-weight: 700; color: var(--color-text-secondary); }
+
+/* ---------- اسکلتون‌ها ---------- */
+.se-skeleton { position: relative; overflow: hidden; border-radius: 0.75rem; background: var(--color-surface-muted); }
+.se-skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: se-shimmer 1.5s infinite; }
+@keyframes se-shimmer { to { transform: translateX(100%); } }
+```
+
+---
+
+۲. فایل src/components/Layout.tsx
+
+(هدر شیشه‌ای سراسری، حذف دکمه شناور اکشن، نوار پایین اینستاگرامی)
+
+```tsx
+import { getTenantName } from '../lib/orgPolicy';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Search, Bell, Menu, X, Home, Users, CheckSquare, MessagesSquare, ChevronLeft,
+  UserRound, Settings, Sparkles
+} from 'lucide-react';
+import { cn } from '../lib/utils';
+import { AppState } from '../types';
+import { Avatar } from './ui/Avatar';
+import { NavigationDrawer } from './NavigationDrawer';
+import { Sidebar } from './Sidebar';
+import { AtmosphereLayer } from './AtmosphereLayer';
+import { RBACService } from '../lib/rbac';
+import { menuSections, filterSections } from '../lib/navigation';
+import { haptics } from '../lib/haptics';
+import { computeMissing, getOnboardingConfig } from '../lib/onboarding';
+import { ThemeToggle } from './ThemeToggle';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  onOpenSearch?: () => void;
+  unreadNotificationsCount?: number;
+  onOpenNotifications?: () => void;
+  state?: AppState;
+  updateState?: (updater: (draft: AppState) => AppState | void) => void;
+}
+
+const NAV_ITEMS = [
+  { id: 'home', path: '/', label: 'خانه', icon: Home },
+  { id: 'accounts', path: '/accounts', label: 'مشتریان', icon: Users },
+  { id: 'tasks', path: '/tasks', label: 'وظایف', icon: CheckSquare },
+  { id: 'groups', path: '/groups', label: 'تعاملات', icon: MessagesSquare },
+] as const;
+
+export function Layout({ children, onOpenSearch, unreadNotificationsCount = 0, onOpenNotifications, state, updateState }: LayoutProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const currentUser = state?.users?.find(u => u.id === state?.currentUserId);
+  const currentRole = state?.roles?.find(r => r.id === currentUser?.roleId);
+  const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
+  const canAccess = (tab: string) => (rbac ? rbac.canAccessWorkspace(tab as any) : true);
+  const sections = useMemo(() => filterSections(menuSections, canAccess), [rbac]);
+  const can = (perm: string) => (rbac ? rbac.hasPermission(perm as any) : true);
+
+  const activeCustomer = state?.accounts?.find(a => a.id === state?.activeContextAccountId);
+  const myTasks = (state?.tasks || []).filter((t: any) => t.assigneeType !== 'GROUP' && t.assigneeId === state?.currentUserId);
+  const sidebarStats = state ? { openTasks: myTasks.filter((t: any) => t.status !== 'COMPLETED').length, doneTasks: myTasks.filter((t: any) => t.status === 'COMPLETED').length, overdue: myTasks.filter((t: any) => t.slaStatus === 'BREACHED' && t.status !== 'COMPLETED').length } : undefined;
+  
+  const ob = getOnboardingConfig(state as any); 
+  const myFile: any = (state?.personnelFiles || []).find((f: any) => f.userId === state?.currentUserId);
+  const fileMissing = state && ob.enabled && state.currentUserId && location.pathname !== '/personnel-file' && (!myFile || myFile.status !== 'APPROVED') ? computeMissing(myFile, ob).length : 0;
+  
+  const inChat = location.pathname.startsWith('/groups');
+  const chatOpen = inChat && new URLSearchParams(location.search).get('c') !== null;
+  const seg = location.pathname === '/' ? 'home' : location.pathname.split('/')[1];
+  const activePageLabel = sections.flatMap(section => section.items).find(item => location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/')))?.label || (location.pathname === '/' ? 'داشبورد' : 'فضای کاری');
+
+  // هندل کردن اسکرول برای تغییر شفافیت هدر
+  useEffect(() => {
+    const mainEl = document.getElementById('main-scroll-container');
+    const handleScroll = () => setIsScrolled(mainEl ? mainEl.scrollTop > 20 : false);
+    mainEl?.addEventListener('scroll', handleScroll);
+    return () => mainEl?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => { setAvatarMenuOpen(false); }, [location.pathname]);
+
+  const goNav = (id: string, path: string) => {
+    haptics.selection(); navigate(path);
+  };
+
+  // Swipe راست→چپ برای بازکردن چت
+  const swipe = useRef<{ x: number; y: number; t: number } | null>(null);
+  const blocked = (el: EventTarget | null) => !!(el as HTMLElement | null)?.closest?.('input,textarea,select,table,[contenteditable],[role="slider"]');
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (seg !== 'home' || e.pointerType === 'mouse' || blocked(e.target)) { swipe.current = null; return; }
+    const edge = 24; if (e.clientX < edge || e.clientX > window.innerWidth - edge) { swipe.current = null; return; }
+    swipe.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const s = swipe.current; swipe.current = null; if (!s) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (dx < -80 && Math.abs(dy) < 40 && Date.now() - s.t < 600) { haptics.light(); navigate('/groups'); }
+  };
+
+  const topButtons = (
+    <>
+      <button onClick={onOpenSearch} aria-label="جستجو" className="se-interactive text-ink hover:text-primary transition-colors"><Search className="h-5 w-5" /></button>
+      <button onClick={onOpenNotifications} aria-label="اعلان‌ها" className="relative se-interactive text-ink hover:text-primary transition-colors">
+        <Bell className="h-5 w-5" />
+        {unreadNotificationsCount > 0 && (
+          <span className="absolute -end-1 -top-1 min-w-4 rounded-full bg-coral px-1 text-center text-[9px] font-bold leading-tight text-white ring-2 ring-white">{unreadNotificationsCount.toLocaleString('fa-IR')}</span>
+        )}
+      </button>
+      <div className="relative">
+        <button onClick={() => setAvatarMenuOpen(o => !o)} aria-label="منوی کاربر" className="se-interactive !p-0.5">
+          <Avatar name={currentUser?.name || 'کاربر'} src={currentUser?.avatar} size="sm" />
+        </button>
+        {avatarMenuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setAvatarMenuOpen(false)} />
+            <div role="menu" className="glass-strong absolute end-0 top-[calc(100%+12px)] z-50 w-56 overflow-hidden rounded-3xl p-2 shadow-modal">
+              <div className="px-3 py-2"><div className="truncate text-xs font-bold text-ink">{currentUser?.name || 'کاربر سیستم'}</div><div className="truncate text-[11px] text-ink-soft">{currentRole?.name || ''}</div></div>
+              <button role="menuitem" onClick={() => navigate('/profile')} className="flex w-full cursor-pointer items-center gap-2 rounded-2xl px-3 py-2.5 text-start text-xs font-bold text-ink hover:bg-primary/[.07]"><UserRound size={15} />پروفایل من</button>
+              <div className="flex items-center justify-between px-3 py-2"><span className="text-xs font-bold text-ink">تم</span><ThemeToggle /></div>
+              {canAccess('settings') && <button role="menuitem" onClick={() => navigate('/settings')} className="flex w-full cursor-pointer items-center gap-2 rounded-2xl px-3 py-2.5 text-start text-xs font-bold text-ink hover:bg-primary/[.07]"><Settings size={15} />تنظیمات</button>}
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-transparent font-premium" dir="rtl">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-xs focus:font-bold focus:text-white">پرش به محتوای اصلی</a>
+      
+      <AtmosphereLayer />
+      
+      {/* لایه اصلی برنامه */}
+      <div className={cn('relative z-10 flex h-full w-full origin-left overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+        navDrawerOpen ? 'pointer-events-none scale-[0.92] rounded-[2rem] opacity-70 shadow-2xl' : 'scale-100')}>
+
+        <Sidebar sections={sections} user={currentUser} roleName={currentRole?.name} stats={sidebarStats} />
+
+        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+          
+          {/* هدر معلق سراسری - برای تمام صفحات */}
+          <header className={cn("se-floating-header", isScrolled && "scrolled")}>
+            <div className="flex items-center gap-3 min-w-0">
+              <button onClick={() => setNavDrawerOpen(true)} aria-label="منوی اصلی" className="se-interactive text-ink lg:hidden"><Menu className="h-5 w-5" /></button>
+              <div className="min-w-0">
+                <h1 className="truncate text-[15px] font-extrabold tracking-tight text-ink flex items-center gap-1.5">
+                  {seg === 'home' && <Sparkles size={16} className="text-gold" />}
+                  {activePageLabel}
+                </h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">{topButtons}</div>
+          </header>
+
+          {/* محتوای اصلی */}
+          <main id="main-scroll-container" tabIndex={-1} className="w-full flex-1 overflow-y-auto outline-none" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { swipe.current = null; }}>
+            <div className={cn('mx-auto min-h-full w-full max-w-[1440px] pt-[calc(env(safe-area-inset-top,0px)+84px)]', inChat ? 'pb-0' : 'pb-[calc(env(safe-area-inset-bottom,0px)+100px)] lg:pb-24')}>
+              {activeCustomer && seg === 'accounts' && (
+                <div className="flex items-center gap-1.5 px-4 pb-2">
+                  <ChevronLeft className="h-4 w-4 text-ink-soft" />
+                  <span className="font-medium text-ink-soft text-xs">مشتری:</span>
+                  <div className="glass flex items-center gap-1.5 rounded-full py-0.5 pe-1 ps-3">
+                    <span className="max-w-[180px] truncate text-[11px] font-extrabold text-ink">{activeCustomer.name}</span>
+                    <button aria-label="خروج از زمینه مشتری" onClick={() => updateState && updateState(d => { d.activeContextAccountId = null; d.activeContextCustomerId = null; })}
+                      className="grid h-6 w-6 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-ink/10 hover:text-ink"><X className="h-3 w-3" /></button>
+                  </div>
+                </div>
+              )}
+              {fileMissing > 0 && myFile?.status !== 'SUBMITTED_FOR_REVIEW' && (
+                <button onClick={() => navigate('/personnel-file')} className="se-interactive mx-4 mb-4 flex min-h-[44px] w-[calc(100%-2rem)] cursor-pointer items-center justify-between rounded-2xl border border-warning-line bg-warning-soft px-4 text-start text-xs font-bold text-warning"><span>{myFile?.status === 'NEEDS_CORRECTION' ? 'پرونده پرسنلی شما نیازمند اصلاح است' : `پرونده پرسنلی شما ناقص است (${fileMissing.toLocaleString('fa-IR')} مورد)`}</span><span>تکمیل پرونده ←</span></button>
+              )}
+              
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {/* ناوبری پایین: کپسول شیشه‌ای اینستاگرامی */}
+        <div className={cn('se-bottom-nav lg:hidden', chatOpen && '!hidden')}>
+          <nav aria-label="ناوبری اصلی" className="se-nav-capsule">
+            {NAV_ITEMS.map(i => {
+              const on = i.id === seg; const Icon = i.icon;
+              return (
+                <button key={i.id} onClick={() => goNav(i.id, i.path)} aria-current={on ? 'page' : undefined} aria-label={i.label} className="se-nav-item">
+                  <Icon strokeWidth={on ? 2.4 : 1.8} className="h-[22px] w-[22px]" />
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      <NavigationDrawer isOpen={navDrawerOpen} onClose={() => setNavDrawerOpen(false)} state={state} />
+    </div>
+  );
+}
+```
+
+---
+
+۳. فایل src/components/HomeWorkspace.tsx
+
+(طراحی Bento Grid، حذف دکمه + شناور، حفظ کامل منطق)
+
+```tsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppState } from '../types';
+import { CheckSquare, Clock, AlertTriangle, Building2, ChevronLeft, Calendar, ListChecks, CalendarCheck, Plus } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+const greeting = (h: number) => (h < 5 ? 'شب بخیر' : h < 12 ? 'صبح بخیر' : h < 17 ? 'ظهر بخیر' : h < 20 ? 'عصر بخیر' : 'شب بخیر');
+const fa = (n: number) => n.toLocaleString('fa-IR');
+
+interface StatProps { label: string; value: number; hint: string; icon: React.ElementType; tone: 'danger' | 'warning' | 'primary' | 'success'; onClick: () => void; index: number }
+const TONES = {
+  danger: 'bg-danger-soft text-danger', 
+  warning: 'bg-warning-soft text-warning', 
+  primary: 'bg-primary/10 text-primary', 
+  success: 'bg-success-soft text-success',
+} as const;
+
+function StatCard({ label, value, hint, icon: Icon, tone, onClick, index }: StatProps) {
+  return (
+    <button onClick={onClick} style={{ ['--i' as any]: index }}
+      className="se-card se-interactive se-pressable flex min-h-[44px] cursor-pointer flex-col gap-2 p-4 text-start transition-all hover:-translate-y-1 hover:shadow-float">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-text-secondary">{label}</span>
+        <span className={cn('grid h-9 w-9 place-items-center rounded-2xl', TONES[tone])}><Icon size={18} /></span>
+      </div>
+      <span className="text-2xl font-black leading-none tracking-tight text-text-main">{fa(value)}</span>
+      <span className="text-[11px] font-medium text-text-secondary">{hint}</span>
+    </button>
+  );
+}
+
+function SectionTitle({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
+  return (
+    <div className="flex items-center justify-between px-1 mt-2">
+      <h2 className="text-sm font-extrabold text-text-main">{title}</h2>
+      {action && <button onClick={onAction} className="flex min-h-[44px] cursor-pointer items-center gap-0.5 px-1 text-[11px] font-bold text-primary hover:underline">{action}<ChevronLeft size={13} /></button>}
+    </div>
+  );
+}
+
+export function HomeWorkspace({ state }: { state: AppState }) {
+  const navigate = useNavigate();
+  const currentUser = state.users.find(u => u.id === state.currentUserId);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  const myTasks = (state.tasks || []).filter(t => t.assigneeId === state.currentUserId && t.status !== 'COMPLETED');
+  const overdueTasks = myTasks.filter(t => t.dueDate && t.dueDate < today);
+  const pendingApprovals = (state.internalRequests || []).filter((r: any) => r.currentAssigneeId === state.currentUserId && r.status === 'IN_REVIEW');
+  const todayActivities = (state.activities || []).filter(a => a.ownerId === state.currentUserId && a.dateTime.startsWith(today));
+  const todayMeetings = (state.internalMeetings || []).filter((m: any) => (m.organizerId === state.currentUserId || m.participantIds?.includes(state.currentUserId || '')) && m.date === today);
+  const recentAccounts = [...(state.accounts || [])].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5);
+  const todayDateStr = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+  const todayCount = todayMeetings.length + todayActivities.length;
+
+  return (
+    <div className="flex-1 space-y-6 overflow-y-auto bg-transparent p-4 pb-24 font-premium sm:p-6" dir="rtl">
+      
+      {/* سلام و خلاصه روز (Bento Grid Style) */}
+      <section data-tour="header-user" className="se-card relative overflow-hidden p-6 rounded-[28px]">
+        <div aria-hidden className="pointer-events-none absolute -top-16 end-[-40px] h-44 w-44 rounded-full bg-gold/20 blur-3xl" />
+        <p className="relative flex items-center gap-1.5 text-xs font-medium text-text-secondary"><Calendar size={14} className="text-primary" />{todayDateStr}</p>
+        <h1 className="relative mt-2 text-2xl font-black tracking-tight text-text-main">
+          {greeting(now.getHours())}، {currentUser?.name?.split(' ')[0] || 'همکار گرامی'}
+        </h1>
+        <p className="relative mt-1.5 text-sm text-text-secondary leading-relaxed">
+          {myTasks.length === 0 && todayCount === 0 
+            ? 'امروز مورد بازی یا برنامه‌ای ندارید؛ می‌توانید از دکمه‌های عملیات درون صفحه، کار جدیدی ثبت کنید.' 
+            : `${fa(myTasks.length)} وظیفه باز و ${fa(todayCount)} برنامه برای امروز دارید.`}
+        </p>
+        <div className="relative mt-4 flex flex-wrap gap-2">
+           <button onClick={() => navigate('/tasks?new=1')} className="bg-primary text-white rounded-full px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-lux hover:bg-primary-hover transition-all">
+             <Plus size={14} /> تسک جدید
+           </button>
+           <button onClick={() => navigate('/accounts?new=1')} className="glass text-ink rounded-full px-4 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 transition-all">
+             <Building2 size={14} /> مشتری جدید
+           </button>
+        </div>
+      </section>
+
+      {/* نیاز به اقدام */}
+      <section data-tour="needs-action" className="space-y-3" aria-label="نیاز به اقدام">
+        <SectionTitle title="نیاز به اقدام شما" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard index={0} label="وظایف تأخیردار" value={overdueTasks.length} hint="نیازمند پیگیری فوری" icon={AlertTriangle} tone="danger" onClick={() => navigate('/tasks')} />
+          <StatCard index={1} label="تأییدیه‌های منتظر" value={pendingApprovals.length} hint="کارتابل اتوماسیون" icon={CheckSquare} tone="warning" onClick={() => navigate('/internal_automation')} />
+          <StatCard index={2} label="وظایف باز من" value={myTasks.length} hint="در انتظار انجام" icon={ListChecks} tone="primary" onClick={() => navigate('/tasks')} />
+          <StatCard index={3} label="برنامه امروز" value={todayCount} hint="جلسه و فعالیت" icon={CalendarCheck} tone="success" onClick={() => navigate('/calendar')} />
+        </div>
+      </section>
+
+      {/* برنامه امروز */}
+      <section data-tour="today-schedule" className="space-y-3" aria-label="برنامه کاری امروز">
+        <SectionTitle title="برنامه کاری امروز" action="مشاهده تقویم" onAction={() => navigate('/calendar')} />
+        <div className="space-y-2.5">
+          {todayMeetings.map((m: any) => (
+            <div key={m.id} className="se-card flex items-center gap-3 border-e-4 border-e-primary p-3.5">
+              <div className="flex min-w-[56px] flex-col items-center rounded-2xl bg-canvas px-2 py-1.5 text-center border border-border/50">
+                <span className="text-xs font-bold text-text-main font-mono">{m.startTime}</span>
+                <span className="text-[10px] text-text-secondary font-mono">{m.endTime}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-bold text-text-main">{m.title}</h3>
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-text-secondary"><Clock size={12} />جلسه کاری</p>
+              </div>
+            </div>
+          ))}
+          {todayActivities.map(a => {
+            const acc = state.accounts.find(x => x.id === a.accountId);
+            return (
+              <div key={a.id} className="se-card flex items-center gap-3 border-e-4 border-e-chart-5 p-3.5">
+                <div className="flex min-w-[56px] flex-col items-center rounded-2xl bg-canvas px-2 py-1.5 text-center border border-border/50">
+                  <span className="text-xs font-bold text-text-main font-mono">{new Date(a.dateTime).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-sm font-bold text-text-main">{a.title}</h3>
+                  <p className="mt-0.5 flex items-center gap-1 text-[11px] text-text-secondary"><Building2 size={12} /><span className="truncate">{acc?.name || 'مشتری'}</span></p>
+                </div>
+              </div>
+            );
+          })}
+          {todayCount === 0 && (
+            <div className="rounded-2xl border border-dashed border-border-strong bg-white/40 px-4 py-8 text-center text-xs font-medium text-text-secondary">رویداد یا جلسه‌ای برای امروز ثبت نشده است.</div>
+          )}
+        </div>
+      </section>
+
+      {/* مشتریان اخیر */}
+      <section data-tour="customer-worklist" className="space-y-3" aria-label="مشتریان اخیر">
+        <SectionTitle title="مشتریان اخیر" action="همه حساب‌ها" onAction={() => navigate('/accounts')} />
+        <div className="space-y-2">
+          {recentAccounts.map(acc => (
+            <button key={acc.id} onClick={() => navigate(`/accounts/${acc.id}`)}
+              className="se-card se-interactive se-pressable flex min-h-[60px] w-full cursor-pointer items-center justify-between p-3.5 text-start hover:shadow-raised rounded-2xl">
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-sm font-bold text-primary">{acc.name ? acc.name.substring(0, 1) : 'م'}</span>
+                <span className="min-w-0"><span className="block truncate text-sm font-bold text-text-main">{acc.name}</span><span className="mt-0.5 block truncate text-[11px] text-text-secondary font-mono" dir="ltr" style={{ textAlign: 'right' }}>{acc.phone || 'بدون شماره'}</span></span>
+              </span>
+              <ChevronLeft size={16} className="shrink-0 text-text-secondary" />
+            </button>
+          ))}
+          {recentAccounts.length === 0 && <div className="rounded-2xl border border-dashed border-border-strong bg-white/40 px-4 py-8 text-center text-xs text-text-secondary">هنوز مشتری ثبت نشده است.</div>}
+        </div>
+      </section>
+    </div>
+  );
+}
+```
+
+---
+
+۴. فایل src/components/TasksWorkspace.tsx
+
+(حفظ کامل منطق SLA و فرم‌های پویا، تغییر کلاس‌های استایل به se-card)
+
+```tsx
+import { useCan } from '../hooks/useCan';
+import React, { useState, useMemo } from 'react';
+import { AppState, CustomerTask, ID, Priority } from '../types';
+import { processTaskCollaborationEvents } from '../lib/collaboration';
+import { CheckSquare, Plus, Search, X } from 'lucide-react';
+import { FilterChip } from './ui/Tabs';
+import { Modal } from './ui/Modal';
+import { useDeepLinkCreate } from '../hooks/useDeepLinkCreate';
+import { EmptyState } from './ui/EmptyState';
+import { Button } from './ui/Button';
+import { TaskCard } from './shared/TaskCard';
+import { AttachmentManager } from './ui/AttachmentManager';
+import { generateId } from '../lib/utils';
+import { parseTaskIntent } from '../lib/enterprise';
+import { emitBusinessEvent } from '../lib/events';
+import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
+import { createTaskWorkspaceFormSchema } from '../services/dynamicFormEngine';
+import { assignSla, proposeOverflow, assessTaskSla, rankTasksForAttention, type TaskSlaState } from '../services/taskIntelligence';
+import { OPERATIONS_CONFIG } from '../config/operations';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { appendTaskActivity } from '../services/taskActivity';
+import { applyTaskWorkflow, type TaskWorkflowAction } from '../services/taskWorkflow';
+import { evaluateAllCustomerCollections } from '../services/collectionEngine';
+import { buildOperationalExceptionCenter } from '../services/operationalExceptionCenter';
+
+interface TasksWorkspaceProps {
+  state: AppState;
+  updateState: (updater: (draft: AppState) => AppState | void) => void;
+}
+
+export function TasksWorkspace({ state, updateState }: TasksWorkspaceProps) {
+  const { can, canOn, denied } = useCan(state, updateState);
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'OPEN' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
+  const [slaFilter, setSlaFilter] = useState<'ALL' | 'BREACHED' | 'AT_RISK' | 'UNSCHEDULED' | 'BLOCKED'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, OPERATIONS_CONFIG.searchDebounceMs);
+  
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<CustomerTask | null>(null);
+  const [showAttachModalFor, setShowAttachModalFor] = useState<ID | null>(null);
+  const [workflowTaskId, setWorkflowTaskId] = useState<ID | null>(null);
+  const [workflowReason, setWorkflowReason] = useState('');
+  const [workflowResult, setWorkflowResult] = useState('');
+  const [workflowNextAction, setWorkflowNextAction] = useState('');
+  const [workflowError, setWorkflowError] = useState('');
+  const [showExceptions, setShowExceptions] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [capacityWarning, setCapacityWarning] = useState<{ values: Record<string, any>; suggestedDate: string | null; count: number; limit: number } | null>(null);
+  const capacityOverrideRef = React.useRef(false);
+  
+  const activeAccountId = state.activeContextAccountId;
+
+  const filteredTasks = useMemo(() => {
+    let list = (state.tasks || []).filter(t => activeAccountId ? (t.accountId === activeAccountId || t.customerId === activeAccountId) : true);
+
+    if (filterStatus === 'OPEN') list = list.filter(t => t.status === 'OPEN');
+    if (filterStatus === 'IN_PROGRESS') list = list.filter(t => t.status === 'IN_PROGRESS');
+    if (filterStatus === 'COMPLETED') list = list.filter(t => t.status === 'COMPLETED');
+
+    if (debouncedSearchQuery.trim()) {
+      const q = debouncedSearchQuery.toLowerCase();
+      list = list.filter(t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)));
+    }
+
+    if (slaFilter === 'BLOCKED') list = list.filter(task => String(task.status).toUpperCase() === 'BLOCKED');
+    else if (slaFilter !== 'ALL') list = list.filter(task => assessTaskSla(task).state === (slaFilter as TaskSlaState));
+    return rankTasksForAttention(list).map(item => item as typeof list[number]);
+  }, [state.tasks, activeAccountId, filterStatus, slaFilter, debouncedSearchQuery]);
+
+  const activeTasks = useMemo(() => (state.tasks || []).filter(task => !['COMPLETED','CANCELLED','CANCELED','VOID','DELETED'].includes(String(task.status || '').toUpperCase()) && (!activeAccountId || task.accountId === activeAccountId || task.customerId === activeAccountId)), [state.tasks, activeAccountId]);
+  const collectionProfiles = useMemo(() => evaluateAllCustomerCollections(state).profiles, [state.accounts, state.invoices, state.cheques, state.settings, (state as any).collectionPromises]);
+  
+  const operationalExceptions = useMemo(() => {
+    const all = buildOperationalExceptionCenter(state, new Date(), collectionProfiles);
+    return all.filter(item => {
+      if (activeAccountId && item.accountId && item.accountId !== activeAccountId) return false;
+      if (item.kind === 'TASK') {
+        const task = (state.tasks || []).find(candidate => String(candidate.id) === item.taskId);
+        if (!task) return false;
+        const ownerId = task.assigneeType === 'GROUP'
+          ? (state.groups?.find(group => group.id === task.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined)
+          : task.assigneeId;
+        return canOn('tasks', 'VIEW', { ownerId, branchId: (task as any).branchId, territoryId: (task as any).territoryId, teamId: (task as any).teamId, tenantId: (task as any).tenantId });
+      }
+      if (!can('finance', 'VIEW')) return false;
+      const account = (state.accounts || []).find(candidate => candidate.id === item.accountId);
+      if (!account) return false;
+      return canOn('finance', 'VIEW', { ownerId: (account as any).ownerId, branchId: (account as any).branchId, territoryId: (account as any).territoryId, teamId: (account as any).teamId, tenantId: (account as any).tenantId });
+    });
+  }, [state, activeAccountId, collectionProfiles, can, canOn]);
+  
+  const slaCounts = useMemo(() => activeTasks.reduce((counts, task) => { const status = assessTaskSla(task).state; if (status === 'BREACHED') counts.breached++; else if (status === 'AT_RISK') counts.atRisk++; else if (status === 'UNSCHEDULED') counts.unscheduled++; if (String(task.status).toUpperCase() === 'BLOCKED') counts.blocked++; return counts; }, { breached: 0, atRisk: 0, unscheduled: 0, blocked: 0 }), [activeTasks]);
+
+  const openNewTaskModalRef = React.useRef<() => void>(() => {});
+  useDeepLinkCreate(() => openNewTaskModalRef.current());
+  const openNewTaskModal = () => {
+    if (!can('tasks', 'CREATE')) return denied('ایجاد وظیفه');
+    setEditingTask(null);
+    setErrorMsg('');
+    setShowTaskModal(true);
+  };
+
+  openNewTaskModalRef.current = openNewTaskModal;
+
+  const openEditTaskModal = (task: CustomerTask) => {
+    if (!canOn('tasks', 'EDIT', { ownerId: task.assigneeType === 'GROUP' ? (state.groups?.find(g => g.id === task.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined) : task.assigneeId })) return denied('ویرایش این وظیفه');
+    setEditingTask(task);
+    setErrorMsg('');
+    setShowTaskModal(true);
+  };
+
+  const handleSaveTask = (values: Record<string, any>) => {
+    if (editingTask ? !canOn('tasks', 'EDIT', { ownerId: editingTask.assigneeType === 'GROUP' ? (state.groups?.find(g => g.id === editingTask.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined) : editingTask.assigneeId }) : !can('tasks', 'CREATE')) { setErrorMsg('مجوز ثبت یا ویرایش این وظیفه را ندارید.'); return denied('ثبت/ویرایش وظیفه'); }
+    if (String(values.assigneeId || '') && String(values.assigneeId) !== state.currentUserId && !can('tasks', 'ASSIGN')) { setErrorMsg('مجوز ارجاع وظیفه به دیگران را ندارید.'); return denied('ارجاع وظیفه به دیگران'); }
+    if (values.assigneeType !== 'GROUP' && values.assigneeId && (state.users || []).find(u => u.id === values.assigneeId && (u.isActive ?? u.active) === false)) { setErrorMsg('مسئول انتخاب‌شده غیرفعال است.'); return; }
+    setErrorMsg('');
+    const taskTitle = String(values.title || '').trim();
+    const taskAccountId = String(values.accountId || '');
+    const taskDueDate = String(values.dueDate || '');
+    const taskPriority = (values.priority || 'NORMAL') as Priority;
+    const assigneeType = (values.assigneeType || 'USER') as 'USER' | 'GROUP';
+    const assigneeId = String(values.assigneeId || '');
+    const taskDescription = String(values.description || '').trim();
+    if (!taskTitle) return setErrorMsg('عنوان وظیفه را تکمیل کنید.');
+    if (!taskAccountId) return setErrorMsg('حساب تجاری مربوطه را مشخص کنید.');
+    if (!assigneeId) return setErrorMsg('مسئول انجام کار را انتخاب کنید.');
+
+    if (!editingTask && !capacityOverrideRef.current && taskDueDate) {
+      const preview = { title: taskTitle, description: taskDescription, priority: taskPriority, assigneeId, dueDate: taskDueDate };
+      const settings = (state.settings as any)?.taskWorkloadLimits?.[assigneeId] || {};
+      const proposal = proposeOverflow(state.tasks || [], assigneeId, taskDueDate, [preview], {
+        maxDailyTasks: settings.maxDailyTasks ?? OPERATIONS_CONFIG.defaultDailyTaskCapacity,
+        maxDailyScore: settings.maxDailyScore ?? OPERATIONS_CONFIG.defaultDailyScoreCapacity,
+        workingDays: settings.workingDays
+      }, (state.users || []).filter(u => (u.isActive ?? u.active) !== false).map(u => u.id));
+      if (!proposal.capacity.fits) {
+        setCapacityWarning({ values, suggestedDate: proposal.nextSlot?.date || null, count: proposal.capacity.currentCount, limit: proposal.capacity.maxDailyTasks });
+        return;
+      }
+    }
+    capacityOverrideRef.current = false;
+    setCapacityWarning(null);
+
+    updateState(draft => {
+      if (!draft.tasks) draft.tasks = [];
+      if (editingTask) {
+        const t = draft.tasks.find(x => x.id === editingTask.id);
+        if (t) {
+          t.title = taskTitle;
+          t.description = taskDescription;
+          t.accountId = taskAccountId;
+          t.customerId = taskAccountId;
+          t.dueDate = taskDueDate;
+          t.priority = taskPriority;
+          const reassigned = t.assigneeId !== assigneeId || t.assigneeType !== assigneeType;
+          if (reassigned) {
+            if (!t.reassignHistory) t.reassignHistory = [];
+            t.reassignHistory.push({ fromId: t.assigneeId || 'UNKNOWN', toId: assigneeId, date: new Date().toISOString(), reason: 'ویرایش و ارجاع' });
+            t.assigneeType = assigneeType;
+            t.assigneeId = assigneeId;
+          }
+          const updated = appendTaskActivity(t, { action: reassigned ? 'REASSIGNED' : 'UPDATED', actorId: state.currentUserId || 'UNKNOWN', summary: reassigned ? 'وظیفه ویرایش و به مسئول جدید ارجاع شد' : 'جزئیات وظیفه ویرایش شد', details: reassigned ? `مسئول قبلی: ${editingTask.assigneeId || 'نامشخص'}؛ مسئول جدید: ${assigneeId}` : 'عنوان، توضیحات، حساب، مهلت یا اولویت بازبینی شد' });
+          t.activityHistory = updated.activityHistory;
+        }
+      } else {
+        const intentInfo = parseTaskIntent(taskTitle + ' ' + taskDescription);
+        const newTask = assignSla({
+          id: generateId(), accountId: taskAccountId, customerId: taskAccountId,
+          title: taskTitle, description: taskDescription, dueDate: taskDueDate, targetDate: taskDueDate,
+          status: 'OPEN', priority: taskPriority === 'NORMAL' && intentInfo.priority !== 'NORMAL' ? intentInfo.priority : taskPriority,
+          slaStatus: 'ON_TRACK', assigneeType, assigneeId,
+          smartIntent: intentInfo.intent, smartReason: intentInfo.reason, mentions: Array.isArray(values.mentions) ? values.mentions : [], createdAt: new Date().toISOString()
+        }) as CustomerTask;
+        const withActivity = appendTaskActivity(newTask, { action: 'CREATED', actorId: state.currentUserId || 'UNKNOWN', summary: 'وظیفه ایجاد شد', details: `اولویت: ${taskPriority}؛ مسئول: ${assigneeId}` });
+        Object.assign(newTask, withActivity);
+        draft.tasks.unshift(newTask);
+        processTaskCollaborationEvents(newTask, state, draft, true);
+        emitBusinessEvent('TASK_CREATED', 'TASK', newTask.id, newTask, state, updateState);
+      }
+    });
+    setShowTaskModal(false);
+  };
+
+  const handleToggleTaskStatus = (taskId: ID) => {
+    { const tk = (state.tasks || []).find(x => x.id === taskId); if (!tk || !canOn('tasks', 'EDIT', { ownerId: tk.assigneeType === 'GROUP' ? (state.groups?.find(g => g.id === tk.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined) : tk.assigneeId })) return denied('تغییر وضعیت این وظیفه'); }
+    updateState(draft => {
+      const t = draft.tasks?.find(item => item.id === taskId);
+      if (t) {
+        const wasCompleted = t.status === 'COMPLETED';
+        t.status = wasCompleted ? 'OPEN' : 'COMPLETED';
+        const withActivity = appendTaskActivity(t, { action: wasCompleted ? 'REOPENED' : 'COMPLETED', actorId: state.currentUserId || 'UNKNOWN', summary: wasCompleted ? 'وظیفه دوباره باز شد' : 'وظیفه به‌عنوان انجام‌شده ثبت شد' });
+        t.activityHistory = withActivity.activityHistory;
+      }
+    });
+  };
+
+  const applyWorkflowAction = (action: TaskWorkflowAction) => {
+    const task = (state.tasks || []).find(item => item.id === workflowTaskId);
+    if (!task) return;
+    if (!canOn('tasks', 'EDIT', { ownerId: task.assigneeType === 'GROUP' ? (state.groups?.find(g => g.id === task.assigneeId)?.memberIds.includes(state.currentUserId || '') ? state.currentUserId : undefined) : task.assigneeId })) return denied('تغییر گردش کار این وظیفه');
+    const result = applyTaskWorkflow(task, { action, actorId: state.currentUserId || 'UNKNOWN', reason: workflowReason, result: workflowResult, nextAction: workflowNextAction });
+    if (!result.ok) { setWorkflowError(result.error || 'تغییر وضعیت انجام نشد.'); return; }
+    updateState(draft => { const idx = draft.tasks?.findIndex(item => item.id === task.id) ?? -1; if (idx >= 0 && draft.tasks) draft.tasks[idx] = result.task as CustomerTask; });
+    setWorkflowError(''); setWorkflowReason(''); setWorkflowResult(''); setWorkflowNextAction('');
+    if (action === 'COMPLETE') setWorkflowTaskId(null);
+  };
+
+  const taskFormSchema = createTaskWorkspaceFormSchema(state.users || [], state.groups || [], state.accounts || []);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 h-full bg-transparent" dir="rtl">
+      <div className="shrink-0 bg-canvas px-5 sm:px-8 pt-6 pb-4 space-y-4 z-10">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-black text-text-main tracking-tight flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-primary" /> مدیریت وظایف
+            </h2>
+            <span className="text-xs text-text-secondary font-medium mt-0.5 block">پیگیری‌ها، ارجاعات و فایل‌های ضمیمه</span>
+          </div>
+          <Button variant="primary" onClick={openNewTaskModal} icon={<Plus className="w-4 h-4" />}>تسک جدید</Button>
+        </div>
+        
+        {activeAccountId && (
+          <div className="bg-primary/10 border border-primary/20 text-primary text-xs font-bold p-3.5 rounded-2xl flex items-center justify-between">
+            <span>در حال نمایش پیگیری‌های اختصاصی حساب: {state.accounts?.find(a=>a.id===activeAccountId)?.name}</span>
+            <button onClick={() => updateState(d => { d.activeContextAccountId = null; d.activeContextCustomerId = null; })} className="text-primary hover:text-primary-hover bg-primary/20 p-1.5 rounded-xl cursor-pointer">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="خلاصه وضعیت و استثناهای وظایف">
+          <button type="button" onClick={() => setSlaFilter(slaFilter === 'BREACHED' ? 'ALL' : 'BREACHED')} aria-pressed={slaFilter === 'BREACHED'} className={`rounded-2xl border p-3 text-right transition-colors ${slaFilter === 'BREACHED' ? 'border-danger-line bg-danger-soft' : 'border-border/70 bg-surface'}`}>
+            <span className="block text-[10px] font-bold text-text-secondary">مهلت گذشته</span><strong className="mt-1 block text-lg text-danger tabular-nums">{slaCounts.breached}</strong>
+          </button>
+          <button type="button" onClick={() => setSlaFilter(slaFilter === 'AT_RISK' ? 'ALL' : 'AT_RISK')} aria-pressed={slaFilter === 'AT_RISK'} className={`rounded-2xl border p-3 text-right transition-colors ${slaFilter === 'AT_RISK' ? 'border-warning-line bg-warning-soft' : 'border-border/70 bg-surface'}`}>
+            <span className="block text-[10px] font-bold text-text-secondary">در آستانه تأخیر</span><strong className="mt-1 block text-lg text-warning tabular-nums">{slaCounts.atRisk}</strong>
+          </button>
+          <button type="button" onClick={() => setSlaFilter(slaFilter === 'UNSCHEDULED' ? 'ALL' : 'UNSCHEDULED')} aria-pressed={slaFilter === 'UNSCHEDULED'} className={`rounded-2xl border p-3 text-right transition-colors ${slaFilter === 'UNSCHEDULED' ? 'border-border bg-canvas' : 'border-border/70 bg-surface'}`}>
+            <span className="block text-[10px] font-bold text-text-secondary">بدون مهلت معتبر</span><strong className="mt-1 block text-lg text-text-main tabular-nums">{slaCounts.unscheduled}</strong>
+          </button>
+          <button type="button" onClick={() => setSlaFilter(slaFilter === 'BLOCKED' ? 'ALL' : 'BLOCKED')} aria-pressed={slaFilter === 'BLOCKED'} className={`rounded-2xl border p-3 text-right transition-colors ${slaFilter === 'BLOCKED' ? 'border-danger-line bg-danger-soft' : 'border-border/70 bg-surface'}`}>
+            <span className="block text-[10px] font-bold text-text-secondary">متوقف / نیازمند رفع مانع</span><strong className="mt-1 block text-lg text-danger tabular-nums">{slaCounts.blocked}</strong>
+          </button>
+        </div>
+        <div className="flex justify-start"><button type="button" onClick={() => setShowExceptions(v => !v)} aria-pressed={showExceptions} className={`text-xs font-bold px-3 py-2 rounded-xl border ${showExceptions ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-surface text-text-secondary'}`}>مرکز استثناهای عملیاتی · {operationalExceptions.length}</button></div>
+        {showExceptions && <div className="rounded-2xl border border-warning-line bg-warning-soft/50 p-3 space-y-2" aria-label="مرکز استثناهای عملیاتی">{operationalExceptions.length ? operationalExceptions.slice(0, 12).map(item => item.kind === 'TASK' ? <button key={item.id} type="button" onClick={() => { const task = (state.tasks || []).find(t => String(t.id) === item.taskId); if (!task) return; setWorkflowTaskId(task.id); setWorkflowReason(task.blockReason || ''); setWorkflowResult(task.result || ''); setWorkflowNextAction(task.nextAction || ''); setWorkflowError(''); }} className="w-full text-right rounded-xl bg-surface border border-border/70 p-3"><span className="flex items-center justify-between gap-2"><span className="text-xs font-black text-text-main">{item.title}</span><span className="text-[10px] font-bold text-warning">{item.severity === 'CRITICAL' ? 'بحرانی' : item.severity === 'HIGH' ? 'زیاد' : 'متوسط'}</span></span><span className="block mt-1 text-[11px] text-warning">وظیفه · {item.description}</span></button> : <div key={item.id} className="rounded-xl bg-surface border border-border/70 p-3"><span className="flex items-center justify-between gap-2"><span className="text-xs font-black text-text-main">{item.title}</span><span className="text-[10px] font-bold text-danger">{item.severity === 'CRITICAL' ? 'بحرانی' : item.severity === 'HIGH' ? 'زیاد' : 'متوسط'}</span></span><span className="block mt-1 text-[11px] text-text-secondary">{item.description}</span><span className="block mt-1 text-[11px] text-primary">اقدام پیشنهادی: {item.recommendedAction}</span></div>) : <p className="text-xs text-text-secondary">مورد استثنایی فعالی در وظایف و مطالبات پیدا نشد.</p>}</div>}
+        {slaFilter !== 'ALL' && <div className="flex justify-start"><button type="button" onClick={() => setSlaFilter('ALL')} className="text-xs font-bold text-primary underline underline-offset-4">حذف فیلتر SLA</button></div>}
+
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between pt-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <FilterChip label="همه وظایف" active={filterStatus === 'ALL'} onClick={() => setFilterStatus('ALL')} />
+            <FilterChip label="در انتظار" active={filterStatus === 'OPEN'} onClick={() => setFilterStatus('OPEN')} />
+            <FilterChip label="تکمیل‌شده" active={filterStatus === 'COMPLETED'} onClick={() => setFilterStatus('COMPLETED')} />
+          </div>
+          <div className="relative w-full sm:w-64">
+            <input type="text" placeholder="جستجو..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full h-[42px] bg-surface border border-border/80 rounded-2xl pl-4 pr-11 text-xs font-medium text-text-main outline-none focus:border-primary shadow-subtle" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary" size={16} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto min-h-0 px-5 sm:px-8 pb-32 pt-2">
+        {filteredTasks.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredTasks.map(task => {
+              const acc = state.accounts?.find(a => a.id === (task.accountId || task.customerId));
+              const isDone = task.status === 'COMPLETED';
+              let assigneeName = 'ناشناس';
+              if (task.assigneeType === 'GROUP') {
+                assigneeName = state.groups?.find(g => g.id === task.assigneeId)?.name || assigneeName;
+              } else {
+                assigneeName = state.users?.find(u => u.id === task.assigneeId)?.name || assigneeName;
+              }
+              const attachmentCount = (state.attachments || []).filter(a => a.entityId === task.id).length;
+
+              return (
+                <div key={task.id} className="se-card p-4">
+                  <TaskCard 
+                    task={task}
+                    account={acc}
+                    assigneeName={assigneeName}
+                    isCompleted={isDone}
+                    attachmentCount={attachmentCount}
+                    onToggleStatus={() => handleToggleTaskStatus(task.id)}
+                    onEdit={() => openEditTaskModal(task)}
+                    onAttach={() => setShowAttachModalFor(task.id)}
+                    onWorkflow={() => { setWorkflowTaskId(task.id); setWorkflowReason(task.blockReason || ''); setWorkflowResult(task.result || ''); setWorkflowNextAction(task.nextAction || ''); setWorkflowError(''); }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState 
+            icon={<CheckSquare className="w-8 h-8 text-text-secondary opacity-50" />} 
+            title="وظیفه‌ای یافت نشد" 
+            description="برای ایجاد تسک پیگیری جدید روی دکمه تسک جدید کلیک کنید." 
+            actionLabel="تسک جدید"
+            onAction={openNewTaskModal}
+          />
+        )}
+      </div>
+
+      <Modal
+        isOpen={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        title={editingTask ? 'ویرایش وظیفه' : 'تعریف وظیفه جدید'}
+      >
+        <div className="space-y-3">
+          {errorMsg && <div role="alert" className="bg-danger-soft border border-danger-line text-danger px-4 py-3 rounded-2xl font-bold">{errorMsg}</div>}
+          {capacityWarning && <div role="alert" className="space-y-3 rounded-2xl border border-warning-line bg-warning-soft p-4 text-sm">
+            <p className="font-black text-text-main">ظرفیت روزانه مسئول انتخاب‌شده تکمیل می‌شود.</p>
+            <p className="text-text-secondary">در حال حاضر {capacityWarning.count} تسک فعال ثبت شده است؛ سقف پیش‌فرض {capacityWarning.limit} تسک است. ارجاع خودکار انجام نمی‌شود.</p>
+            {capacityWarning.suggestedDate && <Button variant="primary" block onClick={() => { const values = { ...capacityWarning.values, dueDate: capacityWarning.suggestedDate }; setCapacityWarning(null); handleSaveTask(values); }}>انتقال به اولین نوبت پیشنهادی ({capacityWarning.suggestedDate})</Button>}
+            {can('tasks', 'ASSIGN') && <Button variant="secondary" block onClick={() => { capacityOverrideRef.current = true; const values = capacityWarning.values; setCapacityWarning(null); handleSaveTask(values); }}>ارجاع اجباری با مسئولیت مدیر</Button>}
+            <Button variant="ghost" block onClick={() => setCapacityWarning(null)}>بازگشت به فرم</Button>
+          </div>}
+          <DynamicFormRenderer
+            schema={taskFormSchema}
+            initialValues={editingTask ? {
+              title: editingTask.title,
+              accountId: editingTask.accountId || editingTask.customerId || '',
+              dueDate: editingTask.dueDate || '',
+              priority: editingTask.priority || 'NORMAL',
+              assigneeType: editingTask.assigneeType || 'USER',
+              assigneeId: editingTask.assigneeId || '',
+              description: editingTask.description || ''
+            } : {
+              accountId: state.activeContextAccountId || state.accounts?.[0]?.id || '',
+              dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+              priority: 'NORMAL', assigneeType: 'USER', assigneeId: state.currentUserId || ''
+            }}
+            onSubmit={handleSaveTask}
+            onCancel={() => setShowTaskModal(false)}
+            submitLabel={editingTask ? 'ذخیره تغییرات' : 'ثبت وظیفه'}
+          />
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!workflowTaskId} onClose={() => { setWorkflowTaskId(null); setWorkflowError(''); }} title="گردش کار و نتیجه پیگیری">
+        {(() => { const task = (state.tasks || []).find(item => item.id === workflowTaskId); if (!task) return <p className="text-sm text-text-secondary">وظیفه در دسترس نیست.</p>; const status = String(task.status || 'OPEN').toUpperCase(); return <div className="space-y-4">
+          <div className="rounded-2xl bg-canvas border border-border p-3"><div className="text-sm font-black text-text-main">{task.title}</div><div className="mt-1 text-xs text-text-secondary">وضعیت: {status} · تاریخچه: {(task.activityHistory || []).length} رویداد</div>{task.blockReason && <div className="mt-2 text-xs text-danger">مانع فعلی: {task.blockReason}</div>}{task.result && <div className="mt-2 text-xs text-text-secondary">آخرین نتیجه: {task.result}</div>}</div>
+          {workflowError && <div role="alert" className="rounded-xl border border-danger-line bg-danger-soft p-3 text-xs font-bold text-danger">{workflowError}</div>}
+          <label className="block text-xs font-bold text-text-main">شرح مانع / دلیل توقف<textarea value={workflowReason} onChange={e => setWorkflowReason(e.target.value)} rows={2} className="mt-1 w-full rounded-xl border border-border bg-surface p-3 text-sm" placeholder="برای توقف وظیفه الزامی است" /></label>
+          <label className="block text-xs font-bold text-text-main">نتیجه پیگیری<textarea value={workflowResult} onChange={e => setWorkflowResult(e.target.value)} rows={2} className="mt-1 w-full rounded-xl border border-border bg-surface p-3 text-sm" placeholder="نتیجه واقعی تماس، مراجعه یا اقدام" /></label>
+          <label className="block text-xs font-bold text-text-main">اقدام بعدی<textarea value={workflowNextAction} onChange={e => setWorkflowNextAction(e.target.value)} rows={2} className="mt-1 w-full rounded-xl border border-border bg-surface p-3 text-sm" placeholder="اقدام بعدی و قابل پیگیری" /></label>
+          <div className="grid grid-cols-2 gap-2">{status === 'OPEN' || status === 'PENDING' ? <Button variant="secondary" block onClick={() => applyWorkflowAction('START')}>شروع کار</Button> : null}{['OPEN','PENDING','IN_PROGRESS'].includes(status) ? <Button variant="secondary" block onClick={() => applyWorkflowAction('BLOCK')}>ثبت مانع و توقف</Button> : null}{status === 'BLOCKED' ? <Button variant="secondary" block onClick={() => applyWorkflowAction('UNBLOCK')}>رفع مانع و ادامه</Button> : null}{['OPEN','PENDING','IN_PROGRESS'].includes(status) ? <Button variant="primary" block onClick={() => applyWorkflowAction('COMPLETE')}>ثبت نتیجه و تکمیل</Button> : null}{['COMPLETED','CANCELLED','CANCELED'].includes(status) ? <Button variant="secondary" block onClick={() => applyWorkflowAction('REOPEN')}>بازگشایی وظیفه</Button> : null}<Button variant="ghost" block onClick={() => applyWorkflowAction('RECORD_RESULT')}>ثبت نتیجه / اقدام بعدی</Button></div>
+          <div className="border-t border-border pt-3 space-y-2"><div className="text-xs font-black text-text-main">تاریخچه فعالیت</div>{[...(task.activityHistory || [])].slice().reverse().slice(0, 10).map((event: any) => <div key={event.id} className="rounded-xl bg-canvas p-2"><div className="text-[11px] font-bold text-text-main">{event.summary}</div><div className="text-[10px] text-text-secondary">{new Date(event.at).toLocaleString('fa-IR')} · {event.actorId}</div>{event.details && <div className="text-[11px] text-text-secondary mt-1">{event.details}</div>}</div>)}</div>
+        </div>; })()}
+      </Modal>
+
+      <Modal
+        isOpen={!!showAttachModalFor}
+        onClose={() => setShowAttachModalFor(null)}
+        title="مدیریت فایل‌ها و پیوست‌ها"
+        footer={<Button variant="primary" onClick={() => setShowAttachModalFor(null)}>بستن</Button>}
+      >
+        {showAttachModalFor && (
+          <AttachmentManager 
+            entityId={showAttachModalFor}
+            entityType="TASK"
+            state={state}
+            updateState={updateState}
+          />
+        )}
+      </Modal>
+    </div>
+  );
+}
+```
+
+---
+
+۵. فایل src/components/CustomersWorkspace.tsx
+
+(طراحی لیست شیشه‌ای، حفظ کامل جستجو و RBAC)
+
+```tsx
+import { useDeepLinkCreate } from '../hooks/useDeepLinkCreate';
+import { getDefaultCreditLimit } from '../lib/orgPolicy';
+import { useCan } from '../hooks/useCan';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { AppState, Account } from '../types';
+import { AvatarGroup } from './ui/Avatar';
+import { Plus, ChevronDown, Search, Filter, Building2, Phone, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Customer360 } from './Customer360';
+import { EmptyState } from './ui/EmptyState';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { generateId, matchesSearch, nextSequenceNumber } from '../lib/utils';
+import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
+import { CUSTOMER_FORM_SCHEMA } from '../services/dynamicFormEngine';
+import { activeRecords } from '../lib/recordLifecycle';
+
+interface CustomersWorkspaceProps {
+  state: AppState;
+  updateState: (updater: (draft: AppState) => AppState | void) => void;
+}
+
+export function CustomersWorkspace({ state, updateState }: CustomersWorkspaceProps) {
+  const { can, canOn, denied } = useCan(state, updateState);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [filterType, setFilterType] = useState<'ALL' | 'WITH_PHONE' | 'WITH_CONTACTS'>('ALL');
+  const [sortOrder, setSortOrder] = useState<'NAME' | 'CODE'>('NAME');
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  useDeepLinkCreate(() => setShowCreateModal(true));
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
+
+  const pathParts = location.pathname.split('/');
+  const urlCustomerId = pathParts.length > 2 ? pathParts[2] : null;
+
+  const selectedCustomer = activeRecords(state.accounts).find(a => a.id === urlCustomerId);
+
+  const filteredAccounts = useMemo(() => {
+    let list = activeRecords(state.accounts).filter((account: any) => canOn('accounts', 'VIEW', { ownerId: account.ownerId, branchId: account.branchId, territoryId: account.territoryId, teamId: account.teamId, tenantId: account.tenantId }));
+    if (filterType === 'WITH_PHONE') {
+      list = list.filter(a => !!a.phone);
+    } else if (filterType === 'WITH_CONTACTS') {
+      list = list.filter(a => a.contacts && a.contacts.length > 0);
+    }
+
+    if (searchQuery.trim()) {
+      list = list.filter(a => 
+        matchesSearch(a.name, searchQuery) || 
+        matchesSearch(a.code, searchQuery) ||
+        matchesSearch(a.phone, searchQuery)
+      );
+    }
+
+    return [...list].sort((a, b) => {
+      if (sortOrder === 'CODE') return (a.code || '').localeCompare(b.code || '');
+      return a.name.localeCompare(b.name);
+    });
+  }, [state.accounts, searchQuery, filterType, sortOrder, canOn]);
+
+  if (selectedCustomer) {
+    return (
+      <Customer360 
+        customer={selectedCustomer}
+        state={state}
+        updateState={updateState}
+        onBack={() => {
+          updateState(draft => {
+            draft.activeContextAccountId = null;
+            draft.activeContextCustomerId = null;
+          });
+          navigate('/accounts');
+        }}
+      />
+    );
+  }
+
+  const handleDynamicFormSubmit = (formValues: Record<string, any>) => {
+    if (!can('accounts', 'CREATE')) return denied('ایجاد مشتری');
+    const newId = generateId();
+    const autoCode = nextSequenceNumber('ACC-', (state.accounts || []).map(a => (a as any).code), 1001);
+    const newAccount: Account = {
+      id: newId,
+      name: String(formValues.name).trim(),
+      company: String(formValues.name).trim(),
+      code: autoCode,
+      phone: formValues.phone ? String(formValues.phone).trim() : undefined,
+      address: formValues.address ? String(formValues.address).trim() : undefined,
+      creditLimit: Number(formValues.creditLimit) || getDefaultCreditLimit(state),
+      balance: 0,
+      totalRevenue: 0,
+      status: 'ACTIVE',
+      ownerId: state.currentUserId || 'user-admin',
+      createdAt: new Date().toISOString(),
+      customerType: formValues.customerType,
+      nationalCode: formValues.nationalCode,
+      economicCode: formValues.economicCode,
+      paymentTermsDays: Number(formValues.paymentTermsDays) || 30,
+      sayadRequired: Boolean(formValues.sayadRequired),
+      contacts: [
+        {
+          id: generateId(),
+          name: String(formValues.name).trim(),
+          title: formValues.customerType === 'LEGAL' ? 'نماینده رسمی' : 'مالک فروشگاه',
+          phone: formValues.phone ? String(formValues.phone).trim() : undefined,
+          isPrimary: true
+        }
+      ]
+    };
+
+    updateState(draft => {
+      if (!draft.accounts) draft.accounts = [];
+      draft.accounts.unshift(newAccount);
+      if (!draft.auditLogs) draft.auditLogs = [];
+      draft.auditLogs.push({
+        id: generateId(),
+        action: 'CREATE',
+        entityType: 'ACCOUNT',
+        entityId: newId,
+        details: `حساب مشتری جدید "${newAccount.name}" از طریق موتور فرم‌های پویا ایجاد گردید.`,
+        actor: state.currentUserId || 'کاربر سیستم',
+        createdAt: new Date().toISOString()
+      });
+    });
+
+    setShowCreateModal(false);
+    setSuccessNotice(`پرونده مشتری جدید "${newAccount.name}" با اعتبارسنجی کامل موتور پویا ثبت گردید.`);
+    setTimeout(() => setSuccessNotice(null), 4000);
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-transparent p-5 sm:p-8 space-y-6 pb-32" dir="rtl">
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-2xl flex items-center gap-2 font-bold animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{successNotice}</span>
+        </div>
+      )}
+      
+      <div className="flex gap-3 relative">
+        <div className="flex-1 se-card px-4 py-3 flex items-center gap-3">
+          <Search size={16} className="text-text-secondary shrink-0" />
+          <input 
+            type="text" 
+            placeholder="جستجو در حساب‌ها، کد یا شماره تماس..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent outline-none text-xs w-full text-text-main placeholder:text-text-secondary font-medium" 
+          />
+        </div>
+        <button 
+          onClick={() => setShowFilterMenu(prev => !prev)}
+          className={`se-card rounded-2xl px-4 py-3 flex items-center gap-2 transition-all cursor-pointer shrink-0 text-xs font-bold ${showFilterMenu ? 'border-primary text-primary bg-primary/5' : 'text-text-main hover:bg-canvas'}`}
+        >
+          <Filter size={14} className={showFilterMenu ? 'text-primary' : 'text-text-secondary'} />
+          <span>{filterType === 'ALL' ? 'فیلتر' : filterType === 'WITH_PHONE' ? 'دارای تماس' : 'دارای مخاطب'}</span>
+        </button>
+
+        {showFilterMenu && (
+          <div className="absolute left-0 top-14 se-card p-2 z-30 min-w-[180px] space-y-1 shadow-modal">
+            <button 
+              onClick={() => { setFilterType('ALL'); setShowFilterMenu(false); }}
+              className={`w-full text-right px-3 py-2 text-xs rounded-xl font-bold transition-colors cursor-pointer ${filterType === 'ALL' ? 'bg-primary/10 text-primary' : 'text-text-main hover:bg-canvas'}`}
+            >
+              همه حساب‌ها
+            </button>
+            <button 
+              onClick={() => { setFilterType('WITH_PHONE'); setShowFilterMenu(false); }}
+              className={`w-full text-right px-3 py-2 text-xs rounded-xl font-bold transition-colors cursor-pointer ${filterType === 'WITH_PHONE' ? 'bg-primary/10 text-primary' : 'text-text-main hover:bg-canvas'}`}
+            >
+              دارای شماره تماس
+            </button>
+            <button 
+              onClick={() => { setFilterType('WITH_CONTACTS'); setShowFilterMenu(false); }}
+              className={`w-full text-right px-3 py-2 text-xs rounded-xl font-bold transition-colors cursor-pointer ${filterType === 'WITH_CONTACTS' ? 'bg-primary/10 text-primary' : 'text-text-main hover:bg-canvas'}`}
+            >
+              دارای مخاطبین ثبت‌شده
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between border-b border-border/60 px-1 pb-3">
+        <div className="flex gap-6">
+          <button 
+            onClick={() => { setSearchQuery(''); setFilterType('ALL'); }}
+            className="pb-2 text-xs font-extrabold border-b-[3px] border-primary text-primary transition-colors relative cursor-pointer"
+          >
+            لیست حساب‌های تجاری ({filteredAccounts.length})
+          </button>
+        </div>
+        <button 
+          onClick={() => setShowCreateModal(true)} 
+          className="pb-1 text-primary hover:text-primary-dark transition-all cursor-pointer flex items-center gap-1.5 text-xs font-black bg-primary/10 hover:bg-primary/20 px-3.5 py-1.5 rounded-xl shadow-xs"
+        >
+          <Plus size={15}/> حساب تجاری جدید
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div className="se-card p-6 space-y-4">
+          <button 
+            onClick={() => setSortOrder(prev => prev === 'NAME' ? 'CODE' : 'NAME')}
+            className="flex items-center gap-2 text-xs font-extrabold text-text-main hover:text-primary transition-colors cursor-pointer"
+          >
+            <ChevronDown size={16} className="text-text-secondary" />
+            <span>مرتب‌سازی بر اساس: {sortOrder === 'NAME' ? 'نام شرکت' : 'کد حساب'} (کلیک جهت تغییر)</span>
+          </button>
+
+          {filteredAccounts.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-right text-xs">
+                <thead>
+                  <tr className="text-text-secondary border-b border-border/60 text-[11px] font-bold">
+                    <th className="pb-3 w-12 text-center">ردیف</th>
+                    <th className="pb-3">نام حساب / شرکت</th>
+                    <th className="pb-3 hidden sm:table-cell">کد / شناسه</th>
+                    <th className="pb-3">مخاطبین</th>
+                    <th className="pb-3 text-left pl-3">عملیات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredAccounts.map((acc, idx) => (
+                    <tr 
+                      key={acc.id} 
+                      className="hover:bg-canvas transition-colors cursor-pointer group"
+                      onClick={() => {
+                        updateState(draft => {
+                          draft.activeContextAccountId = acc.id;
+                          draft.activeContextCustomerId = acc.id;
+                        });
+                        navigate(`/accounts/${acc.id}`);
+                      }}
+                    >
+                      <td className="py-4 text-center text-text-secondary font-mono">{idx + 1}</td>
+                      <td className="py-4">
+                        <div className="font-bold text-text-main group-hover:text-primary transition-colors flex items-center gap-2">
+                          <Building2 size={14} className="text-text-secondary" /> {acc.name}
+                        </div>
+                        {acc.phone && <div className="text-[10px] text-text-secondary mt-1 flex items-center gap-1 font-mono"><Phone size={10}/> {acc.phone}</div>}
+                      </td>
+                      <td className="py-4 hidden sm:table-cell font-mono text-text-secondary">{acc.code || '-'}</td>
+                      <td className="py-4">
+                        <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                      </td>
+                      <td className="py-4 text-left pl-3">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                          ورود ۳۶۰ <ChevronLeft size={12} />
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState 
+              icon={<Building2 className="w-8 h-8 text-text-secondary opacity-50" />} 
+              title="حسابی یافت نشد" 
+              description="مشتری با این مشخصات در سیستم ثبت نشده است." 
+              actionLabel="ایجاد حساب جدید"
+              onAction={() => setShowCreateModal(true)}
+            />
+          )}
+        </div>
+      </div>
+
+      {showCreateModal && (
+        <Modal 
+          isOpen={showCreateModal} 
+          onClose={() => setShowCreateModal(false)} 
+          title="افتتاح حساب تجاری مشتری جدید (موتور فرم‌های پویا)"
+        >
+          <DynamicFormRenderer
+            schema={CUSTOMER_FORM_SCHEMA}
+            initialValues={{
+              customerType: 'LEGAL',
+              creditLimit: 200000000,
+              paymentTermsDays: '30',
+              sayadRequired: true
+            }}
+            onSubmit={handleDynamicFormSubmit}
+            onCancel={() => setShowCreateModal(false)}
+            submitLabel="ثبت و افتتاح پرونده مشتری"
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+🎯 گام بعدی:
+
+این ۵ فایل، ستون فقرات برنامه هستند. حالا که آن‌ها را جایگزین کردید:
+
+1. برنامه را اجرا کنید و مطمئن شوید که هدر معلق در همه صفحات کار می‌کند.
+2. دکمه شناور (+) حذف شده است.
+3. تم زردی و خستگی چشم برطرف شده است.
+4. به من بگویید کدام ماژول را در گام بعدی بازنویسی کنم؟ (مثلاً FinanceWorkspace یا GroupsWorkspace). فایل‌های مربوطه را بفرستید تا ظاهر آن‌ها را با همین سیستم یکپارچه کنم.

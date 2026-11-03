@@ -1,0 +1,2028 @@
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,30 @@
++# BASELINE REPORT — AKHAVAN CRM b19
++
++- تاریخ: 2026-10-26
++- مبنای مستقیم: `AkhavanCRM-SolarEmber_r11-cp9_b18.zip`
++- SHA-256 مبنا: `b9ae65d840dc3dc16183076521268295dc3a03db4525ffccf70aafe4b7c828e6`
++- مبنای محصول: `0.11.4 / r11-cp9-b18`
++- خروجی: `0.11.5 / r11-cp9-b19`
++- وضعیت Git: ZIP مبنا شامل `.git` نبود؛ بنابراین commit/status واقعی Git از این آرشیو قابل گزارش نیست. Diff فایل‌به‌فایل با ZIP اصلی ثبت شده است.
++- مبنای فنی: React 19, Vite, TypeScript, Tailwind v4 و state محلی IndexedDB/Zustand طبق package/source موجود.
++- محدودیت محیط: نصب dependency در این دور پس از 120 ثانیه timeout شد؛ `node_modules/.bin/vite` و type definitions در دسترس نیستند.
++
++## تغییرات کد نسبت به b18
++- `src/components/GeoIntelligenceWorkspace.tsx` — صفحهٔ جدید برای زون، سنجه، انتساب مشتری و ساخت task پیگیری وصول.
++- `src/App.tsx` — route جدید و RBAC guard.
++- `src/lib/navigation.ts` — لینک منوی هوش مکانی.
++- `src/lib/rbac.ts` — `geo.view`, `geo.manage`, ماتریس `geo`, مجوز ورود به workspace.
++- `src/types.ts` — افزودن capability permissions و navigation tab.
++- `src/lib/seed.ts` — افزودن مجوزهای geo به پروفایل مدیریتی اولیه.
++- `src/lib/version.ts`, `package.json`, `metadata.json` — برچسب b19 / 0.11.5.
++- `tests/rbac-configurability.test.mjs`, `tests/geoWorkspaceContracts.test.mjs` و script تست — تست‌های قرارداد/مجوز.
++- `CHANGELOG_b19.md`, `STATUS_b19.md`, `NOT_DONE_b19.md`, `RBAC_AUDIT_b19.md`, `HANDOFF.md`, `VERSION.md`, `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` — مستندات اجرایی و traceability.
++
++## آزمون
++- `npm test`: PASS؛ جمع assertionهای گزارش‌شده در suiteها 471.
++- `node scripts/audit-actions.mjs`: PASS؛ 74/74 handler تغییردهنده guard شده.
++- `npm run audit:contracts`: PASS ایستا؛ 9 SQL files, 46 tables, 44 tenant-scoped tables, 44 RLS targets, 5 required views. بدون SQL Server runtime.
++- `transpileModule`: PASS از نظر syntax/transpile فایل‌های تغییرکرده؛ جایگزین typecheck کامل نیست.
++- `npm run lint`: BLOCKED؛ `vite/client` قابل resolve نیست.
++- `npm run build`: BLOCKED؛ `vite` executable موجود نیست.
++- Browser/iOS, SQL Server runtime, Backend/API, ERP: اجرا نشده‌اند.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,35 @@
++# CHANGELOG b19 — Geo workspace + configurable Geo RBAC
++
++تاریخ: 2026-10-26
++
++## مبنا و رویکرد
++- مبنا: بستهٔ b18؛ تغییرات افزایشی هستند و موتور RBAC، مدل‌های مالی و state قبلی جایگزین نشده‌اند.
++- نسخهٔ برنامه: `0.11.5`، شناسهٔ انتشار: `r11-cp9-b19`.
++
++## تغییرات محصول
++- صفحهٔ «هوش مکانی و مدیریت زون‌ها» به مسیر `/geo-intelligence` افزوده و از منوی اصلی قابل دسترسی شد.
++- صفحه سه حالت زمینه‌ای «زون‌ها»، «تحلیل و Heatmap» و «عملیات و انتساب» دارد.
++- فرم ایجاد/ویرایش زون، کد یکتا، ورود مختصات طول/عرض در ردیف‌های مجزا، بستن حلقه، اعتبارسنجی polygon و پیش‌نمایش شکل هندسه اضافه شد.
++- ذخیرهٔ هندسه نسخه‌دار است؛ نسخهٔ قبلی بسته می‌شود و حفظ می‌شود. وضعیت زون قابل تغییر به پیش‌نویس/فعال/بایگانی است و تغییرات audit می‌شوند.
++- انتساب مشتریان با آزمون point-in-polygon فقط برای مختصات معتبر و مشتریان مجاز طبق RBAC انجام می‌شود؛ سوابق قبلی با تاریخ پایان بسته می‌شوند و رکوردهای خارج از scope کاربر تغییر نمی‌کنند. از زون فعال می‌توان برای یک مشتری مجاز، وظیفهٔ پیگیری وصول در فهرست وظایف موجود با مسئول، ناظر اختیاری، مهلت و اولویت ساخت؛ اعلان از موتور همکاری فعلی عبور می‌کند.
++- مجوزهای مستقل `geo.view` و `geo.manage` به ماتریس مجوزها اضافه شدند و در صفحه تنظیمات پروفایل مجوز قابل تنظیم‌اند. `geo.manage` جدا از مشاهده است؛ مجوزهای مدیریتی قبلی برای سازگاری همچنان می‌توانند مدیریت را مجاز کنند.
++- همه سنجه‌های Heatmap عمداً غیرفعال باقی مانده‌اند تا اتصال و تطبیق منبع واقعی؛ هیچ KPI مکانی ساختگی نشان داده نمی‌شود.
++- آزمون قراردادی جدید مسیر UI، RBAC، scope مشتری، versioning و وضعیت سنجه‌ها را پوشش می‌دهد.
++
++## آزمون‌های واقعی این دور
++- `npm test`: PASS؛ 471 assertion مجموع گزارش‌شده توسط suiteها، شامل 14 assertion قراردادی جدید برای صفحهٔ هوش مکانی.
++- `node scripts/audit-actions.mjs`: PASS؛ 74 handler تغییردهنده، 74 دارای guard، صفر مورد بدون guard در ممیزی ایستا.
++- `npm run audit:contracts`: PASS؛ بررسی ایستای 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS و 5 view موردنیاز. این بررسی اتصال/اجرای SQL Server نیست.
++- TypeScript `transpileModule`: PASS از نظر syntax/transpile برای فایل‌های تغییرکرده؛ typecheck کامل محسوب نمی‌شود.
++
++## مسدود/تأییدنشده
++- تلاش `npm install --ignore-scripts --no-audit --no-fund` در این محیط تا پایان مهلت 120 ثانیه timeout شد؛ Vite و type definitions در دسترس قرار نگرفتند.
++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/وابستگی‌ها.
++- `npm run build`: BLOCKED؛ `vite: not found`.
++- مرورگر واقعی، Safari/iOS، SQL Server runtime، Backend/API و ERP در این محیط اجرا نشدند.
++
++## موارد باقی‌مانده
++- نقشهٔ واقعی ایران، انتخاب/آزمون tile provider، ابزار رسم/ویرایش مستقیم روی نقشه، چاپ و آزمون موبایل.
++- اتصال Heatmap به منابع معتبر فروش/مالی/برگشتی/وصول، freshness، attribution تولیدکننده و cross-filter؛ ثبت نتیجهٔ نهایی/مبلغ وصول/evidence و گزارش عملکرد task نیز باقی است.
++- ایجاد task وصول از زون، مسئول/ناظر/مهلت، ثبت نتیجه واقعی و گزارش سلسله‌مراتبی.
++- typecheck/build/lint کامل و آزمون واقعی UI؛ enforcement سمت Backend و SQL Server RLS.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,1030 @@
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,30 @@
+++# BASELINE REPORT — AKHAVAN CRM b19
+++
+++- تاریخ: 2026-10-26
+++- مبنای مستقیم: `AkhavanCRM-SolarEmber_r11-cp9_b18.zip`
+++- SHA-256 مبنا: `b9ae65d840dc3dc16183076521268295dc3a03db4525ffccf70aafe4b7c828e6`
+++- مبنای محصول: `0.11.4 / r11-cp9-b18`
+++- خروجی: `0.11.5 / r11-cp9-b19`
+++- وضعیت Git: ZIP مبنا شامل `.git` نبود؛ بنابراین commit/status واقعی Git از این آرشیو قابل گزارش نیست. Diff فایل‌به‌فایل با ZIP اصلی ثبت شده است.
+++- مبنای فنی: React 19, Vite, TypeScript, Tailwind v4 و state محلی IndexedDB/Zustand طبق package/source موجود.
+++- محدودیت محیط: نصب dependency در این دور پس از 120 ثانیه timeout شد؛ `node_modules/.bin/vite` و type definitions در دسترس نیستند.
+++
+++## تغییرات کد نسبت به b18
+++- `src/components/GeoIntelligenceWorkspace.tsx` — صفحهٔ جدید برای زون، سنجه، انتساب مشتری.
+++- `src/App.tsx` — route جدید و RBAC guard.
+++- `src/lib/navigation.ts` — لینک منوی هوش مکانی.
+++- `src/lib/rbac.ts` — `geo.view`, `geo.manage`, ماتریس `geo`, مجوز ورود به workspace.
+++- `src/types.ts` — افزودن capability permissions و navigation tab.
+++- `src/lib/seed.ts` — افزودن مجوزهای geo به پروفایل مدیریتی اولیه.
+++- `src/lib/version.ts`, `package.json`, `metadata.json` — برچسب b19 / 0.11.5.
+++- `tests/rbac-configurability.test.mjs`, `tests/geoWorkspaceContracts.test.mjs` و script تست — تست‌های قرارداد/مجوز.
+++- `CHANGELOG_b19.md`, `STATUS_b19.md`, `NOT_DONE_b19.md`, `RBAC_AUDIT_b19.md`, `HANDOFF.md`, `VERSION.md`, `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` — مستندات اجرایی و traceability.
+++
+++## آزمون
+++- `npm test`: PASS؛ جمع assertionهای گزارش‌شده در suiteها 467.
+++- `node scripts/audit-actions.mjs`: PASS؛ 73/73 handler تغییردهنده guard شده.
+++- `npm run audit:contracts`: PASS ایستا؛ 9 SQL files, 46 tables, 44 tenant-scoped tables, 44 RLS targets, 5 required views. بدون SQL Server runtime.
+++- `transpileModule`: PASS از نظر syntax/transpile فایل‌های تغییرکرده؛ جایگزین typecheck کامل نیست.
+++- `npm run lint`: BLOCKED؛ `vite/client` قابل resolve نیست.
+++- `npm run build`: BLOCKED؛ `vite` executable موجود نیست.
+++- Browser/iOS, SQL Server runtime, Backend/API, ERP: اجرا نشده‌اند.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,35 @@
+++# CHANGELOG b19 — Geo workspace + configurable Geo RBAC
+++
+++تاریخ: 2026-10-26
+++
+++## مبنا و رویکرد
+++- مبنا: بستهٔ b18؛ تغییرات افزایشی هستند و موتور RBAC، مدل‌های مالی و state قبلی جایگزین نشده‌اند.
+++- نسخهٔ برنامه: `0.11.5`، شناسهٔ انتشار: `r11-cp9-b19`.
+++
+++## تغییرات محصول
+++- صفحهٔ «هوش مکانی و مدیریت زون‌ها» به مسیر `/geo-intelligence` افزوده و از منوی اصلی قابل دسترسی شد.
+++- صفحه سه حالت زمینه‌ای «زون‌ها»، «تحلیل و Heatmap» و «عملیات و انتساب» دارد.
+++- فرم ایجاد/ویرایش زون، کد یکتا، ورود مختصات طول/عرض در ردیف‌های مجزا، بستن حلقه، اعتبارسنجی polygon و پیش‌نمایش شکل هندسه اضافه شد.
+++- ذخیرهٔ هندسه نسخه‌دار است؛ نسخهٔ قبلی بسته می‌شود و حفظ می‌شود. وضعیت زون قابل تغییر به پیش‌نویس/فعال/بایگانی است و تغییرات audit می‌شوند.
+++- انتساب مشتریان با آزمون point-in-polygon فقط برای مختصات معتبر و مشتریان مجاز طبق RBAC انجام می‌شود؛ سوابق قبلی با تاریخ پایان بسته می‌شوند و رکوردهای خارج از scope کاربر تغییر نمی‌کنند.
+++- مجوزهای مستقل `geo.view` و `geo.manage` به ماتریس مجوزها اضافه شدند و در صفحه تنظیمات پروفایل مجوز قابل تنظیم‌اند. `geo.manage` جدا از مشاهده است؛ مجوزهای مدیریتی قبلی برای سازگاری همچنان می‌توانند مدیریت را مجاز کنند.
+++- همه سنجه‌های Heatmap عمداً غیرفعال باقی مانده‌اند تا اتصال و تطبیق منبع واقعی؛ هیچ KPI مکانی ساختگی نشان داده نمی‌شود.
+++- آزمون قراردادی جدید مسیر UI، RBAC، scope مشتری، versioning و وضعیت سنجه‌ها را پوشش می‌دهد.
+++
+++## آزمون‌های واقعی این دور
+++- `npm test`: PASS؛ 467 assertion مجموع گزارش‌شده توسط suiteها، شامل 10 assertion قراردادی جدید برای صفحهٔ هوش مکانی.
+++- `node scripts/audit-actions.mjs`: PASS؛ 73 handler تغییردهنده، 73 دارای guard، صفر مورد بدون guard در ممیزی ایستا.
+++- `npm run audit:contracts`: PASS؛ بررسی ایستای 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS و 5 view موردنیاز. این بررسی اتصال/اجرای SQL Server نیست.
+++- TypeScript `transpileModule`: PASS از نظر syntax/transpile برای فایل‌های تغییرکرده؛ typecheck کامل محسوب نمی‌شود.
+++
+++## مسدود/تأییدنشده
+++- تلاش `npm install --ignore-scripts --no-audit --no-fund` در این محیط تا پایان مهلت 120 ثانیه timeout شد؛ Vite و type definitions در دسترس قرار نگرفتند.
+++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/وابستگی‌ها.
+++- `npm run build`: BLOCKED؛ `vite: not found`.
+++- مرورگر واقعی، Safari/iOS، SQL Server runtime، Backend/API و ERP در این محیط اجرا نشدند.
+++
+++## موارد باقی‌مانده
+++- نقشهٔ واقعی ایران، انتخاب/آزمون tile provider، ابزار رسم/ویرایش مستقیم روی نقشه، چاپ و آزمون موبایل.
+++- اتصال Heatmap به منابع معتبر فروش/مالی/برگشتی/وصول، freshness، attribution تولیدکننده و cross-filter.
+++- ایجاد task وصول از زون، مسئول/ناظر/مهلت، ثبت نتیجه واقعی و گزارش سلسله‌مراتبی.
+++- typecheck/build/lint کامل و آزمون واقعی UI؛ enforcement سمت Backend و SQL Server RLS.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,73 @@
+++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+++--- a/akhavan_dev_b18
++++++ b/akhavan_dev_b19
+++@@ -0,0 +1,30 @@
++++# BASELINE REPORT — AKHAVAN CRM b19
++++
++++- تاریخ: 2026-10-26
++++- مبنای مستقیم: `AkhavanCRM-SolarEmber_r11-cp9_b18.zip`
++++- SHA-256 مبنا: `b9ae65d840dc3dc16183076521268295dc3a03db4525ffccf70aafe4b7c828e6`
++++- مبنای محصول: `0.11.4 / r11-cp9-b18`
++++- خروجی: `0.11.5 / r11-cp9-b19`
++++- وضعیت Git: ZIP مبنا شامل `.git` نبود؛ بنابراین commit/status واقعی Git از این آرشیو قابل گزارش نیست. Diff فایل‌به‌فایل با ZIP اصلی ثبت شده است.
++++- مبنای فنی: React 19, Vite, TypeScript, Tailwind v4 و state محلی IndexedDB/Zustand طبق package/source موجود.
++++- محدودیت محیط: نصب dependency در این دور پس از 120 ثانیه timeout شد؛ `node_modules/.bin/vite` و type definitions در دسترس نیستند.
++++
++++## تغییرات کد نسبت به b18
++++- `src/components/GeoIntelligenceWorkspace.tsx` — صفحهٔ جدید برای زون، سنجه، انتساب مشتری.
++++- `src/App.tsx` — route جدید و RBAC guard.
++++- `src/lib/navigation.ts` — لینک منوی هوش مکانی.
++++- `src/lib/rbac.ts` — `geo.view`, `geo.manage`, ماتریس `geo`, مجوز ورود به workspace.
++++- `src/types.ts` — افزودن capability permissions و navigation tab.
++++- `src/lib/seed.ts` — افزودن مجوزهای geo به پروفایل مدیریتی اولیه.
++++- `src/lib/version.ts`, `package.json`, `metadata.json` — برچسب b19 / 0.11.5.
++++- `tests/rbac-configurability.test.mjs`, `tests/geoWorkspaceContracts.test.mjs` و script تست — تست‌های قرارداد/مجوز.
++++- `CHANGELOG_b19.md`, `STATUS_b19.md`, `NOT_DONE_b19.md`, `RBAC_AUDIT_b19.md`, `HANDOFF.md`, `VERSION.md`, `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` — مستندات اجرایی و traceability.
++++
++++## آزمون
++++- `npm test`: PASS؛ جمع assertionهای گزارش‌شده در suiteها 467.
++++- `node scripts/audit-actions.mjs`: PASS؛ 73/73 handler تغییردهنده guard شده.
++++- `npm run audit:contracts`: PASS ایستا؛ 9 SQL files, 46 tables, 44 tenant-scoped tables, 44 RLS targets, 5 required views. بدون SQL Server runtime.
++++- `transpileModule`: PASS از نظر syntax/transpile فایل‌های تغییرکرده؛ جایگزین typecheck کامل نیست.
++++- `npm run lint`: BLOCKED؛ `vite/client` قابل resolve نیست.
++++- `npm run build`: BLOCKED؛ `vite` executable موجود نیست.
++++- Browser/iOS, SQL Server runtime, Backend/API, ERP: اجرا نشده‌اند.
+++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+++--- a/akhavan_dev_b18
++++++ b/akhavan_dev_b19
+++@@ -0,0 +1,35 @@
++++# CHANGELOG b19 — Geo workspace + configurable Geo RBAC
++++
++++تاریخ: 2026-10-26
++++
++++## مبنا و رویکرد
++++- مبنا: بستهٔ b18؛ تغییرات افزایشی هستند و موتور RBAC، مدل‌های مالی و state قبلی جایگزین نشده‌اند.
++++- نسخهٔ برنامه: `0.11.5`، شناسهٔ انتشار: `r11-cp9-b19`.
++++
++++## تغییرات محصول
++++- صفحهٔ «هوش مکانی و مدیریت زون‌ها» به مسیر `/geo-intelligence` افزوده و از منوی اصلی قابل دسترسی شد.
++++- صفحه سه حالت زمینه‌ای «زون‌ها»، «تحلیل و Heatmap» و «عملیات و انتساب» دارد.
++++- فرم ایجاد/ویرایش زون، کد یکتا، ورود مختصات طول/عرض در ردیف‌های مجزا، بستن حلقه، اعتبارسنجی polygon و پیش‌نمایش شکل هندسه اضافه شد.
++++- ذخیرهٔ هندسه نسخه‌دار است؛ نسخهٔ قبلی بسته می‌شود و حفظ می‌شود. وضعیت زون قابل تغییر به پیش‌نویس/فعال/بایگانی است و تغییرات audit می‌شوند.
++++- انتساب مشتریان با آزمون point-in-polygon فقط برای مختصات معتبر و مشتریان مجاز طبق RBAC انجام می‌شود؛ سوابق قبلی با تاریخ پایان بسته می‌شوند و رکوردهای خارج از scope کاربر تغییر نمی‌کنند.
++++- مجوزهای مستقل `geo.view` و `geo.manage` به ماتریس مجوزها اضافه شدند و در صفحه تنظیمات پروفایل مجوز قابل تنظیم‌اند. `geo.manage` جدا از مشاهده است؛ مجوزهای مدیریتی قبلی برای سازگاری همچنان می‌توانند مدیریت را مجاز کنند.
++++- همه سنجه‌های Heatmap عمداً غیرفعال باقی مانده‌اند تا اتصال و تطبیق منبع واقعی؛ هیچ KPI مکانی ساختگی نشان داده نمی‌شود.
++++- آزمون قراردادی جدید مسیر UI، RBAC، scope مشتری، versioning و وضعیت سنجه‌ها را پوشش می‌دهد.
++++
++++## آزمون‌های واقعی این دور
++++- `npm test`: PASS؛ 467 assertion مجموع گزارش‌شده توسط suiteها، شامل 10 assertion قراردادی جدید برای صفحهٔ هوش مکانی.
++++- `node scripts/audit-actions.mjs`: PASS؛ 73 handler تغییردهنده، 73 دارای guard، صفر مورد بدون guard در ممیزی ایستا.
++++- `npm run audit:contracts`: PASS؛ بررسی ایستای 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS و 5 view موردنیاز. این بررسی اتصال/اجرای SQL Server نیست.
++++- TypeScript `transpileModule`: PASS از نظر syntax/transpile برای فایل‌های تغییرکرده؛ typecheck کامل محسوب نمی‌شود.
++++
++++## مسدود/تأییدنشده
++++- تلاش `npm install --ignore-scripts --no-audit --no-fund` در این محیط تا پایان مهلت 120 ثانیه timeout شد؛ Vite و type definitions در دسترس قرار نگرفتند.
++++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/وابستگی‌ها.
++++- `npm run build`: BLOCKED؛ `vite: not found`.
++++- مرورگر واقعی، Safari/iOS، SQL Server runtime، Backend/API و ERP در این محیط اجرا نشدند.
++++
++++## موارد باقی‌مانده
++++- نقشهٔ واقعی ایران، انتخاب/آزمون tile provider، ابزار رسم/ویرایش مستقیم روی نقشه، چاپ و آزمون موبایل.
++++- اتصال Heatmap به منابع معتبر فروش/مالی/برگشتی/وصول، freshness، attribution تولیدکننده و cross-filter.
++++- ایجاد task وصول از زون، مسئول/ناظر/مهلت، ثبت نتیجه واقعی و گزارش سلسله‌مراتبی.
++++- typecheck/build/lint کامل و آزمون واقعی UI؛ enforcement سمت Backend و SQL Server RLS.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,3 +1,23 @@
+++# HANDOFF — AKHAVAN CRM b19
+++
+++## آخرین وضعیت و ادامه از همین نقطه
+++- بستهٔ جاری: `r11-cp9-b19` / محصول `0.11.5`; مبنا b18.
+++- کار اجرایی این دور: صفحهٔ `/geo-intelligence`، فرم زون، ورود رأس‌های polygon، اعتبارسنجی/پیش‌نمایش هندسه، versioning، وضعیت زون، انتساب مشتری داخل مرز، audit محلی و مجوزهای `geo.view`/`geo.manage`.
+++- scope مشتری با `RBACService.canActOnRecord('accounts','VIEW',...)` اعمال می‌شود. این guard فقط client-side است؛ نباید آن را امنیت backend تلقی کرد.
+++- سنجه‌های Heatmap عمداً غیرفعال‌اند تا منابع واقعی و aggregation متصل و تطبیق داده شوند. صفحهٔ فعلی نقشهٔ واقعی ایران نیست و tile provider ندارد.
+++- آزمون‌ها: `npm test` PASS (467 assertion در suiteها)، `audit-actions` PASS (73/73)، `audit:contracts` PASS ایستا، transpile syntax PASS.
+++- وابستگی‌ها: نصب با timeout 120 ثانیه متوقف شد؛ lint و build مسدودند. مرورگر/iOS/SQL Server/ERP اجرا نشده‌اند.
+++- فایل مرجع کامل: `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md`; خلاصهٔ وضعیت: `STATUS_b19.md`; backlog: `NOT_DONE_b19.md`; ممیزی نقش: `RBAC_AUDIT_b19.md`.
+++
+++## قدم بعدی اجباری
+++1. در محیط دارای npm registry، نصب dependency، `npm run lint` و `npm run build` را اجرا کن و خطاها را اصلاح کن.
+++2. تست Chromium واقعی و Safari/iOS را انجام بده؛ در غیر این صورت آن‌ها را «تأییدنشده» نگه دار.
+++3. پیش از MapLibre، مختصات واقعی customer و مدل route/visit/financial source را audit کن.
+++4. سپس نقشهٔ ایران/tile provider، drawing، چاپ، KPIهای معتبر، task وصول و گزارش عملکرد را در فازهای مستقل اما با مدل مشترک توسعه بده.
+++5. بعد از تست کامل فرانت‌اند، Backend/API/RLS/SQL Server و ERP را در فاز جدا شروع کن.
+++
+++---
+++
++ # HANDOFF — AKHAVAN CRM r11-cp9 · b18
++ 
++ ## وضعیت تحویل
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,54 @@
+++# NOT DONE — AKHAVAN CRM b19
+++
+++وضعیت هر بند مستقل است؛ وجود مدل یا فرم، به‌تنهایی معیار تکمیل گردش کاری نیست.
+++
+++## P0 — تثبیت سورس و تست انتشار
+++- [ ] اجرای نصب وابستگی‌ها در محیط دارای دسترسی registry.
+++- [ ] `npm run lint` کامل و رفع خطاهای واقعی TypeScript.
+++- [ ] `npm run build` و رفع خطاهای build بدون حذف قابلیت.
+++- [ ] اجرای smoke test در Chromium؛ مسیر `/geo-intelligence`، ایجاد/ویرایش/فعال‌سازی/بایگانی زون، reload، مجوزهای allow/deny و responsive.
+++- [ ] آزمون واقعی iPhone/Safari، RTL، لمس، overflow، performance و دسترس‌پذیری.
+++- [ ] اجرای آزمون‌های امنیت منفی با نقش‌های واقعی CEO، مدیر فروش، سرپرست، فروشنده، حسابدار و بازدیدکننده.
+++- [ ] Backend/API authorization و SQL Server RLS پیش از داده واقعی.
+++
+++## P1 — هوش مکانی و زون‌ها
+++- [x] مدل GeoZone/ZoneGeometryVersion/ZoneAssignment/GeoMetricDefinition/ZoneMetricSnapshot در AppState و normalization برای state قدیمی.
+++- [x] GeoJSON Polygon validation، حداقل 3 رأس متمایز، حلقه بسته، محدوده مختصات و point-in-polygon با احتساب مرز.
+++- [x] نسخه‌بندی هندسه و حفظ تاریخچه.
+++- [x] صفحهٔ زون، فرم مختصات، پیش‌نمایش هندسه (نه نقشهٔ واقعی)، نام/کد، وضعیت زون و audit محلی.
+++- [x] انتساب مشتری داخل polygon برای مشتریان دارای مختصات معتبر و قابل مشاهده طبق RBAC؛ تاریخچه انتساب حفظ می‌شود.
+++- [x] مجوزهای `geo.view` و `geo.manage` در ماتریس RBAC و تنظیمات پروفایل.
+++- [ ] ممیزی دقیق نام/منبع مختصات مشتری و کیفیت داده؛ هماهنگ‌سازی با مرزهای واقعی.
+++- [ ] انتخاب و آزمون MapLibre/tile provider برای ایران، مجوز/هزینه/دسترسی، cache/self-host و چاپ.
+++- [ ] نقشهٔ واقعی ایران با استان/شهر/راه/برچسب فارسی و ابزار رسم/ویرایش polygon روی نقشه، شامل موبایل.
+++- [ ] ذخیره/reload زون با تست مرورگر و دستگاه واقعی؛ بررسی polygonهای پیچیده/خودمتقاطع و تاریخ مؤثر.
+++- [ ] Heatmap تک‌شاخصی با منبع معتبر، واحد، aggregation، زمان تازگی، semantics رنگ و مقایسه دوره.
+++- [ ] اتصال مطالبات به ماندهٔ معتبر فاکتور − PaymentAllocation − اعتبار؛ فروش به فاکتور معتبر؛ وصول از پرداخت واقعی؛ مرجوعی از سند برگشت معتبر.
+++- [ ] attribution فیلتر تولیدکننده از خطوط فاکتور و قواعد مالی؛ جلوگیری از نسبت‌دادن کل مانده مشتری به چند تولیدکننده.
+++- [ ] فیلترهای مشترک و cross-filter نقشه/KPI/جدول/نمودار، drill-down و export.
+++- [ ] task وصول از زون با مجری، ناظر، مهلت، اولویت، نتیجه مورد انتظار، علت عدم وصول و evidence مجاز.
+++- [ ] تطبیق planned route با توقف/ویزیت واقعی، تفکیک visit/delivery/failed delivery/return/no-show و گزارش نتیجه واقعی.
+++- [ ] گزارش سلسله‌مراتبی سازمان→زون→مجری→task→مشتری، چاپ نقشه/فهرست، clustering و تست حجم داده.
+++- [ ] کنترل scope زون/تیم/قلمرو در تمام فیلترها، taskها، گزارش‌ها و export؛ enforcement در لایه سرور.
+++
+++## P1 — RBAC و ساختار سازمانی
+++- [x] پروفایل‌های مجوز قابل تنظیم و ثبت audit محلی.
+++- [x] scope نقش، workspace پیش‌فرض، نقش بالادست و سرپرست مستقیم قابل تنظیم؛ جلوگیری از چرخه.
+++- [x] مجوزهای `geo.view` و `geo.manage` مستقل و قابل تنظیم.
+++- [ ] ویرایشگر کامل `SEE/DO/HIDDEN` برای فیلدها با پوشش واقعی در renderer و API.
+++- [ ] ممیزی تمام handlerها، exportها، bulk actions، فیلترها و مسیرهای عمیق؛ آزمون تغییر URL/state برای دور زدن مجوز.
+++- [ ] تست scope سازمان/شعبه/قلمرو/تیم/مالک برای همه ماژول‌ها، مخصوصاً Geo, reports, tasks, finance.
+++- [ ] backend authentication/authorization و RLS واقعی؛ UI-only guard برای امنیت کافی نیست.
+++
+++## P1 — سایر گردش‌های تجاری/مالی/داده
+++- [ ] تطبیق محاسبات مانده و تخصیص با `PaymentAllocation` و تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
+++- [ ] تکمیل گردش چک، بانک، هزینه، مغایرت‌گیری، تاریخچه، اصلاح/ابطال و audit end-to-end.
+++- [ ] تکمیل Quote → acceptance → handoff خارجی → توزیع/تحویل و حفظ `Quote ≠ Order ≠ Invoice`.
+++- [ ] اتصال KPIها به منابع واحد، تازگی، drill-down، خروجی و تعریف مشترک.
+++- [ ] تکمیل تصمیم‌یارهای lost-customer, next purchase suggestion, lost-opportunity, anomaly detection و route effectiveness؛ بدون سفارش خودکار و با ثبت قبول/رد/تبدیل پیشنهاد.
+++
+++## P2 — یکپارچه‌سازی
+++- [ ] تکمیل API/Auth/DTO/validation، migrations و seed policy در Backend.
+++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS و recovery.
+++- [ ] اتصال ERP/ETL با mapping شناسه‌ها، outbox/retry/idempotency، monitoring و reconciliation.
+++- [ ] آزمون end-to-end با داده/سامانه واقعی؛ تا پیش از آن اتصال واقعی ادعا نشود.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,23 @@
+++# RBAC Audit — b19
+++
+++## کنترل‌های اضافه‌شده
+++- `geo.view`: مشاهدهٔ صفحهٔ هوش مکانی.
+++- `geo.manage`: ایجاد/ویرایش هندسه، تغییر وضعیت زون و به‌روزرسانی انتساب مشتری.
+++- این مجوزها در `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX` و `RBACService.canAccessWorkspace` تعریف شده‌اند؛ تنظیمات پروفایل مجوزها از `PERMISSION_LABELS` تغذیه می‌شود، پس هر دو مجوز در UI تنظیم‌پذیرند.
+++- مدیرانی که مجوز موجود `settings.manage` یا `roles.manage` دارند، به‌منظور سازگاری، همچنان به صفحه دسترسی دارند و می‌توانند تغییر دهند. `geo.view` به‌تنهایی مجوز مدیریت نیست.
+++- مسیر `/geo-intelligence` با `guard('geo_intelligence', ...)` محافظت شده و آیتم منو از `filterSections`/RBAC مشترک عبور می‌کند.
+++- صفحه مشتریان قابل مشاهده را با `rbac.canActOnRecord('accounts','VIEW', scope)` محدود می‌کند؛ داشتن مجوز geo به‌تنهایی نباید scope مشتریان را گسترش دهد.
+++- هنگام refresh انتساب، فقط رکوردهای قبلی مشتریان داخل محدوده مجاز کاربر بسته می‌شوند؛ رکوردهای بیرون scope تغییر نمی‌کنند.
+++- تغییر هندسه، وضعیت زون و انتساب مشتری در `auditLogs` محلی ثبت می‌شود.
+++
+++## شواهد تست
+++- `tests/rbac-configurability.test.mjs`: 13 assertion، شامل مشاهده geo، جدایی view/manage و رد دسترسی کاربر بدون مجوز.
+++- `tests/geoWorkspaceContracts.test.mjs`: 9 assertion قراردادی برای route guard، navigation، permission matrix، scope، point-in-polygon، versioning و عدم نمایش سنجه غیرمتصل.
+++- `node scripts/audit-actions.mjs`: 73/73 handler تغییردهنده دارای guard در ممیزی ایستا.
+++
+++## محدودیت‌ها/ریسک‌های باز
+++- این‌ها کنترل‌های سمت کلاینت هستند؛ کاربر کنترل‌گر state محلی است و این روش مرز امنیتی برای دادهٔ حساس محسوب نمی‌شود.
+++- `geo.manage` در حال حاضر به صورت مجوز کلی زون/انتساب است؛ مجوزهای جداگانه برای ویرایش هندسه، فعال‌سازی، انتساب و export هنوز تفکیک نشده‌اند.
+++- Scope مشتری از RBAC حساب‌ها reuse می‌شود، اما scope اختصاصی زون (territory/team ownership) هنوز کامل نیست؛ مدل `GeoZone` باید با سیاست واقعی قلمرو و تیم هم‌راستا شود.
+++- فیلدهای `SEE/DO/HIDDEN` در تنظیمات قابل تنظیم‌اند، ولی پوشش واقعی تمام rendererها و APIها هنوز audit و اثبات نشده است.
+++- آزمون مرورگر، iOS، API و SQL Server RLS اجرا نشده است.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,21 @@
+++# REQUIREMENTS TRACEABILITY — b19
+++
+++| الزام | محل کد/سند | وضعیت فعلی | معیار پذیرش باقی‌مانده |
+++|---|---|---|---|
+++| حفظ معماری افزایشی و عدم ساخت موتور RBAC موازی | `src/lib/rbac.ts`, diff b18→b19 | رعایت شد در این دور | regression کامل پس از build |
+++| مجوز نقش قابل تنظیم | `src/types.ts`, `src/lib/rbac.ts`, `SettingsWorkspace.tsx`, tests | `geo.view/manage` افزوده و در UI مجوزها قابل تنظیم است | تست UI واقعی و API enforcement |
+++| scope مشتری | `GeoIntelligenceWorkspace.tsx` → `rbac.canActOnRecord` | client-side اعمال شده | تست همه scopeها و سرور/RLS |
+++| صفحه مستقل هوش مکانی | `src/App.tsx`, `src/lib/navigation.ts`, `GeoIntelligenceWorkspace.tsx` | پیاده و route-guard شده | browser/iOS |
+++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx` | پوسته و رفتار پایه | Heatmap و عملیات هنوز منبع/موتور واقعی ندارند |
+++| تعریف نام/کد زون | `GeoIntelligenceWorkspace.tsx` | کد یکتا در state، نام اجباری | قید یکتا و validation سمت سرور |
+++| GeoJSON polygon | `src/lib/geoIntelligence.ts`, workspace | validation و preview شکل | نقشه واقعی، polygon self-intersection و تست داده واقعی |
+++| versioning و audit | `ZoneGeometryVersion`, `auditLogs` | محلی و نسخه‌دار | DB transaction, audit server-side, reload test |
+++| انتساب مشتری به زون | `isPointInsideZone`, `assignCustomersInZone` | فقط مختصات معتبر و مشتریان قابل مشاهده | بررسی کیفیت مختصات و داده واقعی |
+++| Heatmap مالی/فروش/برگشتی/وصول | `GEO_METRIC_CATALOG` | قرارداد سنجه موجود؛ عمداً disabled | منبع واحد، فرمول، freshness، تطبیق عددی |
+++| نقشهٔ ایران/tile provider | backlog و master audit | پیاده نشده | انتخاب/هزینه/مجوز/provider و آزمون ایران |
+++| تسک وصول و گزارش سرپرست | `NOT_DONE_b19.md`, master audit | پیاده نشده | اتصال به task engine، نتیجه واقعی، گزارش drill-down |
+++| چاپ/cross-filter/clustering | `NOT_DONE_b19.md` | پیاده نشده | پیاده‌سازی و آزمون کارایی |
+++| Build/Lint | اجرای واقعی ثبت‌شده در `STATUS_b19.md` | مسدود به علت dependency | نصب موفق و اجرای مجدد |
+++| Browser/iOS/SQL/ERP | `STATUS_b19.md` | اجرا نشده | محیط واقعی و evidence قابل تکرار |
+++
+++برای مشخصات کامل، جزئیات سنجه‌ها، فیلترها، قواعد مالی، عملیات مسیر/ویزیت، سلسله‌مراتب نقش‌ها و تمام backlogهای محصول، به `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` و `NOT_DONE_b19.md` رجوع شود. هیچ الزام صرفاً به علت ذکر شدن در جدول به‌عنوان انجام‌شده ثبت نشده است.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,11 @@
+++# STATUS — AKHAVAN CRM b19
+++
+++- نسخه: `0.11.5` — `r11-cp9-b19`.
+++- مبنا: b18؛ بدون حذف قابلیت‌های قبلی.
+++- **انجام‌شده در b19:** صفحهٔ هوش مکانی متصل به مسیر و منوی برنامه؛ مدیریت زون، اعتبارسنجی و پیش‌نمایش هندسه، ذخیره نسخه‌دار، وضعیت فعال/پیش‌نویس/بایگانی، انتساب مشتری داخل polygon، ممیزی تغییرات، مجوزهای مستقل `geo.view` و `geo.manage`، scope مشتری با RBAC و تست قراردادی UI/RBAC.
+++- **تست‌ها:** `npm test` PASS (467 assertion در suiteها)؛ `audit-actions` PASS (73/73 handler تغییردهنده guard شده)؛ `audit:contracts` PASS فقط ایستا؛ transpile فایل‌های تغییرکرده PASS از نظر syntax.
+++- **Build/Lint:** تأیید نشده. `npm install` در این دور timeout شد؛ `npm run lint` به‌دلیل نبود `vite/client` مسدود و `npm run build` به‌دلیل نبود Vite مسدود.
+++- **نقشه:** صفحهٔ زون و پیش‌نمایش شکل هندسه وجود دارد، اما این پیش‌نمایش نقشهٔ ایران نیست؛ tile provider، نقشهٔ واقعی، رسم لمسی، چاپ و آزمون مرورگر/iOS باقی است.
+++- **Heatmap:** کاتالوگ سنجه‌ها نمایش داده می‌شود، اما همه غیرفعال‌اند تا منبع واقعی متصل شود؛ هیچ KPI ساختگی محاسبه نمی‌شود.
+++- **RBAC:** قابل تنظیم در سمت کلاینت؛ این کار جایگزین API enforcement یا SQL Server RLS نیست. آزمون واقعی نقش‌ها/مرورگر اجرا نشده است.
+++- **وضعیت کلی:** نسخه توسعه‌ای و ناقص است؛ برای production یا اتصال SQL/ERP آماده اعلام نمی‌شود.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,16 +1,17 @@
++ # VERSION
++ 
++-- نسخه محصول: **0.11.4**
++-- شناسه بسته: **r11-cp9-b18**
++-- مبنا: **b16**؛ تغییرات این بسته افزایشی‌اند و قابلیت‌های قبلی حفظ شده‌اند.
+++- نسخه محصول: **0.11.5**
+++- شناسه بسته: **r11-cp9-b19**
+++- مبنا: **r11-cp9-b18**؛ تغییرات افزایشی هستند.
++ 
++ ## تاریخچه
++ - b15: مرکز عملیات فروش/پخش آزمایشی، موتور تحلیل عملیات و داده seed محلی.
++ - b16: گسترش seed آزمایشی و توسعه نمای مالی/خزانه/هزینه‌ها.
++-- b17-audit-docs: افزودن ممیزی جامع و ردیابی الزامات؛ بدون ادعای پیاده‌سازی محصول.
++-- b18: قابل‌تنظیم کردن پروفایل‌های مجوز و scope نقش، نقش بالادست و سرپرست مستقیم؛ افزودن safeguards و تست RBAC؛ افزودن مدل دامنهٔ GeoJSON polygon، نسخه‌بندی هندسه و کاتالوگ سنجه‌های مکانی با fail-closed availability.
+++- b17-audit-docs: ممیزی جامع و ردیابی الزامات؛ صرفاً مستندات.
+++- b18: تنظیم‌پذیری RBAC، scope نقش، نقش بالادست، سرپرست مستقیم، safeguards و مدل دامنه GeoJSON.
+++- b19: صفحهٔ هوش مکانی، مدیریت زون و هندسه نسخه‌دار، انتساب مشتری با point-in-polygon، مجوزهای geo قابل تنظیم، اعمال scope مشتری و تست‌های قراردادی جدید.
++ 
++ ## قرارداد بسته
++-`AkhavanCRM-SolarEmber_r11-cp9_b18.zip`
+++`AkhavanCRM-SolarEmber_r11-cp9_b19.zip`
++ 
++-وضعیت تست، محدودیت‌ها و کارهای باقی‌مانده در `STATUS_b18.md`, `NOT_DONE_b18.md`, `RBAC_AUDIT_b18.md` و `HANDOFF.md` ثبت می‌شود.
+++گزارش کامل در `STATUS_b19.md`, `NOT_DONE_b19.md`, `RBAC_AUDIT_b19.md`, `CHANGELOG_b19.md`, `HANDOFF.md` و `docs/06_MASTER_AUDIT_AND_TRACEABILITY_b17.md` قرار دارد.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,331 @@
+++# AKHAVAN CRM — ممیزی جامع، ردیابی الزامات و وضعیت انجام‌شده/باقی‌مانده
+++
+++- نسخه مبنا: `AkhavanCRM-SolarEmber_r11-cp9_b16.zip`
+++- نسخه سند: `b17-audit-docs` (فقط به‌روزرسانی مستندات؛ به معنی پیاده‌سازی قابلیت‌های محصول نیست)
+++- تاریخ ممیزی: 2026-10-26
+++- نوع بررسی: بازبینی ایستای سورس و اسناد بسته؛ بدون اتصال SQL Server/ERP و بدون اجرای مرورگر واقعی
+++- وضعیت انتشار: **توسعه‌ای؛ آمادهٔ اعلام به‌عنوان محصول عملیاتی نیست**
+++
+++
+++## الحاقیهٔ وضعیت اجرایی b18 — 2026-10-26
+++
+++این الحاقیه وضعیت را از روی تغییرات واقعی b18 به‌روزرسانی می‌کند؛ متن ممیزی b17 پایین‌تر به‌عنوان سابقه حفظ شده است.
+++
+++- **انجام‌شده در b18:** مدل‌های `GeoZone`, `ZoneGeometryVersion`, `ZoneAssignment`, `GeoMetricDefinition`, `ZoneMetricSnapshot` در AppState؛ normalization امن برای state قدیمی؛ اعتبارسنجی GeoJSON Polygon؛ point-in-polygon با احتساب مرز؛ نسخه‌بندی هندسه و جلوگیری از دو نسخهٔ فعال هم‌زمان؛ کاتالوگ هشت سنجه با واحد/منبع/تجمیع/جهت مطلوب؛ تست‌های دامنه.
+++- **عمداً غیرفعال:** تمام سنجه‌ها `available: false` هستند تا منبع واقعی و قواعد تجمیع متصل و راستی‌آزمایی شوند؛ این تصمیم مانع نمایش Heatmap ساختگی می‌شود.
+++- **هنوز باقی‌مانده:** صفحهٔ نقشه، MapLibre و تأمین‌کنندهٔ tile، رسم/ویرایش بصری، جست‌وجو/نمایش نقشهٔ ایران، انتساب مشتری، چاپ، فیلترهای مشترک، اتصال سنجه‌ها به اسناد واقعی، تسک وصول و گزارش عملکرد.
+++- **RBAC b18:** پروفایل‌های مجوز، scope نقش، نقش بالادست و سرپرست مستقیم از UI قابل تنظیم شده‌اند؛ این enforcement فقط سمت کلاینت است و نیاز به Backend/RLS دارد. جزئیات در `../RBAC_AUDIT_b18.md`.
+++- **آزمون b18:** `npm test` برابر 446 assertion موفق؛ `audit:contracts` و `audit-actions` موفق در بررسی ایستا. Build/Lint به‌دلیل dependency نصب‌نشده مسدود؛ مرورگر/iOS/SQL Server واقعی اجرا نشده. جزئیات در `../STATUS_b18.md` و `../NOT_DONE_b18.md`.
+++
+++## 1. هدف و قواعد ممیزی
+++
+++این سند، مرجع واحد ردیابی خواسته‌ها و وضعیت فعلی است. هر الزام باید مستقل ارزیابی شود؛ وجود یک مفهوم کلی مثل «زون»، «گزارش»، «RBAC» یا «هوش مکانی» به‌تنهایی به معنی پیاده‌سازی جزئیات آن نیست.
+++
+++برچسب‌های وضعیت:
+++- **تأییدشده در سورس/سند:** شواهد مشخص در بسته موجود است؛ این برچسب به‌تنهایی کیفیت عملیاتی یا تست انتهابه‌انتها را ثابت نمی‌کند.
+++- **ناقص/نمونه‌ای:** بخشی از رفتار وجود دارد، اما چرخه کامل، منبع معتبر یا معیار پذیرش تأمین نشده است.
+++- **یافت نشد/پیاده‌سازی‌نشده در بسته بررسی‌شده:** در سورس و اسناد بررسی‌شده شاهد کافی پیدا نشد؛ این عبارت ادعای نبود در تمام نسخه‌های خارج از این بسته نیست.
+++- **تأییدنشده:** برای اعلام نتیجه به اجرای تست یا محیط بیرونی نیاز است.
+++
+++قواعد غیرقابل نقض برای ادامه:
+++1. ابتدا آخرین سورس واقعی، Git/status و اسناد جاری را بررسی کن؛ اگر سورس جدیدتری ارائه شد، آن را مبنا قرار بده و اختلاف را ثبت کن.
+++2. قبل از تغییر کد، Diff با مبنا و فهرست رگرسیون تهیه شود. تغییر افزایشی باشد؛ حذف یا بازنویسی بدون دلیل مستند ممنوع.
+++3. هیچ قابلیت، اتصال، تست یا پذیرشی که اجرا نشده، موفق اعلام نشود.
+++4. داده‌های `demo-*` و `LOCAL_TEST` مصنوعی‌اند و نباید داده واقعی کسب‌وکار معرفی شوند.
+++5. منبع واحد حقیقت برای هر قلم داده؛ از کپی‌کردن مانده، فاکتور، پرداخت، کالا یا اطلاعات ERP در مدل موازی خودداری شود.
+++6. `Quote ≠ Order ≠ Invoice`; پذیرش Quote نباید به‌طور ضمنی فاکتور یا سفارش ERP بسازد.
+++7. تخصیص پرداخت باید از `PaymentAllocation` و قواعد مالی معتبر پیروی کند؛ پرداخت/چک دوباره‌شماری نشود.
+++8. Backend، اتصال واقعی SQL Server و ERP طبق اولویت فعلی، مرحله‌ای جدا پس از تکمیل و آزمون فرانت‌اند انجام می‌شود.
+++9. RBAC باید هم در رابط و هم در لایه عملیات/داده enforce شود؛ پنهان‌کردن دکمه کافی نیست.
+++10. هر الزام جزئی در ماتریس ردیابی مستقل باقی بماند و در خلاصه‌ها حذف نشود.
+++
+++## 2. مبنای واقعی و محدودیت شواهد
+++
+++بستهٔ قابل‌دسترسی و تأییدشده برای این ممیزی `AkhavanCRM-SolarEmber_r11-cp9_b16.zip` است. اسناد همراه آن می‌گویند نسخه محصول `0.11.3` و checkpoint `r11-cp9-b16` است.
+++
+++اسناد b16 گزارش می‌کنند:
+++- `npm test`: تعداد 423 assertion موفق در محیط اجرای ثبت‌شده در handoff.
+++- بررسی syntax از طریق `transpileModule` برای `src/lib/seed.ts` و `src/components/FinanceWorkspace.tsx` موفق گزارش شده است.
+++- Build و lint کامل تأیید نشده‌اند؛ در محیط قبلی `vite: not found` و نبود `vite/client` ثبت شده است.
+++- SQL Server، مرورگر واقعی، Safari/iOS و اتصال ERP اجرا/تست نشده‌اند.
+++
+++این ممیزی، خروجی تست‌های قبلی را به‌عنوان گزارش تاریخی ثبت می‌کند، نه اینکه در این مرحله دوباره آن‌ها را اجرا کرده باشد. وضعیت واقعی `npm test`, lint و build باید در محیط تمیز و از روی همین سورس دوباره ثبت شود.
+++
+++## 3. یافته‌های مشخص از سورس
+++
+++### 3.1 داده و عملیات
+++- `src/lib/seed.ts` داده‌های مصنوعی مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه و فعالیت را تولید می‌کند؛ در seed، زون‌هایی مانند `CENTER`, `NORTH`, `SOUTH` و شهرهای نمونه دیده می‌شوند. این‌ها دادهٔ نمایشی‌اند، نه نقشه و هندسهٔ معتبر جغرافیایی ایران.
+++- `src/components/OperationsControlWorkspace.tsx` برنامه پخش و سفارش آزمایشی می‌سازد و `zone` را به‌صورت مقدار متنی نگه می‌دارد؛ برخی مسیرهای ایجاد، صراحتاً `LOCAL_TEST` هستند.
+++- `src/lib/operationsEngine.ts` مغایرت متنی زون سفارش و برنامه پخش و سیگنال‌های عملیاتی را بررسی می‌کند. این قابلیت با آزمون قرارگیری نقطه/مشتری داخل چندضلعی، مسیریابی واقعی یا تحلیل جغرافیایی یکسان نیست.
+++- `src/lib/rbac.ts` و تست‌های مرتبط وجود دارند؛ با این حال دسترسی واقعی هر نقش به همهٔ عملیات، گزارش‌ها و داده‌های جغرافیایی باید جداگانه آزمون شود.
+++- `database/sqlserver/v1/` شامل اسکریپت‌های پایه، integration، finance، semantic analytics، KPI seed، RLS و sales/dispatch preflight است. وجود migrationها اثبات نمی‌کند که آن‌ها روی SQL Server اجرا شده یا با فرانت‌اند یکپارچه شده‌اند.
+++
+++### 3.2 هوش مکانی
+++در بستهٔ بررسی‌شده، شاهدی از صفحه/موتور مستقل «هوش مکانی و مدیریت زون‌ها»، نقشهٔ سراسری ایران، MapLibre، ابزار رسم polygon، GeoJSON ذخیره‌شده و قابل بارگذاری، نسخه‌بندی هندسه، انتخاب مشتری با نقطه‌درچندضلعی، چاپ نقشه/فهرست مشتریان یا Heatmap متصل به داده‌های مالی معتبر پیدا نشد.
+++
+++**نتیجه:** برچسب/قانون زون و سیگنال مغایرت متنی، بخش محدودی از منطق عملیاتی است؛ جایگزین زیرسیستم هوش مکانی نیست. کل این زیرسیستم در این بسته باید «باقی‌مانده/طراحی‌نشده در محصول» تلقی شود تا پس از پیاده‌سازی و آزمون شواهد خلاف آن ثبت شود.
+++
+++## 4. ماتریس جامع وضعیت ماژول‌ها
+++
+++| حوزه | وضعیت قابل اثبات از بسته | کار باقی‌مانده / شرط پذیرش |
+++|---|---|---|
+++| Solar Ember و پوسته UI | سیستم طراحی و کد رابط در سورس وجود دارد؛ حفظ‌شدن بصری در تمام دستگاه‌ها دوباره تأیید نشده | build، مرورگر، Safari/iOS، RTL، overflow، دسترس‌پذیری و رگرسیون بصری |
+++| داده‌های نمونه | seed گسترده و تست حداقل حجم در اسناد b16 گزارش شده | برچسب‌گذاری demo، تکرارپذیری، جلوگیری از آمیختن با داده واقعی؛ سیاست ارتقای seed قدیمی روشن شود |
+++| داشبورد مالی | KPIها، روند شش‌ماهه و تفکیک دسته‌ای هزینه در b16 گزارش شده | منبع معتبر، تعریف KPI، فیلترها، drill-down، خروجی و تطبیق با سند منبع |
+++| خزانه/چک | تب نمایش و خلاصه‌های چک/سررسید وجود دارد | گردش کامل ثبت/تحویل/واگذاری/وصول/برگشت/ابطال، تاریخچه، مانده حساب معتبر و تطبیق بانکی |
+++| هزینه‌ها | تب هزینه و تحلیل دسته‌ای وجود دارد؛ ثبت/پرداخت نهایی صراحتاً کامل اعلام نشده | فرم، مرکز هزینه، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit trail و ضدتکرار |
+++| مطالبات و پرداخت | قواعد `PaymentAllocation` در مستندات به‌عنوان مرجع تخصیص آمده | آزمون عددی جامع، برگشتی/اعتبار، جلوگیری از دوباره‌شماری، تاریخ مبنا و تطبیق گزارش‌ها |
+++| Quote / سفارش / پخش | موتورهای Quote/عملیات، داده‌های نمونه و برخی بررسی‌های زون متنی موجودند | چرخه کامل Quote تا handoff خارجی، وضعیت‌های واقعی، شواهد تحویل و اتصال ERP؛ Quote ≠ Order ≠ Invoice حفظ شود |
+++| RBAC و سازمان | `rbac.ts` و تست‌های scope وجود دارد | آزمون deny برای هر نقش/عملیات، hierarchy قابل تنظیم، محدودیت مالی جدا از دسترسی فروش، اعمال در data/action layer |
+++| ممیزی تغییرات | بخش‌هایی از audit/تاریخچه در معماری و کد وجود دارند | پوشش سراسری تغییرات حساس، قبل/بعد، عامل، زمان، دلیل و جلوگیری از دور زدن UI |
+++| Backend / SQL Server | migrationها و اسناد معماری در بسته موجودند | اجرای واقعی migrations، API/Auth، RLS، تست امنیت/بازیابی و تطبیق قراردادها؛ هنوز اجرا نشده |
+++| ERP / ETL | قراردادها و schema پایه در مستندات/مهاجرت‌ها دیده می‌شوند | connector واقعی، mapping شناسه‌ها، outbox، retry، idempotency، sync monitoring و آزمون با ERP واقعی |
+++| هوش مکانی و زون‌ها | b17: فیلدهای متنی؛ b18: مدل دامنه، polygon validation، point-in-polygon، versioning و catalog سنجه‌ها | نقشه UI، tile provider، drawing، انتساب مشتری، Heatmap متصل به داده واقعی، چاپ و عملیات وصول باقی است؛ قابلیت کامل تأیید نشده |
+++| گزارش‌ها و KPIهای مشترک | semantic layer/KPI catalog در SQL scripts وجود دارد | اثبات یکسانی تعریف در همه ماژول‌ها، cross-filter، freshness/source، drill-down و تست تطبیق اعداد |
+++| محصولات/تأمین/موجودی | داده‌ها و بخش‌هایی از مدل/نمونه‌ها موجود است | ERP منبع حقیقت باقی بماند؛ موجودی/رزرو/خرید واقعی بدون اتصال تأیید نشده |
+++
+++## 5. مشخصات کامل زیرسیستم «هوش مکانی و مدیریت زون‌ها»
+++
+++این بخش ثبت کامل الزام‌هاست، نه ادعای پیاده‌سازی. هر مورد باید جداگانه به backlog، آزمون و معیار پذیرش متصل شود.
+++
+++### 5.1 هدف و مرز محصول
+++زیرسیستم مستقل «هوش مکانی و مدیریت زون‌ها» باید نقشه و زون‌های ذخیره‌شده را به تحلیل فروش و مطالبات، برنامه‌ریزی پخش، تخصیص وظیفه، پیگیری اجرای کار و گزارش عملکرد مدیران متصل کند. این زیرسیستم تصمیم‌یار است؛ صرف نزدیکی جغرافیایی نباید به‌صورت خودکار مأموریت ایجاد کند و نباید جای ERP/DMS یا منبع سند مالی را بگیرد.
+++
+++### 5.2 سه حالت کاری، یک نقشه و یک مدل داده
+++1. **تعریف و مدیریت زون:** نقشهٔ کل ایران؛ رسم polygon با حداقل ۳ نقطه و ترجیحاً ۵ تا ۶ نقطه یا بیشتر؛ نام و کد یکتا؛ ذخیره، بازیابی، ویرایش، فعال/غیرفعال‌کردن و نسخه‌بندی محدوده. زون مرز واقعی polygon است، نه مجموعه‌ای از pinها.
+++2. **تحلیل Heatmap:** در هر نما یک شاخص اصلی و یک مقیاس رنگی. مقایسهٔ دو شاخص فقط با مقایسهٔ صریح کنارهم/دو پنل انجام شود، نه ترکیب مقیاس‌های نامرتبط. Legend باید واحد، بازه و معنای بهتر/بدتر را توضیح دهد.
+++3. **عملیات و تخصیص کار:** انتخاب زون، مشاهده مشتریان داخل آن و مطالبات معتبر، ساخت task وصول/پیگیری، تعیین مجری، ناظر/سرپرست، مهلت، اولویت و نتیجه مورد انتظار؛ ثبت نتیجه واقعی و شواهد مجاز.
+++
+++سه حالت باید نقشه و مدل مشترک داشته باشند، اما کنترل‌ها و ابزارهای صفحه بر اساس حالت انتخابی تغییر کنند؛ همه ابزارها هم‌زمان و شلوغ نمایش داده نشوند.
+++
+++### 5.3 فناوری نقشه و الزامات انتخاب
+++گزینهٔ اولیهٔ بررسی: MapLibre GL JS + GeoJSON + ابزار رسم polygon. این انتخاب هنوز تصمیم فنی نهایی یا پیاده‌سازی‌شده نیست. پیش از تثبیت باید آزمایش شود:
+++- پوشش ایران: استان، شهر، راه‌ها و برچسب مکان‌ها.
+++- کیفیت و دسترسی tile provider از محیط استقرار واقعی؛ هزینه، محدودیت درخواست و شرایط مجوز.
+++- گزینهٔ self-host/cache در صورت محدودیت دسترسی یا هزینه؛ عدم وابستگی به tile server نمایشی.
+++- فارسی و RTL، موبایل و دسکتاپ، کارایی با تعداد زیاد مشتری و clustering.
+++- ذخیره/بارگذاری GeoJSON و حفظ precision مختصات.
+++- چاپ نقشه و فهرست مشتریان داخل زون و مجوزهای مربوط به داده/نقشه.
+++- امکان رسم، انتخاب، ویرایش، لغو تغییر و بازگشت به نسخه قبلی.
+++
+++رایگان بودن کتابخانه به معنی رایگان یا در دسترس بودن tileها نیست.
+++
+++### 5.4 مدل داده و قواعد مالکیت
+++قبل از ایجاد جدول جدید، موجودیت‌ها و ساختارهای فعلی، شناسه‌ها، audit، versioning، task، مشتری، فاکتور، پرداخت، برگشتی و salesperson بررسی شوند. از ایجاد مدل موازی خودداری شود.
+++
+++موجودیت‌های منطقی مورد نیاز (فقط در صورت نبود معادل معتبر):
+++- `Zone`: شناسه، کد، نام، وضعیت، مالک/دامنه دسترسی.
+++- `ZoneGeometryVersion`: هندسه polygon، شماره نسخه، زمان اعتبار از/تا، سازنده و دلیل تغییر.
+++- `ZoneAssignment`: ارتباط مشتری یا رکورد مکانی با زون، روش تخصیص و بازه اعتبار؛ قابل محاسبه مجدد.
+++- `GeoMetricDefinition`: شناسه KPI، منبع داده، واحد، فرمول، grain، aggregation، semantics بهتر/بدتر، مجوز و تازگی.
+++- `ZoneMetricSnapshot`: فقط cache اختیاری؛ قابل بازسازی از منبع و هرگز منبع حقیقت مستقل نیست.
+++- Task/TaskAssignment: از موتور task موجود استفاده شود؛ مجری، ناظر/مشاهده‌گر، مهلت، اولویت و وضعیت.
+++- `TaskEvidence`: نتیجه، زمان و موقعیت مجاز، مبلغ وصول تأییدشده، علت عدم وصول/عدم تحویل و مرجع سند.
+++- `AuditEvent`: استفاده از audit مشترک موجود برای تغییر زون، هندسه، تخصیص و عملیات.
+++
+++ارتباط‌ها باید با شناسه‌های واقعی Customer/Invoice/Payment/Return/Salesperson/Task باشند، نه نام‌ها یا متن‌های کپی‌شده. نسخهٔ مرز زون و تاریخ اعتبار باید برای گزارش تاریخی حفظ شود. تغییر هندسه نباید گزارش گذشته را بی‌صدا بازنویسی کند.
+++
+++### 5.5 تعریف دقیق شاخص‌های Heatmap
+++هر شاخص باید قبل از نمایش، منبع، واحد، فرمول، grain، فیلترهای مجاز، زمان تازگی و معنای بهتر/بدتر داشته باشد:
+++- **مطالبات باز:** مانده فاکتورهای معتبر در تاریخ انتخابی با لحاظ تخصیص پرداخت/اعتبار و سیاست مالی مرجع.
+++- **فروش:** مبلغ اسناد فروش معتبر در بازه؛ تعریف مالیاتی/تخفیف/ابطال باید ثابت و مستند باشد.
+++- **مرجوعی:** مبلغ یا تعداد اسناد برگشتی معتبر؛ واحد انتخابی واضح باشد و مبلغ با تعداد مخلوط نشود.
+++- **تعداد فاکتور:** شمار فاکتورهای معتبر، نه تعداد سفارش.
+++- **تراکم مشتری:** تعداد مشتریان یکتا با موقعیت معتبر در هندسه؛ مشتری فاقد مختصات معتبر از محاسبه مکانی حذف یا جداگانه نشان داده شود.
+++- **وصول نقدی:** مبلغ وصول معتبر؛ پرداخت ثبت‌شده از تخصیص پرداخت به فاکتور جدا شود تا دوباره‌شماری رخ ندهد.
+++- **عملکرد فروشنده:** فقط یک معیار صریح در هر نمایش، مانند فروش، وصول، پوشش مشتری یا تحقق هدف؛ ترکیب مبهم چند معیار ممنوع.
+++- **توزیع/تحویل خارج از زون:** اسناد تحویل/فاکتورهای مرتبطی که با مرز معتبر زون در زمان مربوط همخوانی ندارند؛ برنامه، سفارش، فاکتور و تحویل نباید معادل فرض شوند.
+++
+++برای رنگ‌ها: مقدار بیشتر فروش می‌تواند مثبت، اما مقدار بیشتر بدهی معوق می‌تواند منفی باشد. legend و عبارت «بالاتر بهتر است/بدتر است» باید برای هر KPI صریح باشد.
+++
+++### 5.6 فیلترهای مشترک و قواعد انتساب
+++فیلترهای موردنیاز، در صورت ارتباط با شاخص: بازه تاریخ، ماه/سال، مقایسه با دوره قبل، فروشنده، سرپرست، تیم، مسئول پخش، تولیدکننده، کالا، گروه کالا، زون، منطقه، مشتری، وضعیت مشتری، وضعیت فاکتور/پرداخت/مرجوعی/عملیات وصول.
+++
+++فیلترها فقط زمانی نمایش داده شوند که از نظر معنایی به KPI مربوط باشند. برای مثال، فیلتر تولیدکننده روی مطالبات باید از خطوط فاکتور و قواعد تخصیص مالی معتبر استفاده کند؛ نباید کل مانده مشتری به تمام تولیدکنندگان نسبت داده شود. اگر attribution دقیق ممکن نیست، نتیجه باید محدودیت را آشکار کند، نه اینکه عدد دقیق‌نما بسازد.
+++
+++نقشه، جدول، نمودار و KPI باید از تعریف و فیلتر مشترک استفاده کنند. انتخاب یک زون/نقطه/بازه نمودار باید نماهای مرتبط را cross-filter کند؛ تغییر فیلتر باید هم‌زمان همه نماهای مرتبط را به‌روز کند. منبع، زمان آخرین به‌روزرسانی و تعریف KPI باید قابل مشاهده باشد.
+++
+++### 5.7 عملیات، وصول و مسیر
+++- انتخاب زون باید مشتریان واقعاً داخل polygon را با آزمون point-in-polygon و قواعد مرز معتبر پیدا کند؛ صرف برابر بودن متن `zone` کافی نیست.
+++- پیشنهاد فهرست اولویت‌دار وصول باید از مانده معتبر، سررسید، سابقه تلاش، موقعیت معتبر و scope کاربر استفاده کند.
+++- ایجاد task با مجری اصلی، ناظر/سرپرست، مهلت، اولویت، زون، مشتریان و نتیجه مورد انتظار.
+++- ثبت نتیجه‌های مجزا: ویزیت انجام شد، تحویل موفق، تحویل ناموفق، مرجوعی، مراجعه ناموفق/عدم حضور، وصول موفق یا عدم وصول.
+++- ثبت مبلغ وصول فقط با مرجع معتبر؛ ثبت علت عدم وصول/تحویل، زمان، موقعیت در صورت مجاز بودن و شواهد.
+++- گزارش سرپرست/مدیر: تخصیص‌یافته، انجام‌شده، ناموفق، معوق، مبلغ وصول معتبر و نرخ نتیجه؛ drill-down از سازمان → زون → مجری → task → مشتری.
+++- تطبیق برنامه با توقف‌ها/ویزیت‌های واقعی و تحلیل انحراف مسیر/زمان فقط وقتی داده واقعی معتبر وجود دارد.
+++- هشدار تأخیر تحویل یا تکرار مراجعه ناموفق؛ اعلان باید قابل توضیح و قابل ممیزی باشد.
+++- GPS به‌تنهایی اثبات انجام کار نیست. استفاده از موقعیت باید محدود به هدف، مجاز و دارای کنترل حریم خصوصی باشد.
+++- نزدیکی جغرافیایی به‌تنهایی مجوز تخصیص خودکار کار نیست.
+++
+++### 5.8 نقش‌ها و دامنه دسترسی
+++- فروشنده: مسیر/قلمرو و مشتریان خودش، حتی اگر در برنامه بازدید جاری نباشند.
+++- سرپرست: تیم خود و مشتریانی که در scope همان تیم‌اند.
+++- مدیر فروش: داده‌ها و گزارش‌های فروش در دامنه سازمانی تعریف‌شده.
+++- مدیرعامل: نمای سازمانی طبق سیاست.
+++- حسابدار و نقش‌های دیگر: جداسازی وظایف؛ دسترسی به داده فروش به معنی اجازه ثبت/تأیید همه اقدامات مالی نیست.
+++- ساختار سازمانی و رابطه مدیر مستقیم/زیردست قابل پیکربندی باشد؛ در مقیاس فعلی ساده بماند و برای چند شعبه پیچیدگی غیرضروری ساخته نشود.
+++- همان scope در نقشه، KPI، فیلتر، فهرست، task، گزارش و export اعمال شود و در لایه عملیات/داده enforce گردد.
+++
+++### 5.9 صفحه و تعامل
+++صفحه مستقل «هوش مکانی» با سه حالت «زون‌ها»، «نقشه حرارتی»، «عملیات»؛ نوار فیلتر زمینه‌ای؛ نقشهٔ تعاملی ایران؛ نمایش زون‌های ذخیره‌شده، مشتریان و لایهٔ شاخص انتخاب‌شده؛ انتخاب زون؛ رسم/ویرایش؛ چاپ نقشه و فهرست مشتریان داخل زون؛ جدول مرتبط با مشتری، مانده معتبر، وضعیت و اقدام بعدی. طراحی باید با Solar Ember، فارسی/RTL و موبایل سازگار باشد.
+++
+++### 5.10 برنامه اجرا و معیار پذیرش
+++**مرحله 1 — ممیزی و مدل داده:** بررسی مختصات مشتری، مدل بازدید/مسیر، مانده مالی، RBAC، audit، task و جدول‌های موجود؛ ثبت قراردادها و وابستگی‌ها؛ بدون ساخت جدول تکراری.
+++
+++**مرحله 2 — نقشه و زون ذخیره‌شده:** نقشه ایران، رسم/ویرایش polygon، کد/نام/نسخه، ذخیره و بارگذاری، انتخاب مشتریان داخل محدوده، چاپ فهرست. پذیرش: پس از reload زون باقی بماند؛ ویرایش و نسخه‌بندی شود؛ مجموعه مشتریان داخل polygon با موارد آزمون دستی/عددی صحیح باشد.
+++
+++**مرحله 3 — KPI و Heatmap:** اتصال به داده معتبر فروش/مانده/مرجوعی/فاکتور/وصول/عملکرد؛ یک شاخص در هر نما و فیلترهای مشترک. پذیرش: عدد نقشه با رکوردهای منبع و گزارش برابر باشد؛ تغییر فیلتر تمام نماهای مرتبط را به‌روزرسانی کند.
+++
+++**مرحله 4 — تخصیص و پیگیری:** استفاده از task engine موجود، مجری/ناظر، برنامه مسیر، یادآوری وصول، نتیجه واقعی و گزارش مدیر. پذیرش: task از زون ساخته شود؛ مجری تعیین شود؛ نتیجه و مبلغ وصول واقعی ثبت شود؛ تلاش ناموفق از وصول موفق تفکیک شود.
+++
+++**مرحله 5 — سخت‌سازی:** مجوزها، history، مرزهای هندسی، فیلترهای ترکیبی، چاپ، تعداد بالای مشتری، tile access، ذخیره‌سازی و عملکرد. پذیرش: تست‌های deny، reload، هندسه، KPI، cross-filter و خروجی ثبت‌شده و قابل تکرار باشند.
+++
+++**اولویت MVP:** زون ذخیره‌شده + Heatmap با عدد معتبر + تخصیص/پیگیری وصول + گزارش عملکرد سرپرست. شاخص‌های دیگر باید از همان موتور/تعریف مشترک استفاده کنند، نه صفحه و جدول مستقل برای هر شاخص.
+++
+++### 5.11 قابلیت‌های تصمیم‌یار مرتبط که نباید از نقشه راه حذف شوند
+++- تحلیل مشتری ازدست‌رفته و پیشنهاد بازگرداندن مشتری.
+++- پیشنهاد خرید بعدی بر اساس سابقه معتبر مشتری؛ بدون ثبت سفارش خودکار.
+++- تحلیل فرصت ازدست‌رفته و مرحلهٔ از دست رفتن در قیف.
+++- تشخیص ناهنجاری و ناسازگاری داده‌ها.
+++- اثربخشی مسیر/ویزیت بر اساس نتیجه واقعی، نه تعداد task بسته‌شده.
+++- هشدار افت فروش یا افزایش مرجوعی با مقایسه دوره و توجه به فصل/ترکیب مشتری، فقط در صورت کفایت داده.
+++- ثبت اینکه چه کسی پیشنهاد را ایجاد، قبول، رد یا به task تبدیل کرده است.
+++- نمایش منبع، تازگی، تعریف KPI و توضیح اصلاح/مغایرت داده.
+++
+++## 6. کارهای انجام‌شده در b16 (طبق شواهد موجود)
+++
+++این فهرست محدود به تغییرات مستند b16 است و به معنی تکمیل کل محصول نیست:
+++1. ارتقای برچسب نسخه به `0.11.3` / `r11-cp9-b16`.
+++2. گسترش seed مصنوعی برای مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه، فعالیت/ویزیت/تسک و داده‌های مرتبط.
+++3. افزودن/گسترش KPIهای مالی، نمودار روند شش‌ماهه و تفکیک دسته‌ای هزینه در `FinanceWorkspace`.
+++4. افزودن تب «خزانه و سررسید» و تب «هزینه‌ها» به‌صورت نمای تحلیلی؛ گردش کامل بانک/هزینه/چک تکمیل‌شده محسوب نمی‌شود.
+++5. مستندات handoff، changelog و not-done برای b16 موجود است.
+++6. طبق گزارش همراه نسخه: `npm test` با 423 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
+++
+++## 7. کارهای باقی‌مانده و اولویت اجرا
+++
+++### P0 — پیش از هر ادعای release
+++- [ ] در محیط تمیز `npm install` و سپس `npm test`, `npm run lint`, `npm run build` اجرا و خروجی دقیق ثبت شود.
+++- [ ] تست مرورگر دسکتاپ و Safari/iOS، RTL، ریسپانسیو و overflow.
+++- [ ] تست deny/allow دسترسی برای CEO، Sales Manager، Supervisor، Salesperson، Accountant و Visitor مطابق scope واقعی؛ هر نقش فقط در محدوده مجاز.
+++- [ ] اجرای regression و بررسی اینکه هیچ قابلیت/داده موجود با تغییرات بعدی حذف نشده است.
+++- [ ] seed مصنوعی و داده واقعی از هم تفکیک بمانند؛ مسئله ارتقای seed قدیمی با شناسه‌های تازه تعیین تکلیف شود.
+++
+++### P1 — تکمیل فرانت‌اند و منطق مشترک
+++- [ ] تکمیل فیلترهای مالی، drill-down از KPI به رکورد مبنا و خروجی CSV/XLSX/PDF با مجوز و آزمون.
+++- [ ] گردش هزینه با validation، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit و idempotency.
+++- [ ] دفتر نقد/بانک، مانده معتبر، دریافت/پرداخت، انتقال بین حساب و مغایرت‌گیری بانکی.
+++- [ ] گردش کامل چک با تاریخچه وضعیت و هشدار سررسید.
+++- [ ] تطبیق مطالبات و مانده با `PaymentAllocation`؛ تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
+++- [ ] چرخه Quote → پذیرش → handoff سفارش خارجی → پخش/تحویل → اتصال سندی فاکتور؛ حفظ تمایز Quote/Order/Invoice.
+++- [ ] تکمیل policy/override، فرم‌ها، validation و audit برای عملیات حساس.
+++- [ ] تکمیل تعاریف مشترک KPI، منبع، تازگی، cross-filter و سازگاری عدد بین نقشه/جدول/نمودار.
+++
+++### P1 — هوش مکانی (مدل دامنه در b18 شروع شده؛ زیرسیستم کامل نشده)
+++- [ ] ممیزی دقیق مختصات و کیفیت مکان مشتری، visit/route، task، مالی و RBAC.
+++- [ ] تصمیم فناوری پس از آزمایش MapLibre، provider، دسترسی/هزینه tile ایران، RTL، چاپ و گزینهٔ self-host.
+++- [ ] پیاده‌سازی Zone + polygon + ذخیره/reload + geometry versioning + audit.
+++- [ ] point-in-polygon و تخصیص مشتری به زون با تاریخ اعتبار؛ زون متنی فعلی به‌تنهایی کافی نیست.
+++- [ ] تعریف KPIها و فرمول/واحد/منبع/aggregation/معنای رنگ؛ انتساب تولیدکننده و تخصیص مالی معتبر.
+++- [ ] Heatmap تک‌شاخصی، legend، فیلترهای مشترک و cross-filter.
+++- [ ] اتصال به task engine برای وصول/پیگیری، نتیجه واقعی، evidence و گزارش سلسله‌مراتبی.
+++- [ ] چاپ نقشه و فهرست، clustering، عملکرد در حجم بالا، تست مجوز و حریم خصوصی.
+++- [ ] تکمیل پنج مرحله و ثبت evidence پذیرش هر مرحله.
+++
+++### P2 — پس از تثبیت فرانت‌اند و تست رگرسیون
+++- [ ] طراحی/تکمیل Backend API/Auth و RBAC سمت سرور.
+++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS، امنیت، بازیابی و integrity.
+++- [ ] اتصال ERP/ETL واقعی: mapping شناسه، outbox، retry، idempotency، پایش sync، خطا/تعارض و reconciliation.
+++- [ ] تست end-to-end با داده و سامانه واقعی؛ هر موفقیت اتصال فقط پس از مشاهدهٔ نتیجهٔ واقعی ثبت شود.
+++
+++## 8. تعریف Done و شواهد الزامی
+++
+++یک قابلیت فقط وقتی «انجام‌شده» ثبت می‌شود که همه موارد مربوط به آن فراهم باشد:
+++1. کد در سورس جاری وجود دارد و مسیر UI/عملیات واقعی به آن متصل است.
+++2. دادهٔ نمایشی به‌جای دادهٔ واقعی جا زده نشده است.
+++3. validation، خطاها، حالت خالی، loading، مجوز و audit مربوطه بررسی شده‌اند.
+++4. آزمون واحد/قراردادی و در صورت نیاز آزمون رابط/یکپارچه اجرا شده‌اند؛ خروجی واقعی ثبت شده است.
+++5. منبع حقیقت و تعریف KPI/فرمول مستند است.
+++6. Diff و changelog نشان می‌دهند چه چیزی تغییر کرده و چه چیزی دست‌نخورده مانده است.
+++7. معیار پذیرش مختص همان الزام پاس شده است.
+++
+++اگر کد وجود دارد ولی یکی از موارد بالا تأیید نشده، وضعیت باید «ناقص» یا «تأییدنشده» باشد.
+++
+++## 9. خروجی لازم در هر دور کاری بعدی
+++
+++- `BASELINE_REPORT`: مبنا، commit/hash یا نام دقیق ZIP، وضعیت Git و محدودیت دسترسی.
+++- `AUDIT_CURRENT`: یافته‌های این دور با مسیر فایل و شواهد.
+++- `REQUIREMENTS_TRACEABILITY`: نگاشت بندبه‌بند هر خواسته به فایل/کد/تست/وضعیت.
+++- `GAP_REGISTER`: موارد باقی‌مانده با اولویت، وابستگی، ریسک و معیار پذیرش.
+++- `CHANGELOG`: فایل‌های تغییرکرده و دلیل تغییر.
+++- `TEST_REPORT`: دستور دقیق، محیط، خروجی واقعی و تست‌های اجرا‌نشده.
+++- `NOT_DONE`: هر کار باقی‌مانده؛ موارد تأییدنشده نباید حذف شوند.
+++- `STATUS` و `HANDOFF`: قدم بعدی دقیق و ترتیب مطالعه.
+++- `DIFF`: اختلاف با مبنا.
+++- `ZIP`: فقط پس از ایجاد واقعی و بررسی محتویات/مسیر؛ لینک ساختگی ممنوع.
+++
+++## 10. فرمان ادامه کار برای عامل بعدی
+++
+++ابتدا `../HANDOFF.md`, `../STATUS_b18.md`, `../NOT_DONE_b18.md`, `../RBAC_AUDIT_b18.md`, سپس این سند و `docs/01..05` را بخوان. سورس را دوباره ممیزی کن و هیچ ادعایی را فقط از روی این سند قطعی ندان. آخرین ZIP واقعی را مبنا قرار بده؛ وضعیت Git و diff را بررسی کن. ابتدا P0، سپس موارد P1 را بدون رگرسیون پیش ببر. برای هوش مکانی، مرحله 1 ممیزی و قراردادها را انجام بده؛ قبل از تأیید فناوری نقشه و قبل از ایجاد هر جدول، ساختار موجود را بررسی کن. Backend/SQL Server/ERP را تا پایان مرحلهٔ فرانت‌اند و تست‌های مقرر به فاز بعد موکول کن. پیش از پایان ظرفیت کاری، سورس، diff، تست، `NOT_DONE`, `STATUS`, `HANDOFF` و بستهٔ دانلودی واقعی را ذخیره و مسیر را تأیید کن.
+++
+++---
+++
+++# الحاقیهٔ اجرایی b19 — وضعیت واقعی پس از توسعهٔ صفحهٔ هوش مکانی
+++
+++تاریخ: 2026-10-26. این الحاقیه وضعیت جاری را به‌روزرسانی می‌کند؛ متن تاریخی b17 و فهرست جزئیات الزام‌ها در بالا عمداً حفظ شده است.
+++
+++## A. تغییرات کد و مسیرهای قابل ردیابی
+++
+++| الزام | شواهد سورس جاری | وضعیت b19 | محدودیت/پذیرش باقی‌مانده |
+++|---|---|---|---|
+++| صفحه مستقل هوش مکانی | `src/components/GeoIntelligenceWorkspace.tsx`; route در `src/App.tsx` | ناقص ولی به مسیر و منو وصل شده | مرورگر واقعی، طراحی کامل و نقشهٔ واقعی ایران |
+++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx`، حالت‌های `zones`, `heatmap`, `operations` | پوسته و رفتار پایه وجود دارد | حالت عملیات هنوز موتور ایجاد Task وصول نیست؛ Heatmap غیرفعال است |
+++| نام و کد یکتا | فرم زون در `GeoIntelligenceWorkspace.tsx` | پیاده شده سمت کلاینت | آزمون end-to-end و قید یکتایی سمت سرور باقی است |
+++| ورودی مرز polygon | `parseCoordinates`, `validateZonePolygon` در `src/lib/geoIntelligence.ts` | پیاده شده | ترسیم/ویرایش مستقیم روی نقشه و بررسی polygonهای self-intersecting باقی است |
+++| پیش‌نمایش هندسه | `PolygonGeometryPreview` در `GeoIntelligenceWorkspace.tsx` | پیاده شده | این preview نقشهٔ جغرافیایی/ایران نیست |
+++| ذخیره و نسخه‌بندی هندسه | `createZoneGeometryVersion`, `zoneGeometryVersions`, `currentGeometryVersionId` | پیاده شده در state محلی | آزمون reload واقعی، migration و persistence در مرورگر باقی است |
+++| فعال/پیش‌نویس/بایگانی | `changeZoneStatus` | پیاده شده در UI/state | آزمون نقش/مرورگر و سیاست اثر نسخهٔ هندسه روی وضعیت فعال باقی است |
+++| انتساب مشتری داخل polygon | `isPointInsideZone` و `assignCustomersInZone` | پیاده شده برای مشتریان دارای مختصات معتبر | ممیزی schema مختصات و آزمون داده واقعی باقی است |
+++| تاریخچه انتساب | `zoneAssignments`؛ بستن `effectiveTo` به‌جای حذف | پیاده شده در state محلی | تراکنش اتمیک/قیود DB و rollback باقی است |
+++| مجوزهای مشاهده/مدیریت geo | `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX`, `canAccessWorkspace` در `src/lib/rbac.ts` | پیاده شده و قابل تنظیم در پروفایل | تفکیک مجوزهای granular و server-side enforcement باقی است |
+++| دسترسی به مسیر | `guard('geo_intelligence', ...)` در `src/App.tsx`; navigation در `src/lib/navigation.ts` | پیاده شده | آزمون مرورگر و تغییر URL/حالت واقعی باقی است |
+++| scope مشتریان | `rbac.canActOnRecord('accounts','VIEW',...)` در صفحهٔ geo | پیاده شده در UI/action محلی | scope اختصاصی zone/team/territory و enforcement سرور باقی است |
+++| audit تغییرات | `auditLogs` برای ایجاد/تغییر هندسه، وضعیت و انتساب | پیاده شده در state محلی | audit ضد‌دستکاری و ثبت سمت سرور باقی است |
+++| سنجه‌های Heatmap | `src/lib/geoIntelligence.ts`، کاتالوگ ۸ سنجه | قرارداد/توضیح موجود، عمداً غیرفعال | اتصال منبع معتبر، فرمول، تازگی، رنگ و تطبیق عددی باقی است |
+++| نقشه ایران و tile | در این نسخه provider/MapLibre متصل نیست | پیاده‌سازی نشده | انتخاب و تست provider، هزینه/licensing، دسترسی شبکه، RTL، cache/self-host |
+++| task وصول و route | اتصال جدیدی در b19 انجام نشده | پیاده‌سازی نشده | task engine، مسئول/ناظر/مهلت، نتیجه، GPS مجاز و گزارش سلسله‌مراتبی |
+++| چاپ، clustering، cross-filter | شاهد اجرایی جدید در b19 وجود ندارد | پیاده‌سازی نشده | پس از نقشه و KPI واقعی |
+++
+++## B. RBAC — تصمیم و ریسک
+++
+++- صفحه با مجوزهای `geo.view` و `geo.manage` قابل پیکربندی است. نقش‌های قدیمی با مجوز مدیریتی موجود `settings.manage` یا `roles.manage` نیز برای سازگاری دسترسی دارند.
+++- مشاهدهٔ geo به‌تنهایی اجازهٔ مدیریت زون نمی‌دهد؛ `geo.manage` برای تغییرات زون/انتساب لازم است مگر اینکه کاربر از قبل مجوز مدیریت تنظیمات/نقش‌ها داشته باشد.
+++- مشاهده و انتساب مشتریان از `accounts` record-scope استفاده می‌کند؛ مجوز geo نباید دسترسی مشتری را گسترش دهد.
+++- کنترل‌ها هنوز client-side هستند. امنیت واقعی باید در API/DB/RLS دوباره enforce شود؛ local state و audit log محلی مرز امنیتی نیستند.
+++- مجوز granular جداگانه برای ویرایش هندسه، فعال‌سازی، بایگانی، انتساب، export و مشاهدهٔ KPI هنوز باید طراحی/تست شود.
+++
+++## C. نتیجهٔ آزمون b19
+++
+++- `npm test`: PASS؛ 467 assertion مجموع suiteها (از جمله 13 تست تنظیم‌پذیری RBAC و 10 تست قراردادی صفحهٔ geo).
+++- `node scripts/audit-actions.mjs`: PASS؛ 73 handler تغییردهنده، 73 guard، صفر بدون guard در تحلیل ایستا.
+++- `npm run audit:contracts`: PASS ایستا؛ 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS، 5 view موردنیاز. SQL Server واقعی متصل یا اجرا نشده.
+++- `transpileModule`: PASS فقط برای syntax/transpile فایل‌های تغییرکرده؛ typecheck کامل نیست.
+++- `npm install --ignore-scripts --no-audit --no-fund`: در محیط فعلی به timeout 120 ثانیه رسید و dependency نصب نشد.
+++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/dependencyها.
+++- `npm run build`: BLOCKED؛ `vite: not found`.
+++- مرورگر، Safari/iOS، Backend/API، SQL Server runtime و ERP اجرا نشده‌اند.
+++
+++## D. ماتریس باقی‌مانده به ترتیب اجرا
+++
+++1. **P0:** دسترسی npm؛ نصب dependency؛ typecheck/lint/build؛ رفع همه خطاهای واقعی.
+++2. **P0:** مرورگر دسکتاپ؛ تست CRUD زون، reload، allow/deny RBAC، scope مشتری و رگرسیون.
+++3. **P0:** iPhone/Safari واقعی، RTL، لمس، performance و دسترس‌پذیری.
+++4. **P1:** ممیزی مختصات واقعی مشتریان و دادهٔ مسیر/ویزیت/تحویل/مالی؛ ثبت منبع و کیفیت.
+++5. **P1:** انتخاب MapLibre/tile provider پس از بررسی هزینه، مجوز، ایران، دسترسی و چاپ؛ سپس نقشهٔ واقعی و ابزار رسم.
+++6. **P1:** Heatmap معتبر؛ یک شاخص در هر نما، aggregation، freshness، semantics رنگ، فیلترهای مرتبط و cross-filter؛ تطبیق با اسناد مبنا.
+++7. **P1:** اتصال زون به task engine موجود؛ مسئول/ناظر/مهلت/اولویت/نتیجه و گزارش بر اساس نتیجه واقعی.
+++8. **P1:** تکمیل field-level `SEE/DO/HIDDEN` و scope یکسان در map/report/task/export.
+++9. **P2:** Backend/API/Auth، migrationهای SQL Server، RLS واقعی و آزمون امنیت/بازیابی.
+++10. **P2:** ERP/ETL با mapping، outbox/retry/idempotency، monitoring و reconciliation.
+++
+++هیچ بند بالا به دلیل اشاره در roadmap یا وجود مدل داده، «انجام‌شده» محسوب نمی‌شود؛ وضعیت فقط پس از شواهد کد و معیار پذیرش اختصاصی تغییر می‌کند.
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,8 +1,8 @@
++ {
++   "name": "AKHAVAN CRM",
++-  "version": "0.11.4",
++-  "release": "r11-cp9-b18",
++-  "description": "AKHAVAN CRM — ممیزی و قابل‌تنظیم‌سازی RBAC، محدوده داده، سلسله‌مراتب نقش‌ها و سرپرستی مستقیم",
+++  "version": "0.11.5",
+++  "release": "r11-cp9-b19",
+++  "description": "AKHAVAN CRM — RBAC قابل تنظیم و مدیریت زون‌های مکانی با نسخه‌بندی هندسه و انتساب مشتری",
++   "requestFramePermissions": [],
++   "majorCapabilities": [
++     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,7 +1,7 @@
++ {
++   "name": "react-example",
++   "private": true,
++-  "version": "0.11.4",
+++  "version": "0.11.5",
++   "type": "module",
++   "scripts": {
++     "dev": "vite --port=3000 --host=0.0.0.0",
++@@ -10,7 +10,7 @@
++     "clean": "rm -rf dist server.js",
++     "lint": "tsc --noEmit",
++     "audit:contracts": "node scripts/audit-sqlserver-contracts.mjs",
++-    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs"
+++    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs"
++   },
++   "dependencies": {
++     "@google/genai": "^2.4.0",
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -14,6 +14,7 @@
++ import { TasksWorkspace } from './components/TasksWorkspace';
++ import { FinanceWorkspace } from './components/FinanceWorkspace';
++ import { OperationsControlWorkspace } from './components/OperationsControlWorkspace';
+++import { GeoIntelligenceWorkspace } from './components/GeoIntelligenceWorkspace';
++ import { ReportsWorkspace } from './components/ReportsWorkspace';
++ import { SettingsWorkspace } from './components/SettingsWorkspace';
++ import { ActivitiesWorkspace } from './components/ActivitiesWorkspace';
++@@ -209,6 +210,7 @@
++           <Route path="/tasks" element={guard('tasks', <TasksWorkspace state={state} updateState={updateState} />)} />
++           <Route path="/finance" element={guard('finance', <FinanceWorkspace state={state} updateState={updateState} />)} />
++           <Route path="/operations" element={guard('operations_control', <OperationsControlWorkspace state={state} updateState={updateState} />)} />
+++          <Route path="/geo-intelligence" element={guard('geo_intelligence', <GeoIntelligenceWorkspace state={state} updateState={updateState} />)} />
++           <Route path="/cases" element={guard('cases', <CasesWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
++           <Route path="/marketing" element={guard('marketing', <CampaignsWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
++           <Route path="/knowledge" element={guard('knowledge', <KnowledgeWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,164 @@
+++import React, { useMemo, useState } from 'react';
+++import { AppState, GeoPoint, GeoPolygonGeometry, GeoZone, ZoneGeometryVersion } from '../types';
+++import { GEO_METRIC_CATALOG, createZoneGeometryVersion, isPointInsideZone, validateZonePolygon } from '../lib/geoIntelligence';
+++import { generateId } from '../lib/utils';
+++import { useCan } from '../hooks/useCan';
+++import { Card } from './ui/Card';
+++import { Button } from './ui/Button';
+++import { Input } from './ui/Input';
+++import { MapPinned, Plus, Save, ShieldAlert, Layers3, Users, Clock3, Archive, CheckCircle2, AlertTriangle } from 'lucide-react';
+++
+++interface Props { state: AppState; updateState: (updater: (draft: AppState) => AppState | void) => void; }
+++type Mode = 'zones' | 'heatmap' | 'operations';
+++
+++const readCustomerPoint = (customer: any): GeoPoint | null => {
+++  const longitude = Number(customer.longitude ?? customer.lng ?? customer.locationLongitude ?? customer.coordinates?.longitude);
+++  const latitude = Number(customer.latitude ?? customer.lat ?? customer.locationLatitude ?? customer.coordinates?.latitude);
+++  if (!Number.isFinite(longitude) || !Number.isFinite(latitude) || longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) return null;
+++  return { longitude, latitude };
+++};
+++const parseCoordinates = (text: string): GeoPolygonGeometry => {
+++  const points = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map((line, index) => {
+++    const parts = line.split(/[;,\s]+/).filter(Boolean);
+++    if (parts.length !== 2) throw new Error(`خط ${index + 1}: هر ردیف باید طول و عرض جغرافیایی داشته باشد.`);
+++    const lon = Number(parts[0]); const lat = Number(parts[1]);
+++    if (!Number.isFinite(lon) || !Number.isFinite(lat)) throw new Error(`خط ${index + 1}: مختصات عددی نیست.`);
+++    return [lon, lat];
+++  });
+++  if (points.length < 3) throw new Error('برای تعریف زون حداقل سه رأس لازم است.');
+++  const first = points[0]; const last = points[points.length - 1];
+++  if (first[0] !== last[0] || first[1] !== last[1]) points.push([...first]);
+++  return { type: 'Polygon', coordinates: [points] };
+++};
+++const coordinatesToText = (geometry?: GeoPolygonGeometry) => geometry?.coordinates?.[0]?.slice(0, -1).map(point => `${point[0]}, ${point[1]}`).join('\n') || '';
+++
+++function PolygonGeometryPreview({ geometry }: { geometry: GeoPolygonGeometry }) {
+++  const ring = geometry.coordinates[0].slice(0, -1);
+++  if (ring.length < 3) return null;
+++  const xs = ring.map(point => point[0]); const ys = ring.map(point => point[1]);
+++  const minX = Math.min(...xs); const maxX = Math.max(...xs); const minY = Math.min(...ys); const maxY = Math.max(...ys);
+++  const width = Math.max(maxX - minX, 0.000001); const height = Math.max(maxY - minY, 0.000001);
+++  const points = ring.map(point => `${24 + ((point[0] - minX) / width) * 272},${144 - ((point[1] - minY) / height) * 112}`).join(' ');
+++  return <div className="rounded-2xl border border-border bg-canvas p-3"><div className="mb-2 text-xs font-bold text-text-secondary">پیش‌نمایش شکل هندسه (بدون نقشهٔ پس‌زمینه)</div><svg viewBox="0 0 320 168" role="img" aria-label="پیش‌نمایش چندضلعی زون" className="h-36 w-full"><defs><pattern id="geo-grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M 16 0 L 0 0 0 16" fill="none" stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" /></pattern></defs><rect width="320" height="168" rx="12" fill="url(#geo-grid)"/><polygon points={points} fill="var(--se-plum, #71364B)" fillOpacity="0.14" stroke="var(--se-plum, #71364B)" strokeWidth="2.5" strokeLinejoin="round"/>{ring.map((point,index)=><circle key={`${point[0]}-${point[1]}-${index}`} cx={24 + ((point[0] - minX) / width) * 272} cy={144 - ((point[1] - minY) / height) * 112} r="3.5" fill="var(--se-coral, #C96F55)" stroke="white" strokeWidth="1.2"/> )}</svg><p className="mt-1 text-[10px] leading-5 text-text-secondary">این پیش‌نمایش فقط شکل چندضلعی را نشان می‌دهد؛ جایگزین نقشهٔ ایران یا مبنای مکانیابی نیست.</p></div>;
+++}
+++
+++export function GeoIntelligenceWorkspace({ state, updateState }: Props) {
+++  const { can, denied } = useCan(state, updateState);
+++  const canEdit = can('geo', 'EDIT') || can('settings', 'EDIT') || can('roles', 'EDIT');
+++  const [mode, setMode] = useState<Mode>('zones');
+++  const [selectedZoneId, setSelectedZoneId] = useState('');
+++  const [zoneName, setZoneName] = useState('');
+++  const [zoneCode, setZoneCode] = useState('');
+++  const [coordinateText, setCoordinateText] = useState('');
+++  const [changeReason, setChangeReason] = useState('');
+++  const [statusMessage, setStatusMessage] = useState<{ type: 'ok' | 'error' | 'info'; text: string } | null>(null);
+++  const [metricKey, setMetricKey] = useState<keyof typeof GEO_METRIC_CATALOG>('OUTSTANDING_RECEIVABLES');
+++  const [dateFrom, setDateFrom] = useState('');
+++  const [dateTo, setDateTo] = useState('');
+++  // Reuse the canonical customer-record scope; a geo permission must not widen customer visibility.
+++  const visibleCustomers = (state.customers || []).filter(customer => rbac.canActOnRecord('accounts', 'VIEW', { ownerId: customer.ownerId, branchId: customer.branchId, territoryId: customer.territoryId, teamId: customer.teamId, tenantId: customer.tenantId, deletedAt: customer.deletedAt, isDeleted: customer.isDeleted }));
+++  const visibleCustomerIdSet = new Set(visibleCustomers.map(customer => customer.id));
+++  const zones = state.geoZones || [];
+++  const versions = state.zoneGeometryVersions || [];
+++  const assignments = state.zoneAssignments || [];
+++  const selectedZone = zones.find(zone => zone.id === selectedZoneId) || null;
+++  const activeGeometry = selectedZone ? versions.find(version => version.id === selectedZone.currentGeometryVersionId) || versions.filter(version => version.zoneId === selectedZone.id && !version.effectiveTo).sort((a,b) => b.version-a.version)[0] : undefined;
+++  const parsedGeometry = useMemo(() => {
+++    if (!coordinateText.trim()) return null;
+++    try { const geometry = parseCoordinates(coordinateText); const validation = validateZonePolygon(geometry); return validation.valid ? { geometry, error: '' } : { geometry, error: validation.errors.join(' ') }; }
+++    catch (error) { return { geometry: null, error: error instanceof Error ? error.message : 'مختصات نامعتبر است.' }; }
+++  }, [coordinateText]);
+++  const customersInside = useMemo(() => {
+++    if (!activeGeometry) return [];
+++    return visibleCustomers.filter(customer => { const point = readCustomerPoint(customer); return point ? isPointInsideZone(point, activeGeometry.geometry) : false; });
+++  }, [visibleCustomers, activeGeometry]);
+++  const activeMetric = GEO_METRIC_CATALOG[metricKey];
+++  const selectedZoneAssignments = assignments.filter(item => item.zoneId === selectedZoneId && item.entityType === 'CUSTOMER' && visibleCustomerIdSet.has(item.entityId) && !item.effectiveTo);
+++  const actor = state.users?.find(user => user.id === state.currentUserId)?.name || 'کاربر فعال';
+++
+++  const recordAudit = (draft: AppState, action: string, entityId: string, details: string) => {
+++    if (!draft.auditLogs) draft.auditLogs = [];
+++    draft.auditLogs.push({ id: generateId(), action, entityType: 'GEO_ZONE', entityId, details, actor, createdAt: new Date().toISOString() } as any);
+++  };
+++  const selectZone = (zone: GeoZone) => {
+++    setSelectedZoneId(zone.id); setZoneName(zone.name); setZoneCode(zone.code);
+++    const current = versions.find(version => version.id === zone.currentGeometryVersionId) || versions.filter(version => version.zoneId === zone.id && !version.effectiveTo).sort((a,b) => b.version-a.version)[0];
+++    setCoordinateText(coordinatesToText(current?.geometry)); setChangeReason(''); setStatusMessage(null);
+++  };
+++  const saveZone = () => {
+++    if (!canEdit) { denied('مدیریت زون‌های مکانی'); return; }
+++    if (!zoneName.trim() || !zoneCode.trim()) { setStatusMessage({ type: 'error', text: 'نام و کد زون الزامی است.' }); return; }
+++    if (!parsedGeometry?.geometry || parsedGeometry.error) { setStatusMessage({ type: 'error', text: parsedGeometry?.error || 'مختصات زون را وارد کنید.' }); return; }
+++    const now = new Date().toISOString();
+++    const existing = zones.find(zone => zone.id === selectedZoneId);
+++    if (!existing && zones.some(zone => zone.code.trim().toLowerCase() === zoneCode.trim().toLowerCase())) { setStatusMessage({ type: 'error', text: 'کد زون باید یکتا باشد.' }); return; }
+++    const zoneId = existing?.id || generateId();
+++    try {
+++      const prior = versions.filter(version => version.zoneId === zoneId);
+++      const current = prior.find(version => !version.effectiveTo);
+++      const nextVersions = current ? prior.map(version => version.id === current.id ? { ...version, effectiveTo: now } : version) : prior;
+++      const version = createZoneGeometryVersion({ id: generateId(), zoneId, geometry: parsedGeometry.geometry, effectiveFrom: now, createdBy: state.currentUserId || '', createdAt: now, changeReason: changeReason.trim() || (existing ? 'ویرایش مرز زون' : 'ایجاد زون') }, nextVersions);
+++      updateState(draft => {
+++        if (!draft.geoZones) draft.geoZones = [];
+++        if (!draft.zoneGeometryVersions) draft.zoneGeometryVersions = [];
+++        const oldZone = draft.geoZones.find(zone => zone.id === zoneId);
+++        if (oldZone) Object.assign(oldZone, { name: zoneName.trim(), code: zoneCode.trim(), updatedAt: now, currentGeometryVersionId: version.id, status: oldZone.status === 'ARCHIVED' ? 'DRAFT' : oldZone.status });
+++        else draft.geoZones.push({ id: zoneId, code: zoneCode.trim(), name: zoneName.trim(), status: 'DRAFT', createdAt: now, updatedAt: now, currentGeometryVersionId: version.id, ownerId: draft.currentUserId } as GeoZone);
+++        // Preserve prior geometry versions while closing the previous active one.
+++        draft.zoneGeometryVersions = (draft.zoneGeometryVersions || []).map(item => item.zoneId === zoneId && !item.effectiveTo ? { ...item, effectiveTo: now } : item);
+++        draft.zoneGeometryVersions.push(version);
+++        recordAudit(draft, existing ? 'GEO_ZONE_GEOMETRY_VERSION_CREATED' : 'GEO_ZONE_CREATED', zoneId, `زون «${zoneName.trim()}»؛ نسخه هندسه ${version.version} ذخیره شد.`);
+++      });
+++      setSelectedZoneId(zoneId); setStatusMessage({ type: 'ok', text: `نسخه ${version.version} هندسه ذخیره شد. مرز قبلی حذف نشده است.` });
+++    } catch (error) { setStatusMessage({ type: 'error', text: error instanceof Error ? error.message : 'ذخیره زون ناموفق بود.' }); }
+++  };
+++  const changeZoneStatus = (zone: GeoZone, status: GeoZone['status']) => {
+++    if (!canEdit) { denied('تغییر وضعیت زون'); return; }
+++    updateState(draft => {
+++      const target = draft.geoZones?.find(item => item.id === zone.id); if (!target) return;
+++      target.status = status; target.updatedAt = new Date().toISOString();
+++      recordAudit(draft, 'GEO_ZONE_STATUS_CHANGED', zone.id, `وضعیت زون «${target.name}» به ${status} تغییر کرد.`);
+++    });
+++    setStatusMessage({ type: 'ok', text: `وضعیت زون به ${status === 'ACTIVE' ? 'فعال' : status === 'ARCHIVED' ? 'بایگانی' : 'پیش‌نویس'} تغییر کرد.` });
+++  };
+++  const assignCustomersInZone = () => {
+++    if (!canEdit) { denied('انتساب مشتری به زون'); return; }
+++    if (!selectedZone || selectedZone.status !== 'ACTIVE' || !activeGeometry) { setStatusMessage({ type: 'error', text: 'برای انتساب، زون فعال با هندسه معتبر انتخاب کنید.' }); return; }
+++    const now = new Date().toISOString(); const insideIds = new Set(customersInside.map(customer => customer.id));
+++    updateState(draft => {
+++      if (!draft.zoneAssignments) draft.zoneAssignments = [];
+++      // Close previous polygon assignments for this zone, then create a fresh auditable assignment set.
+++      draft.zoneAssignments = draft.zoneAssignments.map(item => item.zoneId === selectedZone.id && item.method === 'POLYGON' && !item.effectiveTo && insideIds.has(item.entityId) ? { ...item, effectiveTo: now } : item);
+++      for (const customerId of insideIds) draft.zoneAssignments.push({ id: generateId(), zoneId: selectedZone.id, entityType: 'CUSTOMER', entityId: customerId, method: 'POLYGON', effectiveFrom: now, createdBy: draft.currentUserId || '', createdAt: now });
+++      recordAudit(draft, 'GEO_ZONE_CUSTOMERS_ASSIGNED', selectedZone.id, `${insideIds.size} مشتری بر اساس مختصات معتبر داخل مرز زون انتساب داده شد.`);
+++    });
+++    setStatusMessage({ type: 'ok', text: `${insideIds.size} مشتری با مختصات معتبر به‌صورت نسخه‌دار به زون انتساب داده شدند.` });
+++  };
+++
+++  return <div className="mx-auto max-w-7xl space-y-5 p-3 pb-10 sm:p-5" dir="rtl">
+++    <header className="relative overflow-hidden rounded-3xl border border-border bg-white p-5 shadow-card sm:p-7">
+++      <div className="pointer-events-none absolute -left-8 -top-12 h-44 w-44 rounded-full bg-[var(--se-gold,#D5A15E)]/10 blur-3xl" />
+++      <div className="relative flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-primary"><MapPinned size={19}/><span className="text-xs font-black tracking-wide">AKHAVAN · GEO INTELLIGENCE</span></div><h1 className="text-2xl font-black text-text-main sm:text-3xl">هوش مکانی و مدیریت زون‌ها</h1><p className="mt-2 max-w-3xl text-sm leading-7 text-text-secondary">تعریف مرزهای جغرافیایی نسخه‌دار، انتساب مشتری با مختصات معتبر و آماده‌سازی تحلیل مکانی. سنجه‌ها تا اتصال منبع واقعی غیرفعال می‌مانند.</p></div><div className="rounded-2xl border border-warning/30 bg-warning-soft px-3 py-2 text-xs font-bold leading-6 text-warning"><ShieldAlert size={15} className="ml-1 inline"/>صفحهٔ نقشهٔ پایه؛ هنوز tile provider یا نقشهٔ پس‌زمینه متصل نیست.</div></div>
+++      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">{[{label:'کل زون‌ها',value:zones.length},{label:'زون فعال',value:zones.filter(zone=>zone.status==='ACTIVE').length},{label:'نسخه‌های هندسه',value:versions.length},{label:'مشتری دارای مختصات معتبر',value:(state.customers||[]).filter(customer=>readCustomerPoint(customer)).length}].map(item=><div key={item.label} className="rounded-2xl border border-border bg-canvas/70 p-3"><div className="text-xs text-text-secondary">{item.label}</div><div className="mt-1 text-2xl font-black tabular-nums text-text-main">{item.value.toLocaleString('fa-IR')}</div></div>)}</div>
+++    </header>
+++    <div className="flex flex-wrap gap-2" role="tablist" aria-label="حالت‌های هوش مکانی">{([{id:'zones',label:'زون‌ها',icon:Layers3},{id:'heatmap',label:'تحلیل و Heatmap',icon:MapPinned},{id:'operations',label:'عملیات و انتساب',icon:Users}] as const).map(item=><button key={item.id} role="tab" aria-selected={mode===item.id} onClick={()=>setMode(item.id)} className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors ${mode===item.id?'border-primary bg-primary text-white':'border-border bg-white text-text-secondary hover:bg-canvas'}`}><item.icon size={16}/>{item.label}</button>)}</div>
+++    {statusMessage && <div role="status" className={`flex items-start gap-2 rounded-xl border p-3 text-sm leading-6 ${statusMessage.type==='error'?'border-danger/30 bg-danger-soft text-danger':statusMessage.type==='ok'?'border-success/30 bg-success-soft text-success':'border-border bg-canvas text-text-secondary'}`}>{statusMessage.type==='error'?<AlertTriangle size={17} className="mt-1 shrink-0"/>:<CheckCircle2 size={17} className="mt-1 shrink-0"/>}{statusMessage.text}</div>}
+++    {mode==='zones' && <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
+++      <Card className="space-y-3" padding="lg"><div className="flex items-center justify-between gap-2"><h2 className="text-base font-black text-text-main">زون‌های ذخیره‌شده</h2><Button size="sm" variant="outline" onClick={()=>{setSelectedZoneId('');setZoneName('');setZoneCode('');setCoordinateText('');setChangeReason('');setStatusMessage(null);}} icon={<Plus size={15}/>}>زون جدید</Button></div>
+++        {zones.length===0 && <div className="rounded-2xl border border-dashed border-border-strong p-7 text-center"><MapPinned className="mx-auto mb-3 text-text-secondary" size={28}/><p className="text-sm font-bold text-text-main">هنوز زونی تعریف نشده است</p><p className="mt-2 text-xs leading-6 text-text-secondary">برای جلوگیری از دادهٔ ساختگی، زون نمونه ساخته نشده. نام، کد و مختصات واقعی خود را وارد کنید.</p></div>}
+++        <div className="space-y-2">{zones.map(zone=>{const v=versions.find(item=>item.id===zone.currentGeometryVersionId)||versions.filter(item=>item.zoneId===zone.id).sort((a,b)=>b.version-a.version)[0];return <button key={zone.id} onClick={()=>selectZone(zone)} className={`w-full rounded-2xl border p-3 text-start transition-colors ${selectedZoneId===zone.id?'border-primary/50 bg-primary/5':'border-border bg-white hover:bg-canvas'}`}><div className="flex items-start justify-between gap-2"><div><div className="font-bold text-text-main">{zone.name}</div><div className="mt-1 text-xs text-text-secondary">کد {zone.code} · نسخه {v?.version||0}</div></div><span className={`rounded-lg px-2 py-1 text-[10px] font-bold ${zone.status==='ACTIVE'?'bg-success-soft text-success':zone.status==='ARCHIVED'?'bg-canvas text-text-secondary':'bg-warning-soft text-warning'}`}>{zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</span></div></button>;})}</div>
+++      </Card>
+++      <Card className="space-y-4" padding="lg"><div><h2 className="text-base font-black text-text-main">{selectedZone?'ویرایش زون و ثبت نسخهٔ جدید':'تعریف زون جدید'}</h2><p className="mt-1 text-xs leading-6 text-text-secondary">مختصات را در ترتیب طول، عرض جغرافیایی وارد کنید؛ هر رأس در یک خط، نمونهٔ قالب: <code>51.42, 35.72</code>. حلقه هنگام ذخیره بسته می‌شود.</p></div>
+++        <div className="grid gap-3 sm:grid-cols-2"><Input label="نام زون" value={zoneName} onChange={event=>setZoneName(event.target.value)} placeholder="مثلاً منطقه شمالی" required/><Input label="کد یکتا" value={zoneCode} onChange={event=>setZoneCode(event.target.value)} placeholder="مثلاً ZN-001" required/></div>
+++        <label className="block text-xs font-bold text-text-secondary">رأس‌های مرز (طول، عرض)<textarea value={coordinateText} onChange={event=>setCoordinateText(event.target.value)} rows={7} placeholder={'51.42, 35.72\n51.50, 35.70\n51.48, 35.78'} className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 font-mono text-sm text-text-main outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" /></label>
+++        <Input label="دلیل تغییر مرز / توضیح ممیزی" value={changeReason} onChange={event=>setChangeReason(event.target.value)} placeholder="اختیاری؛ مثلاً اصلاح محدوده پوشش"/>
+++        {parsedGeometry && <div className={`rounded-xl border p-3 text-xs leading-6 ${parsedGeometry.error?'border-danger/30 bg-danger-soft text-danger':'border-success/30 bg-success-soft text-success'}`}>{parsedGeometry.error || `هندسه معتبر است؛ ${validateZonePolygon(parsedGeometry.geometry!).vertexCount.toLocaleString('fa-IR')} رأس متمایز.`}</div>}{parsedGeometry?.geometry && !parsedGeometry.error && <PolygonGeometryPreview geometry={parsedGeometry.geometry} />}
+++        <div className="flex flex-wrap gap-2"><Button onClick={saveZone} disabled={!canEdit || !zoneName.trim() || !zoneCode.trim() || !parsedGeometry?.geometry || !!parsedGeometry.error} icon={<Save size={15}/>}>ذخیره نسخهٔ هندسه</Button>{selectedZone?.status!=='ACTIVE'&&selectedZone&&<Button variant="success" disabled={!canEdit||!activeGeometry} onClick={()=>changeZoneStatus(selectedZone,'ACTIVE')} icon={<CheckCircle2 size={15}/>}>فعال‌سازی زون</Button>}{selectedZone?.status==='ACTIVE'&&<Button variant="outline" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'DRAFT')}>بازگشت به پیش‌نویس</Button>}{selectedZone&&selectedZone.status!=='ARCHIVED'&&<Button variant="ghost" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'ARCHIVED')} icon={<Archive size={15}/>}>بایگانی</Button>}</div>
+++        {!canEdit&&<p className="text-xs text-warning">برای تغییر زون، مجوز مدیریت تنظیمات یا نقش لازم است. مجوز مشاهده به‌تنهایی امکان تغییر نمی‌دهد.</p>}
+++      </Card>
+++    </div>}
+++    {mode==='heatmap' && <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]"><Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">تعریف سنجهٔ تحلیل</h2><p className="mt-1 text-xs leading-6 text-text-secondary">در هر تحلیل فقط یک سنجه انتخاب می‌شود؛ رنگ و اولویت آن تا تعریف دقیق منبع و معنای «بیشتر بهتر است/بدتر است» نباید حدس زده شود.</p></div><label className="block text-xs font-bold text-text-secondary">سنجهٔ اصلی<select value={metricKey} onChange={event=>setMetricKey(event.target.value as keyof typeof GEO_METRIC_CATALOG)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{Object.values(GEO_METRIC_CATALOG).map(metric=><option key={metric.key} value={metric.key}>{metric.label}</option>)}</select></label><div className="grid gap-3 sm:grid-cols-2"><Input label="از تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateFrom} onChange={event=>setDateFrom(event.target.value)}/><Input label="تا تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateTo} onChange={event=>setDateTo(event.target.value)}/></div><div className="rounded-2xl border border-warning/30 bg-warning-soft p-4"><div className="flex items-center gap-2 font-bold text-warning"><ShieldAlert size={17}/>این سنجه هنوز منبع واقعی ندارد</div><p className="mt-2 text-sm leading-7 text-text-main">{activeMetric.limitation}</p></div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">قرارداد سنجه</h2><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">واحد</div><div className="mt-1 font-bold text-text-main">{activeMetric.unit}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">تجمیع</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.aggregation}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">منبع معتبر</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.sourceDescription}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">معنای مقدار بالاتر</div><div className="mt-1 font-bold text-text-main">{activeMetric.higherIsBetter===null?'باید با انتخاب سنجه مشخص شود':activeMetric.higherIsBetter?'مطلوب‌تر':'نامطلوب‌تر'}</div></div><div className="text-xs leading-6 text-text-secondary">هیچ Heatmap، عدد یا رتبهٔ ساختگی نمایش داده نمی‌شود. فیلتر تاریخ پس از اتصال به منبع باید بر همان منبع معتبر اعمال شود.</div></Card></div>}
+++    {mode==='operations' && <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">مشتریان داخل زون</h2><label className="block text-xs font-bold text-text-secondary">زون<select value={selectedZoneId} onChange={event=>{const zone=zones.find(item=>item.id===event.target.value);if(zone)selectZone(zone);else setSelectedZoneId('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب زون</option>{zones.map(zone=><option key={zone.id} value={zone.id}>{zone.name} · {zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</option>)}</select></label><div className="grid grid-cols-2 gap-3"><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">مشتری داخل مرز</div><div className="mt-1 text-2xl font-black text-text-main">{customersInside.length.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">انتساب فعال</div><div className="mt-1 text-2xl font-black text-text-main">{selectedZoneAssignments.length.toLocaleString('fa-IR')}</div></div></div><Button block disabled={!canEdit||!selectedZone||selectedZone.status!=='ACTIVE'||!activeGeometry} onClick={assignCustomersInZone} icon={<Users size={15}/>}>انتساب / به‌روزرسانی مشتریان داخل مرز</Button><p className="text-xs leading-6 text-text-secondary">این عمل فقط مشتریانی را در نظر می‌گیرد که مختصات واقعی و معتبر دارند و از RBAC اجازهٔ مشاهدهٔ آن‌ها را دارید. انتساب‌های قبلی همین مشتریان با پایان اعتبار بسته می‌شوند؛ رکوردهای خارج از محدودهٔ دسترسی تغییر نمی‌کنند.</p></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">فهرست مشتریان داخل مرز</h2>{!selectedZone&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm text-text-secondary">زون را انتخاب کنید.</p>}{selectedZone&&customersInside.length===0&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm leading-6 text-text-secondary">مشتری دارای مختصات معتبر داخل هندسهٔ فعلی پیدا نشد؛ این وضعیت به‌معنی صفر بودن کل مشتریان زون نیست، ممکن است مختصات ثبت نشده باشند.</p>}{customersInside.slice(0,100).map(customer=>{const point=readCustomerPoint(customer)!;return <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="min-w-0"><div className="truncate text-sm font-bold text-text-main">{customer.name}</div><div className="mt-1 text-[11px] text-text-secondary">کد: {customer.code||customer.id}</div></div><div className="shrink-0 text-left font-mono text-[10px] text-text-secondary">{point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}</div></div>;})}{customersInside.length>100&&<p className="text-xs text-text-secondary">۱۰۰ مورد نخست نمایش داده شده؛ کل مشتریان داخل مرز: {customersInside.length.toLocaleString('fa-IR')}</p>}</Card></div>}
+++    <Card padding="md" className="flex items-start gap-3 border-warning/30 bg-warning-soft"><Clock3 size={18} className="mt-1 shrink-0 text-warning"/><div className="text-xs leading-6 text-text-main"><strong>محدودیت این مرحله:</strong> مدیریت زون و انتساب مکانی در state محلی ذخیره می‌شود. نقشهٔ واقعی ایران، ترسیم لمسی روی نقشه، چاپ، اتصال به موتور وظایف وصول، فیلترهای مالی و Heatmap واقعی هنوز به سرویس نقشه و قراردادهای دادهٔ معتبر نیاز دارند. برای این موارد هیچ نتیجهٔ ساختگی نمایش داده نمی‌شود.</div></Card>
+++  </div>;
+++}
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,7 +1,7 @@
++ import React from 'react';
++ import {
++   LayoutDashboard, Users, UserPlus, Target, FileSpreadsheet, Wallet, CheckSquare, Calendar,
++-  Activity, Settings, Cpu, ShieldCheck, FolderKanban, PieChart, Sparkles, Gauge, UserCheck, Truck, Boxes, ShoppingCart } from 'lucide-react';
+++  Activity, Settings, Cpu, ShieldCheck, FolderKanban, PieChart, Sparkles, Gauge, UserCheck, Truck, Boxes, ShoppingCart, MapPinned } from 'lucide-react';
++ 
++ export interface NavItem { id: string; path: string; label: string; icon: React.ElementType }
++ export interface NavSection { id: string; title: string; items: NavItem[] }
++@@ -18,6 +18,7 @@
++   { id: 'finance', title: 'عملیات، قرارداد و مالی', items: [
++     { id: 'quotes', path: '/quotes', label: 'پیش‌فاکتورها و تنظیم پیشنهاد فروش', icon: FileSpreadsheet },
++     { id: 'operations_control', path: '/operations', label: 'مرکز عملیات فروش و پخش', icon: Truck },
+++    { id: 'geo_intelligence', path: '/geo-intelligence', label: 'هوش مکانی و مدیریت زون‌ها', icon: MapPinned },
++     { id: 'finance', path: '/finance', label: 'تراکنش‌ها و وصول مطالبات', icon: Wallet },
++     { id: 'reports', path: '/reports', label: 'گزارش‌ها و تحلیل هوشمند', icon: PieChart },
++   ] },
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -33,7 +33,7 @@
++    ========================================================================== */
++ export type PermAction = 'VIEW' | 'CREATE' | 'EDIT' | 'ASSIGN' | 'ALLOCATE' | 'APPROVE' | 'SOFT_DELETE';
++ export type PermModule = 'accounts' | 'leads' | 'opportunities' | 'quotes' | 'tasks' | 'activities' | 'cases' | 'finance' | 'payments'
++-  | 'groups' | 'messages' | 'internal' | 'calendar' | 'reports' | 'settings' | 'users' | 'roles' | 'onboarding' | 'financeRequests';
+++  | 'groups' | 'messages' | 'internal' | 'calendar' | 'reports' | 'settings' | 'users' | 'roles' | 'onboarding' | 'financeRequests' | 'geo';
++ 
++ export const PERMISSION_ACTIONS: PermAction[] = ['VIEW', 'CREATE', 'EDIT', 'ASSIGN', 'ALLOCATE', 'APPROVE', 'SOFT_DELETE'];
++ const AD = ['internal.manage', 'settings.manage'] as CapabilityPermission[];
++@@ -52,6 +52,7 @@
++   internal:      { VIEW: ['internal.view', 'internal.manage'], CREATE: ['internal.view', 'internal.manage'], EDIT: ['internal.manage'], ASSIGN: ['internal.manage'], APPROVE: ['internal.manage'], SOFT_DELETE: ['internal.manage'] },
++   calendar:      { VIEW: ['accounts.view', 'internal.view'], CREATE: ['accounts.edit', 'internal.view'], EDIT: ['accounts.edit', 'internal.view'], SOFT_DELETE: ['accounts.edit', 'internal.manage'] },
++   reports:       { VIEW: ['accounts.view', 'finance.view', 'internal.view'] },
+++  geo:           { VIEW: ['geo.view'], CREATE: ['geo.manage'], EDIT: ['geo.manage'], ASSIGN: ['geo.manage'], SOFT_DELETE: ['geo.manage'] },
++   // ⚠ نگاشت موقت؛ کلید صریح onboarding.* در permissionSet اولویت دارد
++   // ⚠ نگاشت موقت: ثبت دستور = مدیران/مالی؛ تصمیم = مالی. کلید صریح financeRequests.* اولویت دارد.
++   financeRequests: { VIEW: ['finance.view', 'quotes.approve'], CREATE: ['quotes.approve', 'finance.manage', 'internal.manage'], EDIT: ['quotes.approve', 'finance.manage', 'internal.manage'], APPROVE: ['finance.manage'] },
++@@ -177,6 +178,7 @@
++       case 'calendar': return this.hasPermission('accounts.view') || this.hasPermission('internal.view');
++       case 'reports': return this.hasPermission('accounts.view') || this.hasPermission('finance.view') || this.hasPermission('internal.view');
++       case 'operations_control': return this.hasPermission('quotes.view') || this.hasPermission('finance.view') || this.hasPermission('internal.view');
+++      case 'geo_intelligence': return this.hasPermission('geo.view') || this.hasPermission('geo.manage') || this.hasPermission('settings.manage') || this.hasPermission('roles.manage');
++       default: return false;
++     }
++   }
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -148,6 +148,8 @@
++           'roles.manage',
++           'internal.view',
++           'internal.manage',
+++          'geo.view',
+++          'geo.manage',
++         ],
++       },
++       {
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -1,4 +1,4 @@
++ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
++-export const APP_VERSION = '0.11.4';
++-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b18', base: 'r11-cp9-b16' } as const;
+++export const APP_VERSION = '0.11.5';
+++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b19', base: 'r11-cp9-b16' } as const;
++ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -21,7 +21,9 @@
++   | 'users.manage'
++   | 'roles.manage'
++   | 'internal.view'
++-  | 'internal.manage';
+++  | 'internal.manage'
+++  | 'geo.view'
+++  | 'geo.manage';
++ 
++ export type NavigationTab =
++   | 'onboarding'
++@@ -39,7 +41,8 @@
++   | 'activities'
++   | 'calendar'
++   | 'reports'
++-  | 'operations_control';
+++  | 'operations_control'
+++  | 'geo_intelligence';
++ 
++ export type VisibilityScope = 'ORG' | 'BRANCH' | 'TERRITORY' | 'TEAM' | 'OWNER';
++ export type DevicePermissionType = 'LOCATION' | 'CAMERA' | 'MICROPHONE' | 'NOTIFICATIONS';
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -0,0 +1,19 @@
+++import assert from 'node:assert/strict';
+++import fs from 'node:fs';
+++import path from 'node:path';
+++const root = path.resolve(new URL('..', import.meta.url).pathname);
+++const workspace = fs.readFileSync(path.join(root, 'src/components/GeoIntelligenceWorkspace.tsx'), 'utf8');
+++const app = fs.readFileSync(path.join(root, 'src/App.tsx'), 'utf8');
+++const nav = fs.readFileSync(path.join(root, 'src/lib/navigation.ts'), 'utf8');
+++const rbac = fs.readFileSync(path.join(root, 'src/lib/rbac.ts'), 'utf8');
+++assert.ok(app.includes("path=\"/geo-intelligence\" element={guard('geo_intelligence'"), 'geo page is behind canonical workspace guard');
+++assert.ok(nav.includes("id: 'geo_intelligence', path: '/geo-intelligence'"), 'geo page is reachable from main navigation');
+++assert.ok(rbac.includes("case 'geo_intelligence': return this.hasPermission('geo.view')"), 'geo workspace has explicit RBAC gate');
+++assert.ok(rbac.includes("geo:           { VIEW: ['geo.view'], CREATE: ['geo.manage'], EDIT: ['geo.manage'], ASSIGN: ['geo.manage']"), 'zone mutation actions have explicit geo.manage permission');
+++assert.ok(workspace.includes("rbac.canActOnRecord('accounts', 'VIEW'"), 'customer visibility reuses record scope rather than widening it');
+++assert.ok(workspace.includes("isPointInsideZone(point, activeGeometry.geometry)"), 'zone customer matching uses polygon containment');
+++assert.ok(workspace.includes('createZoneGeometryVersion'), 'geometry edits are versioned');
+++assert.ok(workspace.includes('available: false') || workspace.includes('activeMetric.limitation'), 'unwired metrics explain why live heatmap is unavailable');
+++assert.ok(workspace.includes('draft.zoneAssignments = draft.zoneAssignments.map'), 'assignment refresh preserves historical assignments by closing effective dates');
+++assert.ok(workspace.includes('visibleCustomerIdSet.has(item.entityId)'), 'assignment counts are scoped to visible customers');
+++console.log('PASS: 10 assertions (geo workspace routing, RBAC, scope, geometry, versioning and honest metric availability)');
++diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
++--- a/akhavan_dev_b18
+++++ b/akhavan_dev_b19
++@@ -17,6 +17,12 @@
++     permissionSets: [{ id: 'p1', permissions: ['accounts.view'] }],
++   };
++   assert.equal(new RBACService(state).can('accounts', 'VIEW'), true, 'permission profile enables configured capability');
+++  state.permissionSets[0].permissions = ['geo.view'];
+++  assert.equal(new RBACService(state).can('geo', 'VIEW'), true, 'geo visibility is controlled by a configurable permission');
+++  assert.equal(new RBACService(state).can('geo', 'EDIT'), false, 'geo viewing does not grant zone-management rights');
+++  assert.equal(new RBACService(state).canAccessWorkspace('geo_intelligence'), true, 'geo permission unlocks the geo workspace');
+++  state.permissionSets[0].permissions = [];
+++  assert.equal(new RBACService(state).canAccessWorkspace('geo_intelligence'), false, 'geo workspace denies users without geo or administrative permission');
++   state.permissionSets[0].permissions = [];
++   assert.equal(new RBACService(state).can('accounts', 'VIEW'), false, 'editing the permission profile immediately revokes capability');
++   state.permissionSets[0].permissions = ['accounts.view'];
++@@ -28,7 +34,7 @@
++   assert.ok(settings.includes('handleUpdateUserManager'), 'settings exposes direct supervisor assignment');
++   assert.ok(settings.includes('چرخه در سلسله‌مراتب نقش‌ها'), 'role hierarchy cycle is rejected');
++   assert.ok(settings.includes('چرخه در زنجیره سرپرستی'), 'user manager cycle is rejected');
++-  console.log('PASS: 9 assertions (configurable RBAC profiles, scopes, hierarchy, direct supervisor and cycle safeguards)');
+++  console.log('PASS: 13 assertions (configurable RBAC profiles, geo access, scopes, hierarchy, direct supervisor and cycle safeguards)');
++ } finally {
++   fs.rmSync(tmp, { force: true });
++ }
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,3 +1,23 @@
++# HANDOFF — AKHAVAN CRM b19
++
++## آخرین وضعیت و ادامه از همین نقطه
++- بستهٔ جاری: `r11-cp9-b19` / محصول `0.11.5`; مبنا b18.
++- کار اجرایی این دور: صفحهٔ `/geo-intelligence`، فرم زون، ورود رأس‌های polygon، اعتبارسنجی/پیش‌نمایش هندسه، versioning، وضعیت زون، انتساب مشتری داخل مرز، audit محلی و مجوزهای `geo.view`/`geo.manage`.
++- scope مشتری با `RBACService.canActOnRecord('accounts','VIEW',...)` اعمال می‌شود. این guard فقط client-side است؛ نباید آن را امنیت backend تلقی کرد.
++- سنجه‌های Heatmap عمداً غیرفعال‌اند تا منابع واقعی و aggregation متصل و تطبیق داده شوند. صفحهٔ فعلی نقشهٔ واقعی ایران نیست و tile provider ندارد.
++- آزمون‌ها: `npm test` PASS (471 assertion در suiteها)، `audit-actions` PASS (74/74)، `audit:contracts` PASS ایستا، transpile syntax PASS.
++- وابستگی‌ها: نصب با timeout 120 ثانیه متوقف شد؛ lint و build مسدودند. مرورگر/iOS/SQL Server/ERP اجرا نشده‌اند.
++- فایل مرجع کامل: `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md`; خلاصهٔ وضعیت: `STATUS_b19.md`; backlog: `NOT_DONE_b19.md`; ممیزی نقش: `RBAC_AUDIT_b19.md`.
++
++## قدم بعدی اجباری
++1. در محیط دارای npm registry، نصب dependency، `npm run lint` و `npm run build` را اجرا کن و خطاها را اصلاح کن.
++2. تست Chromium واقعی و Safari/iOS را انجام بده؛ در غیر این صورت آن‌ها را «تأییدنشده» نگه دار.
++3. پیش از MapLibre، مختصات واقعی customer و مدل route/visit/financial source را audit کن.
++4. سپس نقشهٔ ایران/tile provider، drawing، چاپ، KPIهای معتبر، task وصول و گزارش عملکرد را در فازهای مستقل اما با مدل مشترک توسعه بده.
++5. بعد از تست کامل فرانت‌اند، Backend/API/RLS/SQL Server و ERP را در فاز جدا شروع کن.
++
++---
++
+ # HANDOFF — AKHAVAN CRM r11-cp9 · b18
+ 
+ ## وضعیت تحویل
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,56 @@
++# NOT DONE — AKHAVAN CRM b19
++
++وضعیت هر بند مستقل است؛ وجود مدل یا فرم، به‌تنهایی معیار تکمیل گردش کاری نیست.
++
++## P0 — تثبیت سورس و تست انتشار
++- [ ] اجرای نصب وابستگی‌ها در محیط دارای دسترسی registry.
++- [ ] `npm run lint` کامل و رفع خطاهای واقعی TypeScript.
++- [ ] `npm run build` و رفع خطاهای build بدون حذف قابلیت.
++- [ ] اجرای smoke test در Chromium؛ مسیر `/geo-intelligence`، ایجاد/ویرایش/فعال‌سازی/بایگانی زون، reload، مجوزهای allow/deny و responsive.
++- [ ] آزمون واقعی iPhone/Safari، RTL، لمس، overflow، performance و دسترس‌پذیری.
++- [ ] اجرای آزمون‌های امنیت منفی با نقش‌های واقعی CEO، مدیر فروش، سرپرست، فروشنده، حسابدار و بازدیدکننده.
++- [ ] Backend/API authorization و SQL Server RLS پیش از داده واقعی.
++
++## P1 — هوش مکانی و زون‌ها
++- [x] مدل GeoZone/ZoneGeometryVersion/ZoneAssignment/GeoMetricDefinition/ZoneMetricSnapshot در AppState و normalization برای state قدیمی.
++- [x] GeoJSON Polygon validation، حداقل 3 رأس متمایز، حلقه بسته، محدوده مختصات و point-in-polygon با احتساب مرز.
++- [x] نسخه‌بندی هندسه و حفظ تاریخچه.
++- [x] صفحهٔ زون، فرم مختصات، پیش‌نمایش هندسه (نه نقشهٔ واقعی)، نام/کد، وضعیت زون و audit محلی.
++- [x] انتساب مشتری داخل polygon برای مشتریان دارای مختصات معتبر و قابل مشاهده طبق RBAC؛ تاریخچه انتساب حفظ می‌شود.
++- [x] مجوزهای `geo.view` و `geo.manage` در ماتریس RBAC و تنظیمات پروفایل.
++- [ ] ممیزی دقیق نام/منبع مختصات مشتری و کیفیت داده؛ هماهنگ‌سازی با مرزهای واقعی.
++- [ ] انتخاب و آزمون MapLibre/tile provider برای ایران، مجوز/هزینه/دسترسی، cache/self-host و چاپ.
++- [ ] نقشهٔ واقعی ایران با استان/شهر/راه/برچسب فارسی و ابزار رسم/ویرایش polygon روی نقشه، شامل موبایل.
++- [ ] ذخیره/reload زون با تست مرورگر و دستگاه واقعی؛ بررسی polygonهای پیچیده/خودمتقاطع و تاریخ مؤثر.
++- [ ] Heatmap تک‌شاخصی با منبع معتبر، واحد، aggregation، زمان تازگی، semantics رنگ و مقایسه دوره.
++- [ ] اتصال مطالبات به ماندهٔ معتبر فاکتور − PaymentAllocation − اعتبار؛ فروش به فاکتور معتبر؛ وصول از پرداخت واقعی؛ مرجوعی از سند برگشت معتبر.
++- [ ] attribution فیلتر تولیدکننده از خطوط فاکتور و قواعد مالی؛ جلوگیری از نسبت‌دادن کل مانده مشتری به چند تولیدکننده.
++- [ ] فیلترهای مشترک و cross-filter نقشه/KPI/جدول/نمودار، drill-down و export.
++- [x] ایجاد وظیفهٔ پیگیری وصول از زون برای یک مشتری انتخاب‌شده با مسئول، ناظر اختیاری، مهلت، اولویت و نتیجه مورد انتظار؛ در فهرست وظایف موجود ثبت و از موتور اعلان همکاری استفاده می‌کند.
++- [ ] ثبت نتیجهٔ نهایی task: مبلغ وصول معتبر، علت عدم وصول، وضعیت و evidence مجاز؛ GPS به‌تنهایی اثبات انجام کار نیست.
++- [ ] ساخت/تخصیص گروهی وظایف از زون بر اساس اولویت مطالبات معتبر و گزارش سلسله‌مراتبی عملکرد.
++- [ ] تطبیق planned route با توقف/ویزیت واقعی، تفکیک visit/delivery/failed delivery/return/no-show و گزارش نتیجه واقعی.
++- [ ] گزارش سلسله‌مراتبی سازمان→زون→مجری→task→مشتری، چاپ نقشه/فهرست، clustering و تست حجم داده.
++- [ ] کنترل scope زون/تیم/قلمرو در تمام فیلترها، taskها، گزارش‌ها و export؛ enforcement در لایه سرور.
++
++## P1 — RBAC و ساختار سازمانی
++- [x] پروفایل‌های مجوز قابل تنظیم و ثبت audit محلی.
++- [x] scope نقش، workspace پیش‌فرض، نقش بالادست و سرپرست مستقیم قابل تنظیم؛ جلوگیری از چرخه.
++- [x] مجوزهای `geo.view` و `geo.manage` مستقل و قابل تنظیم.
++- [ ] ویرایشگر کامل `SEE/DO/HIDDEN` برای فیلدها با پوشش واقعی در renderer و API.
++- [ ] ممیزی تمام handlerها، exportها، bulk actions، فیلترها و مسیرهای عمیق؛ آزمون تغییر URL/state برای دور زدن مجوز.
++- [ ] تست scope سازمان/شعبه/قلمرو/تیم/مالک برای همه ماژول‌ها، مخصوصاً Geo, reports, tasks, finance.
++- [ ] backend authentication/authorization و RLS واقعی؛ UI-only guard برای امنیت کافی نیست.
++
++## P1 — سایر گردش‌های تجاری/مالی/داده
++- [ ] تطبیق محاسبات مانده و تخصیص با `PaymentAllocation` و تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
++- [ ] تکمیل گردش چک، بانک، هزینه، مغایرت‌گیری، تاریخچه، اصلاح/ابطال و audit end-to-end.
++- [ ] تکمیل Quote → acceptance → handoff خارجی → توزیع/تحویل و حفظ `Quote ≠ Order ≠ Invoice`.
++- [ ] اتصال KPIها به منابع واحد، تازگی، drill-down، خروجی و تعریف مشترک.
++- [ ] تکمیل تصمیم‌یارهای lost-customer, next purchase suggestion, lost-opportunity, anomaly detection و route effectiveness؛ بدون سفارش خودکار و با ثبت قبول/رد/تبدیل پیشنهاد.
++
++## P2 — یکپارچه‌سازی
++- [ ] تکمیل API/Auth/DTO/validation، migrations و seed policy در Backend.
++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS و recovery.
++- [ ] اتصال ERP/ETL با mapping شناسه‌ها، outbox/retry/idempotency، monitoring و reconciliation.
++- [ ] آزمون end-to-end با داده/سامانه واقعی؛ تا پیش از آن اتصال واقعی ادعا نشود.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,23 @@
++# RBAC Audit — b19
++
++## کنترل‌های اضافه‌شده
++- `geo.view`: مشاهدهٔ صفحهٔ هوش مکانی.
++- `geo.manage`: ایجاد/ویرایش هندسه، تغییر وضعیت زون و به‌روزرسانی انتساب مشتری.
++- این مجوزها در `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX` و `RBACService.canAccessWorkspace` تعریف شده‌اند؛ تنظیمات پروفایل مجوزها از `PERMISSION_LABELS` تغذیه می‌شود، پس هر دو مجوز در UI تنظیم‌پذیرند.
++- مدیرانی که مجوز موجود `settings.manage` یا `roles.manage` دارند، به‌منظور سازگاری می‌توانند صفحه را باز کنند؛ اما تغییر زون فقط با `geo.manage` (یا کلید عملیاتی صریح `geo.edit`) مجاز است. `geo.view` و مجوز ورود به صفحه به‌تنهایی مجوز مدیریت نیستند.
++- مسیر `/geo-intelligence` با `guard('geo_intelligence', ...)` محافظت شده و آیتم منو از `filterSections`/RBAC مشترک عبور می‌کند.
++- صفحه مشتریان قابل مشاهده را با `rbac.canActOnRecord('accounts','VIEW', scope)` محدود می‌کند؛ داشتن مجوز geo به‌تنهایی نباید scope مشتریان را گسترش دهد.
++- هنگام refresh انتساب، فقط رکوردهای قبلی مشتریان داخل محدوده مجاز کاربر بسته می‌شوند؛ رکوردهای بیرون scope تغییر نمی‌کنند.
++- تغییر هندسه، وضعیت زون، انتساب مشتری و ساخت task وصول از زون در `auditLogs` محلی ثبت می‌شود. ساخت task به `tasks.CREATE` نیاز دارد؛ ارجاع به کاربر دیگر/تعیین ناظر به `tasks.ASSIGN` نیاز دارد.
++
++## شواهد تست
++- `tests/rbac-configurability.test.mjs`: 13 assertion، شامل مشاهده geo، جدایی view/manage و رد دسترسی کاربر بدون مجوز.
++- `tests/geoWorkspaceContracts.test.mjs`: 9 assertion قراردادی برای route guard، navigation، permission matrix، scope، point-in-polygon، versioning و عدم نمایش سنجه غیرمتصل.
++- `node scripts/audit-actions.mjs`: 74/74 handler تغییردهنده دارای guard در ممیزی ایستا.
++
++## محدودیت‌ها/ریسک‌های باز
++- این‌ها کنترل‌های سمت کلاینت هستند؛ کاربر کنترل‌گر state محلی است و این روش مرز امنیتی برای دادهٔ حساس محسوب نمی‌شود.
++- `geo.manage` در حال حاضر به صورت مجوز کلی زون/انتساب است؛ مجوزهای جداگانه برای ویرایش هندسه، فعال‌سازی، انتساب و export هنوز تفکیک نشده‌اند.
++- Scope مشتری از RBAC حساب‌ها reuse می‌شود، اما scope اختصاصی زون (territory/team ownership) هنوز کامل نیست؛ مدل `GeoZone` باید با سیاست واقعی قلمرو و تیم هم‌راستا شود.
++- فیلدهای `SEE/DO/HIDDEN` در تنظیمات قابل تنظیم‌اند، ولی پوشش واقعی تمام rendererها و APIها هنوز audit و اثبات نشده است.
++- آزمون مرورگر، iOS، API و SQL Server RLS اجرا نشده است.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,21 @@
++# REQUIREMENTS TRACEABILITY — b19
++
++| الزام | محل کد/سند | وضعیت فعلی | معیار پذیرش باقی‌مانده |
++|---|---|---|---|
++| حفظ معماری افزایشی و عدم ساخت موتور RBAC موازی | `src/lib/rbac.ts`, diff b18→b19 | رعایت شد در این دور | regression کامل پس از build |
++| مجوز نقش قابل تنظیم | `src/types.ts`, `src/lib/rbac.ts`, `SettingsWorkspace.tsx`, tests | `geo.view/manage` افزوده و در UI مجوزها قابل تنظیم است | تست UI واقعی و API enforcement |
++| scope مشتری | `GeoIntelligenceWorkspace.tsx` → `rbac.canActOnRecord` | client-side اعمال شده | تست همه scopeها و سرور/RLS |
++| صفحه مستقل هوش مکانی | `src/App.tsx`, `src/lib/navigation.ts`, `GeoIntelligenceWorkspace.tsx` | پیاده و route-guard شده | browser/iOS |
++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx` | پوسته و رفتار پایه | Heatmap و عملیات هنوز منبع/موتور واقعی ندارند |
++| تعریف نام/کد زون | `GeoIntelligenceWorkspace.tsx` | کد یکتا در state، نام اجباری | قید یکتا و validation سمت سرور |
++| GeoJSON polygon | `src/lib/geoIntelligence.ts`, workspace | validation و preview شکل | نقشه واقعی، polygon self-intersection و تست داده واقعی |
++| versioning و audit | `ZoneGeometryVersion`, `auditLogs` | محلی و نسخه‌دار | DB transaction, audit server-side, reload test |
++| انتساب مشتری به زون | `isPointInsideZone`, `assignCustomersInZone` | فقط مختصات معتبر و مشتریان قابل مشاهده | بررسی کیفیت مختصات و داده واقعی |
++| Heatmap مالی/فروش/برگشتی/وصول | `GEO_METRIC_CATALOG` | قرارداد سنجه موجود؛ عمداً disabled | منبع واحد، فرمول، freshness، تطبیق عددی |
++| نقشهٔ ایران/tile provider | backlog و master audit | پیاده نشده | انتخاب/هزینه/مجوز/provider و آزمون ایران |
++| تسک وصول و گزارش سرپرست | `GeoIntelligenceWorkspace.tsx` و `processTaskCollaborationEvents` | task برای یک مشتری با مسئول/ناظر/مهلت/اولویت به tasks موجود متصل است | ثبت نتیجه/مبلغ/evidence، batch, report drill-down و route/visit واقعی |
++| چاپ/cross-filter/clustering | `NOT_DONE_b19.md` | پیاده نشده | پیاده‌سازی و آزمون کارایی |
++| Build/Lint | اجرای واقعی ثبت‌شده در `STATUS_b19.md` | مسدود به علت dependency | نصب موفق و اجرای مجدد |
++| Browser/iOS/SQL/ERP | `STATUS_b19.md` | اجرا نشده | محیط واقعی و evidence قابل تکرار |
++
++برای مشخصات کامل، جزئیات سنجه‌ها، فیلترها، قواعد مالی، عملیات مسیر/ویزیت، سلسله‌مراتب نقش‌ها و تمام backlogهای محصول، به `docs/07_MASTER_AUDIT_AND_TRACEABILITY_b19.md` و `NOT_DONE_b19.md` رجوع شود. هیچ الزام صرفاً به علت ذکر شدن در جدول به‌عنوان انجام‌شده ثبت نشده است.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,11 @@
++# STATUS — AKHAVAN CRM b19
++
++- نسخه: `0.11.5` — `r11-cp9-b19`.
++- مبنا: b18؛ بدون حذف قابلیت‌های قبلی.
++- **انجام‌شده در b19:** صفحهٔ هوش مکانی متصل به مسیر و منوی برنامه؛ مدیریت زون، اعتبارسنجی و پیش‌نمایش هندسه، ذخیره نسخه‌دار، وضعیت فعال/پیش‌نویس/بایگانی، انتساب مشتری داخل polygon، ایجاد task پیگیری وصول از زون برای مشتری انتخابی با مسئول/ناظر/مهلت/اولویت و اعلان از موتور همکاری موجود، ممیزی تغییرات، مجوزهای مستقل `geo.view` و `geo.manage`، scope مشتری با RBAC و تست قراردادی UI/RBAC.
++- **تست‌ها:** `npm test` PASS (471 assertion در suiteها)؛ `audit-actions` PASS (74/74 handler تغییردهنده guard شده)؛ `audit:contracts` PASS فقط ایستا؛ transpile فایل‌های تغییرکرده PASS از نظر syntax.
++- **Build/Lint:** تأیید نشده. `npm install` در این دور timeout شد؛ `npm run lint` به‌دلیل نبود `vite/client` مسدود و `npm run build` به‌دلیل نبود Vite مسدود.
++- **نقشه:** صفحهٔ زون و پیش‌نمایش شکل هندسه وجود دارد، اما این پیش‌نمایش نقشهٔ ایران نیست؛ tile provider، نقشهٔ واقعی، رسم لمسی، چاپ و آزمون مرورگر/iOS باقی است.
++- **Heatmap:** کاتالوگ سنجه‌ها نمایش داده می‌شود، اما همه غیرفعال‌اند تا منبع واقعی متصل شود؛ هیچ KPI ساختگی محاسبه نمی‌شود.
++- **RBAC:** قابل تنظیم در سمت کلاینت؛ این کار جایگزین API enforcement یا SQL Server RLS نیست. آزمون واقعی نقش‌ها/مرورگر اجرا نشده است.
++- **وضعیت کلی:** نسخه توسعه‌ای و ناقص است؛ برای production یا اتصال SQL/ERP آماده اعلام نمی‌شود.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,16 +1,17 @@
+ # VERSION
+ 
+-- نسخه محصول: **0.11.4**
+-- شناسه بسته: **r11-cp9-b18**
+-- مبنا: **b16**؛ تغییرات این بسته افزایشی‌اند و قابلیت‌های قبلی حفظ شده‌اند.
++- نسخه محصول: **0.11.5**
++- شناسه بسته: **r11-cp9-b19**
++- مبنا: **r11-cp9-b18**؛ تغییرات افزایشی هستند.
+ 
+ ## تاریخچه
+ - b15: مرکز عملیات فروش/پخش آزمایشی، موتور تحلیل عملیات و داده seed محلی.
+ - b16: گسترش seed آزمایشی و توسعه نمای مالی/خزانه/هزینه‌ها.
+-- b17-audit-docs: افزودن ممیزی جامع و ردیابی الزامات؛ بدون ادعای پیاده‌سازی محصول.
+-- b18: قابل‌تنظیم کردن پروفایل‌های مجوز و scope نقش، نقش بالادست و سرپرست مستقیم؛ افزودن safeguards و تست RBAC؛ افزودن مدل دامنهٔ GeoJSON polygon، نسخه‌بندی هندسه و کاتالوگ سنجه‌های مکانی با fail-closed availability.
++- b17-audit-docs: ممیزی جامع و ردیابی الزامات؛ صرفاً مستندات.
++- b18: تنظیم‌پذیری RBAC، scope نقش، نقش بالادست، سرپرست مستقیم، safeguards و مدل دامنه GeoJSON.
++- b19: صفحهٔ هوش مکانی، مدیریت زون و هندسه نسخه‌دار، انتساب مشتری با point-in-polygon، مجوزهای geo قابل تنظیم، اعمال scope مشتری و تست‌های قراردادی جدید.
+ 
+ ## قرارداد بسته
+-`AkhavanCRM-SolarEmber_r11-cp9_b18.zip`
++`AkhavanCRM-SolarEmber_r11-cp9_b19.zip`
+ 
+-وضعیت تست، محدودیت‌ها و کارهای باقی‌مانده در `STATUS_b18.md`, `NOT_DONE_b18.md`, `RBAC_AUDIT_b18.md` و `HANDOFF.md` ثبت می‌شود.
++گزارش کامل در `STATUS_b19.md`, `NOT_DONE_b19.md`, `RBAC_AUDIT_b19.md`, `CHANGELOG_b19.md`, `HANDOFF.md` و `docs/06_MASTER_AUDIT_AND_TRACEABILITY_b17.md` قرار دارد.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,331 @@
++# AKHAVAN CRM — ممیزی جامع، ردیابی الزامات و وضعیت انجام‌شده/باقی‌مانده
++
++- نسخه مبنا: `AkhavanCRM-SolarEmber_r11-cp9_b16.zip`
++- نسخه سند: `b17-audit-docs` (فقط به‌روزرسانی مستندات؛ به معنی پیاده‌سازی قابلیت‌های محصول نیست)
++- تاریخ ممیزی: 2026-10-26
++- نوع بررسی: بازبینی ایستای سورس و اسناد بسته؛ بدون اتصال SQL Server/ERP و بدون اجرای مرورگر واقعی
++- وضعیت انتشار: **توسعه‌ای؛ آمادهٔ اعلام به‌عنوان محصول عملیاتی نیست**
++
++
++## الحاقیهٔ وضعیت اجرایی b18 — 2026-10-26
++
++این الحاقیه وضعیت را از روی تغییرات واقعی b18 به‌روزرسانی می‌کند؛ متن ممیزی b17 پایین‌تر به‌عنوان سابقه حفظ شده است.
++
++- **انجام‌شده در b18:** مدل‌های `GeoZone`, `ZoneGeometryVersion`, `ZoneAssignment`, `GeoMetricDefinition`, `ZoneMetricSnapshot` در AppState؛ normalization امن برای state قدیمی؛ اعتبارسنجی GeoJSON Polygon؛ point-in-polygon با احتساب مرز؛ نسخه‌بندی هندسه و جلوگیری از دو نسخهٔ فعال هم‌زمان؛ کاتالوگ هشت سنجه با واحد/منبع/تجمیع/جهت مطلوب؛ تست‌های دامنه.
++- **عمداً غیرفعال:** تمام سنجه‌ها `available: false` هستند تا منبع واقعی و قواعد تجمیع متصل و راستی‌آزمایی شوند؛ این تصمیم مانع نمایش Heatmap ساختگی می‌شود.
++- **هنوز باقی‌مانده:** صفحهٔ نقشه، MapLibre و تأمین‌کنندهٔ tile، رسم/ویرایش بصری، جست‌وجو/نمایش نقشهٔ ایران، انتساب مشتری، چاپ، فیلترهای مشترک، اتصال سنجه‌ها به اسناد واقعی، تسک وصول و گزارش عملکرد.
++- **RBAC b18:** پروفایل‌های مجوز، scope نقش، نقش بالادست و سرپرست مستقیم از UI قابل تنظیم شده‌اند؛ این enforcement فقط سمت کلاینت است و نیاز به Backend/RLS دارد. جزئیات در `../RBAC_AUDIT_b18.md`.
++- **آزمون b18:** `npm test` برابر 446 assertion موفق؛ `audit:contracts` و `audit-actions` موفق در بررسی ایستا. Build/Lint به‌دلیل dependency نصب‌نشده مسدود؛ مرورگر/iOS/SQL Server واقعی اجرا نشده. جزئیات در `../STATUS_b18.md` و `../NOT_DONE_b18.md`.
++
++## 1. هدف و قواعد ممیزی
++
++این سند، مرجع واحد ردیابی خواسته‌ها و وضعیت فعلی است. هر الزام باید مستقل ارزیابی شود؛ وجود یک مفهوم کلی مثل «زون»، «گزارش»، «RBAC» یا «هوش مکانی» به‌تنهایی به معنی پیاده‌سازی جزئیات آن نیست.
++
++برچسب‌های وضعیت:
++- **تأییدشده در سورس/سند:** شواهد مشخص در بسته موجود است؛ این برچسب به‌تنهایی کیفیت عملیاتی یا تست انتهابه‌انتها را ثابت نمی‌کند.
++- **ناقص/نمونه‌ای:** بخشی از رفتار وجود دارد، اما چرخه کامل، منبع معتبر یا معیار پذیرش تأمین نشده است.
++- **یافت نشد/پیاده‌سازی‌نشده در بسته بررسی‌شده:** در سورس و اسناد بررسی‌شده شاهد کافی پیدا نشد؛ این عبارت ادعای نبود در تمام نسخه‌های خارج از این بسته نیست.
++- **تأییدنشده:** برای اعلام نتیجه به اجرای تست یا محیط بیرونی نیاز است.
++
++قواعد غیرقابل نقض برای ادامه:
++1. ابتدا آخرین سورس واقعی، Git/status و اسناد جاری را بررسی کن؛ اگر سورس جدیدتری ارائه شد، آن را مبنا قرار بده و اختلاف را ثبت کن.
++2. قبل از تغییر کد، Diff با مبنا و فهرست رگرسیون تهیه شود. تغییر افزایشی باشد؛ حذف یا بازنویسی بدون دلیل مستند ممنوع.
++3. هیچ قابلیت، اتصال، تست یا پذیرشی که اجرا نشده، موفق اعلام نشود.
++4. داده‌های `demo-*` و `LOCAL_TEST` مصنوعی‌اند و نباید داده واقعی کسب‌وکار معرفی شوند.
++5. منبع واحد حقیقت برای هر قلم داده؛ از کپی‌کردن مانده، فاکتور، پرداخت، کالا یا اطلاعات ERP در مدل موازی خودداری شود.
++6. `Quote ≠ Order ≠ Invoice`; پذیرش Quote نباید به‌طور ضمنی فاکتور یا سفارش ERP بسازد.
++7. تخصیص پرداخت باید از `PaymentAllocation` و قواعد مالی معتبر پیروی کند؛ پرداخت/چک دوباره‌شماری نشود.
++8. Backend، اتصال واقعی SQL Server و ERP طبق اولویت فعلی، مرحله‌ای جدا پس از تکمیل و آزمون فرانت‌اند انجام می‌شود.
++9. RBAC باید هم در رابط و هم در لایه عملیات/داده enforce شود؛ پنهان‌کردن دکمه کافی نیست.
++10. هر الزام جزئی در ماتریس ردیابی مستقل باقی بماند و در خلاصه‌ها حذف نشود.
++
++## 2. مبنای واقعی و محدودیت شواهد
++
++بستهٔ قابل‌دسترسی و تأییدشده برای این ممیزی `AkhavanCRM-SolarEmber_r11-cp9_b16.zip` است. اسناد همراه آن می‌گویند نسخه محصول `0.11.3` و checkpoint `r11-cp9-b16` است.
++
++اسناد b16 گزارش می‌کنند:
++- `npm test`: تعداد 423 assertion موفق در محیط اجرای ثبت‌شده در handoff.
++- بررسی syntax از طریق `transpileModule` برای `src/lib/seed.ts` و `src/components/FinanceWorkspace.tsx` موفق گزارش شده است.
++- Build و lint کامل تأیید نشده‌اند؛ در محیط قبلی `vite: not found` و نبود `vite/client` ثبت شده است.
++- SQL Server، مرورگر واقعی، Safari/iOS و اتصال ERP اجرا/تست نشده‌اند.
++
++این ممیزی، خروجی تست‌های قبلی را به‌عنوان گزارش تاریخی ثبت می‌کند، نه اینکه در این مرحله دوباره آن‌ها را اجرا کرده باشد. وضعیت واقعی `npm test`, lint و build باید در محیط تمیز و از روی همین سورس دوباره ثبت شود.
++
++## 3. یافته‌های مشخص از سورس
++
++### 3.1 داده و عملیات
++- `src/lib/seed.ts` داده‌های مصنوعی مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه و فعالیت را تولید می‌کند؛ در seed، زون‌هایی مانند `CENTER`, `NORTH`, `SOUTH` و شهرهای نمونه دیده می‌شوند. این‌ها دادهٔ نمایشی‌اند، نه نقشه و هندسهٔ معتبر جغرافیایی ایران.
++- `src/components/OperationsControlWorkspace.tsx` برنامه پخش و سفارش آزمایشی می‌سازد و `zone` را به‌صورت مقدار متنی نگه می‌دارد؛ برخی مسیرهای ایجاد، صراحتاً `LOCAL_TEST` هستند.
++- `src/lib/operationsEngine.ts` مغایرت متنی زون سفارش و برنامه پخش و سیگنال‌های عملیاتی را بررسی می‌کند. این قابلیت با آزمون قرارگیری نقطه/مشتری داخل چندضلعی، مسیریابی واقعی یا تحلیل جغرافیایی یکسان نیست.
++- `src/lib/rbac.ts` و تست‌های مرتبط وجود دارند؛ با این حال دسترسی واقعی هر نقش به همهٔ عملیات، گزارش‌ها و داده‌های جغرافیایی باید جداگانه آزمون شود.
++- `database/sqlserver/v1/` شامل اسکریپت‌های پایه، integration، finance، semantic analytics، KPI seed، RLS و sales/dispatch preflight است. وجود migrationها اثبات نمی‌کند که آن‌ها روی SQL Server اجرا شده یا با فرانت‌اند یکپارچه شده‌اند.
++
++### 3.2 هوش مکانی
++در بستهٔ بررسی‌شده، شاهدی از صفحه/موتور مستقل «هوش مکانی و مدیریت زون‌ها»، نقشهٔ سراسری ایران، MapLibre، ابزار رسم polygon، GeoJSON ذخیره‌شده و قابل بارگذاری، نسخه‌بندی هندسه، انتخاب مشتری با نقطه‌درچندضلعی، چاپ نقشه/فهرست مشتریان یا Heatmap متصل به داده‌های مالی معتبر پیدا نشد.
++
++**نتیجه:** برچسب/قانون زون و سیگنال مغایرت متنی، بخش محدودی از منطق عملیاتی است؛ جایگزین زیرسیستم هوش مکانی نیست. کل این زیرسیستم در این بسته باید «باقی‌مانده/طراحی‌نشده در محصول» تلقی شود تا پس از پیاده‌سازی و آزمون شواهد خلاف آن ثبت شود.
++
++## 4. ماتریس جامع وضعیت ماژول‌ها
++
++| حوزه | وضعیت قابل اثبات از بسته | کار باقی‌مانده / شرط پذیرش |
++|---|---|---|
++| Solar Ember و پوسته UI | سیستم طراحی و کد رابط در سورس وجود دارد؛ حفظ‌شدن بصری در تمام دستگاه‌ها دوباره تأیید نشده | build، مرورگر، Safari/iOS، RTL، overflow، دسترس‌پذیری و رگرسیون بصری |
++| داده‌های نمونه | seed گسترده و تست حداقل حجم در اسناد b16 گزارش شده | برچسب‌گذاری demo، تکرارپذیری، جلوگیری از آمیختن با داده واقعی؛ سیاست ارتقای seed قدیمی روشن شود |
++| داشبورد مالی | KPIها، روند شش‌ماهه و تفکیک دسته‌ای هزینه در b16 گزارش شده | منبع معتبر، تعریف KPI، فیلترها، drill-down، خروجی و تطبیق با سند منبع |
++| خزانه/چک | تب نمایش و خلاصه‌های چک/سررسید وجود دارد | گردش کامل ثبت/تحویل/واگذاری/وصول/برگشت/ابطال، تاریخچه، مانده حساب معتبر و تطبیق بانکی |
++| هزینه‌ها | تب هزینه و تحلیل دسته‌ای وجود دارد؛ ثبت/پرداخت نهایی صراحتاً کامل اعلام نشده | فرم، مرکز هزینه، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit trail و ضدتکرار |
++| مطالبات و پرداخت | قواعد `PaymentAllocation` در مستندات به‌عنوان مرجع تخصیص آمده | آزمون عددی جامع، برگشتی/اعتبار، جلوگیری از دوباره‌شماری، تاریخ مبنا و تطبیق گزارش‌ها |
++| Quote / سفارش / پخش | موتورهای Quote/عملیات، داده‌های نمونه و برخی بررسی‌های زون متنی موجودند | چرخه کامل Quote تا handoff خارجی، وضعیت‌های واقعی، شواهد تحویل و اتصال ERP؛ Quote ≠ Order ≠ Invoice حفظ شود |
++| RBAC و سازمان | `rbac.ts` و تست‌های scope وجود دارد | آزمون deny برای هر نقش/عملیات، hierarchy قابل تنظیم، محدودیت مالی جدا از دسترسی فروش، اعمال در data/action layer |
++| ممیزی تغییرات | بخش‌هایی از audit/تاریخچه در معماری و کد وجود دارند | پوشش سراسری تغییرات حساس، قبل/بعد، عامل، زمان، دلیل و جلوگیری از دور زدن UI |
++| Backend / SQL Server | migrationها و اسناد معماری در بسته موجودند | اجرای واقعی migrations، API/Auth، RLS، تست امنیت/بازیابی و تطبیق قراردادها؛ هنوز اجرا نشده |
++| ERP / ETL | قراردادها و schema پایه در مستندات/مهاجرت‌ها دیده می‌شوند | connector واقعی، mapping شناسه‌ها، outbox، retry، idempotency، sync monitoring و آزمون با ERP واقعی |
++| هوش مکانی و زون‌ها | b17: فیلدهای متنی؛ b18: مدل دامنه، polygon validation، point-in-polygon، versioning و catalog سنجه‌ها | نقشه UI، tile provider، drawing، انتساب مشتری، Heatmap متصل به داده واقعی، چاپ و عملیات وصول باقی است؛ قابلیت کامل تأیید نشده |
++| گزارش‌ها و KPIهای مشترک | semantic layer/KPI catalog در SQL scripts وجود دارد | اثبات یکسانی تعریف در همه ماژول‌ها، cross-filter، freshness/source، drill-down و تست تطبیق اعداد |
++| محصولات/تأمین/موجودی | داده‌ها و بخش‌هایی از مدل/نمونه‌ها موجود است | ERP منبع حقیقت باقی بماند؛ موجودی/رزرو/خرید واقعی بدون اتصال تأیید نشده |
++
++## 5. مشخصات کامل زیرسیستم «هوش مکانی و مدیریت زون‌ها»
++
++این بخش ثبت کامل الزام‌هاست، نه ادعای پیاده‌سازی. هر مورد باید جداگانه به backlog، آزمون و معیار پذیرش متصل شود.
++
++### 5.1 هدف و مرز محصول
++زیرسیستم مستقل «هوش مکانی و مدیریت زون‌ها» باید نقشه و زون‌های ذخیره‌شده را به تحلیل فروش و مطالبات، برنامه‌ریزی پخش، تخصیص وظیفه، پیگیری اجرای کار و گزارش عملکرد مدیران متصل کند. این زیرسیستم تصمیم‌یار است؛ صرف نزدیکی جغرافیایی نباید به‌صورت خودکار مأموریت ایجاد کند و نباید جای ERP/DMS یا منبع سند مالی را بگیرد.
++
++### 5.2 سه حالت کاری، یک نقشه و یک مدل داده
++1. **تعریف و مدیریت زون:** نقشهٔ کل ایران؛ رسم polygon با حداقل ۳ نقطه و ترجیحاً ۵ تا ۶ نقطه یا بیشتر؛ نام و کد یکتا؛ ذخیره، بازیابی، ویرایش، فعال/غیرفعال‌کردن و نسخه‌بندی محدوده. زون مرز واقعی polygon است، نه مجموعه‌ای از pinها.
++2. **تحلیل Heatmap:** در هر نما یک شاخص اصلی و یک مقیاس رنگی. مقایسهٔ دو شاخص فقط با مقایسهٔ صریح کنارهم/دو پنل انجام شود، نه ترکیب مقیاس‌های نامرتبط. Legend باید واحد، بازه و معنای بهتر/بدتر را توضیح دهد.
++3. **عملیات و تخصیص کار:** انتخاب زون، مشاهده مشتریان داخل آن و مطالبات معتبر، ساخت task وصول/پیگیری، تعیین مجری، ناظر/سرپرست، مهلت، اولویت و نتیجه مورد انتظار؛ ثبت نتیجه واقعی و شواهد مجاز.
++
++سه حالت باید نقشه و مدل مشترک داشته باشند، اما کنترل‌ها و ابزارهای صفحه بر اساس حالت انتخابی تغییر کنند؛ همه ابزارها هم‌زمان و شلوغ نمایش داده نشوند.
++
++### 5.3 فناوری نقشه و الزامات انتخاب
++گزینهٔ اولیهٔ بررسی: MapLibre GL JS + GeoJSON + ابزار رسم polygon. این انتخاب هنوز تصمیم فنی نهایی یا پیاده‌سازی‌شده نیست. پیش از تثبیت باید آزمایش شود:
++- پوشش ایران: استان، شهر، راه‌ها و برچسب مکان‌ها.
++- کیفیت و دسترسی tile provider از محیط استقرار واقعی؛ هزینه، محدودیت درخواست و شرایط مجوز.
++- گزینهٔ self-host/cache در صورت محدودیت دسترسی یا هزینه؛ عدم وابستگی به tile server نمایشی.
++- فارسی و RTL، موبایل و دسکتاپ، کارایی با تعداد زیاد مشتری و clustering.
++- ذخیره/بارگذاری GeoJSON و حفظ precision مختصات.
++- چاپ نقشه و فهرست مشتریان داخل زون و مجوزهای مربوط به داده/نقشه.
++- امکان رسم، انتخاب، ویرایش، لغو تغییر و بازگشت به نسخه قبلی.
++
++رایگان بودن کتابخانه به معنی رایگان یا در دسترس بودن tileها نیست.
++
++### 5.4 مدل داده و قواعد مالکیت
++قبل از ایجاد جدول جدید، موجودیت‌ها و ساختارهای فعلی، شناسه‌ها، audit، versioning، task، مشتری، فاکتور، پرداخت، برگشتی و salesperson بررسی شوند. از ایجاد مدل موازی خودداری شود.
++
++موجودیت‌های منطقی مورد نیاز (فقط در صورت نبود معادل معتبر):
++- `Zone`: شناسه، کد، نام، وضعیت، مالک/دامنه دسترسی.
++- `ZoneGeometryVersion`: هندسه polygon، شماره نسخه، زمان اعتبار از/تا، سازنده و دلیل تغییر.
++- `ZoneAssignment`: ارتباط مشتری یا رکورد مکانی با زون، روش تخصیص و بازه اعتبار؛ قابل محاسبه مجدد.
++- `GeoMetricDefinition`: شناسه KPI، منبع داده، واحد، فرمول، grain، aggregation، semantics بهتر/بدتر، مجوز و تازگی.
++- `ZoneMetricSnapshot`: فقط cache اختیاری؛ قابل بازسازی از منبع و هرگز منبع حقیقت مستقل نیست.
++- Task/TaskAssignment: از موتور task موجود استفاده شود؛ مجری، ناظر/مشاهده‌گر، مهلت، اولویت و وضعیت.
++- `TaskEvidence`: نتیجه، زمان و موقعیت مجاز، مبلغ وصول تأییدشده، علت عدم وصول/عدم تحویل و مرجع سند.
++- `AuditEvent`: استفاده از audit مشترک موجود برای تغییر زون، هندسه، تخصیص و عملیات.
++
++ارتباط‌ها باید با شناسه‌های واقعی Customer/Invoice/Payment/Return/Salesperson/Task باشند، نه نام‌ها یا متن‌های کپی‌شده. نسخهٔ مرز زون و تاریخ اعتبار باید برای گزارش تاریخی حفظ شود. تغییر هندسه نباید گزارش گذشته را بی‌صدا بازنویسی کند.
++
++### 5.5 تعریف دقیق شاخص‌های Heatmap
++هر شاخص باید قبل از نمایش، منبع، واحد، فرمول، grain، فیلترهای مجاز، زمان تازگی و معنای بهتر/بدتر داشته باشد:
++- **مطالبات باز:** مانده فاکتورهای معتبر در تاریخ انتخابی با لحاظ تخصیص پرداخت/اعتبار و سیاست مالی مرجع.
++- **فروش:** مبلغ اسناد فروش معتبر در بازه؛ تعریف مالیاتی/تخفیف/ابطال باید ثابت و مستند باشد.
++- **مرجوعی:** مبلغ یا تعداد اسناد برگشتی معتبر؛ واحد انتخابی واضح باشد و مبلغ با تعداد مخلوط نشود.
++- **تعداد فاکتور:** شمار فاکتورهای معتبر، نه تعداد سفارش.
++- **تراکم مشتری:** تعداد مشتریان یکتا با موقعیت معتبر در هندسه؛ مشتری فاقد مختصات معتبر از محاسبه مکانی حذف یا جداگانه نشان داده شود.
++- **وصول نقدی:** مبلغ وصول معتبر؛ پرداخت ثبت‌شده از تخصیص پرداخت به فاکتور جدا شود تا دوباره‌شماری رخ ندهد.
++- **عملکرد فروشنده:** فقط یک معیار صریح در هر نمایش، مانند فروش، وصول، پوشش مشتری یا تحقق هدف؛ ترکیب مبهم چند معیار ممنوع.
++- **توزیع/تحویل خارج از زون:** اسناد تحویل/فاکتورهای مرتبطی که با مرز معتبر زون در زمان مربوط همخوانی ندارند؛ برنامه، سفارش، فاکتور و تحویل نباید معادل فرض شوند.
++
++برای رنگ‌ها: مقدار بیشتر فروش می‌تواند مثبت، اما مقدار بیشتر بدهی معوق می‌تواند منفی باشد. legend و عبارت «بالاتر بهتر است/بدتر است» باید برای هر KPI صریح باشد.
++
++### 5.6 فیلترهای مشترک و قواعد انتساب
++فیلترهای موردنیاز، در صورت ارتباط با شاخص: بازه تاریخ، ماه/سال، مقایسه با دوره قبل، فروشنده، سرپرست، تیم، مسئول پخش، تولیدکننده، کالا، گروه کالا، زون، منطقه، مشتری، وضعیت مشتری، وضعیت فاکتور/پرداخت/مرجوعی/عملیات وصول.
++
++فیلترها فقط زمانی نمایش داده شوند که از نظر معنایی به KPI مربوط باشند. برای مثال، فیلتر تولیدکننده روی مطالبات باید از خطوط فاکتور و قواعد تخصیص مالی معتبر استفاده کند؛ نباید کل مانده مشتری به تمام تولیدکنندگان نسبت داده شود. اگر attribution دقیق ممکن نیست، نتیجه باید محدودیت را آشکار کند، نه اینکه عدد دقیق‌نما بسازد.
++
++نقشه، جدول، نمودار و KPI باید از تعریف و فیلتر مشترک استفاده کنند. انتخاب یک زون/نقطه/بازه نمودار باید نماهای مرتبط را cross-filter کند؛ تغییر فیلتر باید هم‌زمان همه نماهای مرتبط را به‌روز کند. منبع، زمان آخرین به‌روزرسانی و تعریف KPI باید قابل مشاهده باشد.
++
++### 5.7 عملیات، وصول و مسیر
++- انتخاب زون باید مشتریان واقعاً داخل polygon را با آزمون point-in-polygon و قواعد مرز معتبر پیدا کند؛ صرف برابر بودن متن `zone` کافی نیست.
++- پیشنهاد فهرست اولویت‌دار وصول باید از مانده معتبر، سررسید، سابقه تلاش، موقعیت معتبر و scope کاربر استفاده کند.
++- ایجاد task با مجری اصلی، ناظر/سرپرست، مهلت، اولویت، زون، مشتریان و نتیجه مورد انتظار.
++- ثبت نتیجه‌های مجزا: ویزیت انجام شد، تحویل موفق، تحویل ناموفق، مرجوعی، مراجعه ناموفق/عدم حضور، وصول موفق یا عدم وصول.
++- ثبت مبلغ وصول فقط با مرجع معتبر؛ ثبت علت عدم وصول/تحویل، زمان، موقعیت در صورت مجاز بودن و شواهد.
++- گزارش سرپرست/مدیر: تخصیص‌یافته، انجام‌شده، ناموفق، معوق، مبلغ وصول معتبر و نرخ نتیجه؛ drill-down از سازمان → زون → مجری → task → مشتری.
++- تطبیق برنامه با توقف‌ها/ویزیت‌های واقعی و تحلیل انحراف مسیر/زمان فقط وقتی داده واقعی معتبر وجود دارد.
++- هشدار تأخیر تحویل یا تکرار مراجعه ناموفق؛ اعلان باید قابل توضیح و قابل ممیزی باشد.
++- GPS به‌تنهایی اثبات انجام کار نیست. استفاده از موقعیت باید محدود به هدف، مجاز و دارای کنترل حریم خصوصی باشد.
++- نزدیکی جغرافیایی به‌تنهایی مجوز تخصیص خودکار کار نیست.
++
++### 5.8 نقش‌ها و دامنه دسترسی
++- فروشنده: مسیر/قلمرو و مشتریان خودش، حتی اگر در برنامه بازدید جاری نباشند.
++- سرپرست: تیم خود و مشتریانی که در scope همان تیم‌اند.
++- مدیر فروش: داده‌ها و گزارش‌های فروش در دامنه سازمانی تعریف‌شده.
++- مدیرعامل: نمای سازمانی طبق سیاست.
++- حسابدار و نقش‌های دیگر: جداسازی وظایف؛ دسترسی به داده فروش به معنی اجازه ثبت/تأیید همه اقدامات مالی نیست.
++- ساختار سازمانی و رابطه مدیر مستقیم/زیردست قابل پیکربندی باشد؛ در مقیاس فعلی ساده بماند و برای چند شعبه پیچیدگی غیرضروری ساخته نشود.
++- همان scope در نقشه، KPI، فیلتر، فهرست، task، گزارش و export اعمال شود و در لایه عملیات/داده enforce گردد.
++
++### 5.9 صفحه و تعامل
++صفحه مستقل «هوش مکانی» با سه حالت «زون‌ها»، «نقشه حرارتی»، «عملیات»؛ نوار فیلتر زمینه‌ای؛ نقشهٔ تعاملی ایران؛ نمایش زون‌های ذخیره‌شده، مشتریان و لایهٔ شاخص انتخاب‌شده؛ انتخاب زون؛ رسم/ویرایش؛ چاپ نقشه و فهرست مشتریان داخل زون؛ جدول مرتبط با مشتری، مانده معتبر، وضعیت و اقدام بعدی. طراحی باید با Solar Ember، فارسی/RTL و موبایل سازگار باشد.
++
++### 5.10 برنامه اجرا و معیار پذیرش
++**مرحله 1 — ممیزی و مدل داده:** بررسی مختصات مشتری، مدل بازدید/مسیر، مانده مالی، RBAC، audit، task و جدول‌های موجود؛ ثبت قراردادها و وابستگی‌ها؛ بدون ساخت جدول تکراری.
++
++**مرحله 2 — نقشه و زون ذخیره‌شده:** نقشه ایران، رسم/ویرایش polygon، کد/نام/نسخه، ذخیره و بارگذاری، انتخاب مشتریان داخل محدوده، چاپ فهرست. پذیرش: پس از reload زون باقی بماند؛ ویرایش و نسخه‌بندی شود؛ مجموعه مشتریان داخل polygon با موارد آزمون دستی/عددی صحیح باشد.
++
++**مرحله 3 — KPI و Heatmap:** اتصال به داده معتبر فروش/مانده/مرجوعی/فاکتور/وصول/عملکرد؛ یک شاخص در هر نما و فیلترهای مشترک. پذیرش: عدد نقشه با رکوردهای منبع و گزارش برابر باشد؛ تغییر فیلتر تمام نماهای مرتبط را به‌روزرسانی کند.
++
++**مرحله 4 — تخصیص و پیگیری:** استفاده از task engine موجود، مجری/ناظر، برنامه مسیر، یادآوری وصول، نتیجه واقعی و گزارش مدیر. پذیرش: task از زون ساخته شود؛ مجری تعیین شود؛ نتیجه و مبلغ وصول واقعی ثبت شود؛ تلاش ناموفق از وصول موفق تفکیک شود.
++
++**مرحله 5 — سخت‌سازی:** مجوزها، history، مرزهای هندسی، فیلترهای ترکیبی، چاپ، تعداد بالای مشتری، tile access، ذخیره‌سازی و عملکرد. پذیرش: تست‌های deny، reload، هندسه، KPI، cross-filter و خروجی ثبت‌شده و قابل تکرار باشند.
++
++**اولویت MVP:** زون ذخیره‌شده + Heatmap با عدد معتبر + تخصیص/پیگیری وصول + گزارش عملکرد سرپرست. شاخص‌های دیگر باید از همان موتور/تعریف مشترک استفاده کنند، نه صفحه و جدول مستقل برای هر شاخص.
++
++### 5.11 قابلیت‌های تصمیم‌یار مرتبط که نباید از نقشه راه حذف شوند
++- تحلیل مشتری ازدست‌رفته و پیشنهاد بازگرداندن مشتری.
++- پیشنهاد خرید بعدی بر اساس سابقه معتبر مشتری؛ بدون ثبت سفارش خودکار.
++- تحلیل فرصت ازدست‌رفته و مرحلهٔ از دست رفتن در قیف.
++- تشخیص ناهنجاری و ناسازگاری داده‌ها.
++- اثربخشی مسیر/ویزیت بر اساس نتیجه واقعی، نه تعداد task بسته‌شده.
++- هشدار افت فروش یا افزایش مرجوعی با مقایسه دوره و توجه به فصل/ترکیب مشتری، فقط در صورت کفایت داده.
++- ثبت اینکه چه کسی پیشنهاد را ایجاد، قبول، رد یا به task تبدیل کرده است.
++- نمایش منبع، تازگی، تعریف KPI و توضیح اصلاح/مغایرت داده.
++
++## 6. کارهای انجام‌شده در b16 (طبق شواهد موجود)
++
++این فهرست محدود به تغییرات مستند b16 است و به معنی تکمیل کل محصول نیست:
++1. ارتقای برچسب نسخه به `0.11.3` / `r11-cp9-b16`.
++2. گسترش seed مصنوعی برای مشتری، Quote، سفارش، برنامه پخش، برگشتی، فاکتور خرید، هزینه، فعالیت/ویزیت/تسک و داده‌های مرتبط.
++3. افزودن/گسترش KPIهای مالی، نمودار روند شش‌ماهه و تفکیک دسته‌ای هزینه در `FinanceWorkspace`.
++4. افزودن تب «خزانه و سررسید» و تب «هزینه‌ها» به‌صورت نمای تحلیلی؛ گردش کامل بانک/هزینه/چک تکمیل‌شده محسوب نمی‌شود.
++5. مستندات handoff، changelog و not-done برای b16 موجود است.
++6. طبق گزارش همراه نسخه: `npm test` با 423 assertion پاس شده و بررسی syntax دو فایل مشخص موفق بوده است؛ در این بازبینی دوباره اجرا نشده است.
++
++## 7. کارهای باقی‌مانده و اولویت اجرا
++
++### P0 — پیش از هر ادعای release
++- [ ] در محیط تمیز `npm install` و سپس `npm test`, `npm run lint`, `npm run build` اجرا و خروجی دقیق ثبت شود.
++- [ ] تست مرورگر دسکتاپ و Safari/iOS، RTL، ریسپانسیو و overflow.
++- [ ] تست deny/allow دسترسی برای CEO، Sales Manager، Supervisor، Salesperson، Accountant و Visitor مطابق scope واقعی؛ هر نقش فقط در محدوده مجاز.
++- [ ] اجرای regression و بررسی اینکه هیچ قابلیت/داده موجود با تغییرات بعدی حذف نشده است.
++- [ ] seed مصنوعی و داده واقعی از هم تفکیک بمانند؛ مسئله ارتقای seed قدیمی با شناسه‌های تازه تعیین تکلیف شود.
++
++### P1 — تکمیل فرانت‌اند و منطق مشترک
++- [ ] تکمیل فیلترهای مالی، drill-down از KPI به رکورد مبنا و خروجی CSV/XLSX/PDF با مجوز و آزمون.
++- [ ] گردش هزینه با validation، ذی‌نفع، مدرک، تأیید، پرداخت، ابطال/اصلاح، audit و idempotency.
++- [ ] دفتر نقد/بانک، مانده معتبر، دریافت/پرداخت، انتقال بین حساب و مغایرت‌گیری بانکی.
++- [ ] گردش کامل چک با تاریخچه وضعیت و هشدار سررسید.
++- [ ] تطبیق مطالبات و مانده با `PaymentAllocation`؛ تست جلوگیری از دوباره‌شماری پرداخت/چک/اعتبار.
++- [ ] چرخه Quote → پذیرش → handoff سفارش خارجی → پخش/تحویل → اتصال سندی فاکتور؛ حفظ تمایز Quote/Order/Invoice.
++- [ ] تکمیل policy/override، فرم‌ها، validation و audit برای عملیات حساس.
++- [ ] تکمیل تعاریف مشترک KPI، منبع، تازگی، cross-filter و سازگاری عدد بین نقشه/جدول/نمودار.
++
++### P1 — هوش مکانی (مدل دامنه در b18 شروع شده؛ زیرسیستم کامل نشده)
++- [ ] ممیزی دقیق مختصات و کیفیت مکان مشتری، visit/route، task، مالی و RBAC.
++- [ ] تصمیم فناوری پس از آزمایش MapLibre، provider، دسترسی/هزینه tile ایران، RTL، چاپ و گزینهٔ self-host.
++- [ ] پیاده‌سازی Zone + polygon + ذخیره/reload + geometry versioning + audit.
++- [ ] point-in-polygon و تخصیص مشتری به زون با تاریخ اعتبار؛ زون متنی فعلی به‌تنهایی کافی نیست.
++- [ ] تعریف KPIها و فرمول/واحد/منبع/aggregation/معنای رنگ؛ انتساب تولیدکننده و تخصیص مالی معتبر.
++- [ ] Heatmap تک‌شاخصی، legend، فیلترهای مشترک و cross-filter.
++- [ ] اتصال به task engine برای وصول/پیگیری، نتیجه واقعی، evidence و گزارش سلسله‌مراتبی.
++- [ ] چاپ نقشه و فهرست، clustering، عملکرد در حجم بالا، تست مجوز و حریم خصوصی.
++- [ ] تکمیل پنج مرحله و ثبت evidence پذیرش هر مرحله.
++
++### P2 — پس از تثبیت فرانت‌اند و تست رگرسیون
++- [ ] طراحی/تکمیل Backend API/Auth و RBAC سمت سرور.
++- [ ] اجرای migrationها روی SQL Server واقعی، آزمون RLS، امنیت، بازیابی و integrity.
++- [ ] اتصال ERP/ETL واقعی: mapping شناسه، outbox، retry، idempotency، پایش sync، خطا/تعارض و reconciliation.
++- [ ] تست end-to-end با داده و سامانه واقعی؛ هر موفقیت اتصال فقط پس از مشاهدهٔ نتیجهٔ واقعی ثبت شود.
++
++## 8. تعریف Done و شواهد الزامی
++
++یک قابلیت فقط وقتی «انجام‌شده» ثبت می‌شود که همه موارد مربوط به آن فراهم باشد:
++1. کد در سورس جاری وجود دارد و مسیر UI/عملیات واقعی به آن متصل است.
++2. دادهٔ نمایشی به‌جای دادهٔ واقعی جا زده نشده است.
++3. validation، خطاها، حالت خالی، loading، مجوز و audit مربوطه بررسی شده‌اند.
++4. آزمون واحد/قراردادی و در صورت نیاز آزمون رابط/یکپارچه اجرا شده‌اند؛ خروجی واقعی ثبت شده است.
++5. منبع حقیقت و تعریف KPI/فرمول مستند است.
++6. Diff و changelog نشان می‌دهند چه چیزی تغییر کرده و چه چیزی دست‌نخورده مانده است.
++7. معیار پذیرش مختص همان الزام پاس شده است.
++
++اگر کد وجود دارد ولی یکی از موارد بالا تأیید نشده، وضعیت باید «ناقص» یا «تأییدنشده» باشد.
++
++## 9. خروجی لازم در هر دور کاری بعدی
++
++- `BASELINE_REPORT`: مبنا، commit/hash یا نام دقیق ZIP، وضعیت Git و محدودیت دسترسی.
++- `AUDIT_CURRENT`: یافته‌های این دور با مسیر فایل و شواهد.
++- `REQUIREMENTS_TRACEABILITY`: نگاشت بندبه‌بند هر خواسته به فایل/کد/تست/وضعیت.
++- `GAP_REGISTER`: موارد باقی‌مانده با اولویت، وابستگی، ریسک و معیار پذیرش.
++- `CHANGELOG`: فایل‌های تغییرکرده و دلیل تغییر.
++- `TEST_REPORT`: دستور دقیق، محیط، خروجی واقعی و تست‌های اجرا‌نشده.
++- `NOT_DONE`: هر کار باقی‌مانده؛ موارد تأییدنشده نباید حذف شوند.
++- `STATUS` و `HANDOFF`: قدم بعدی دقیق و ترتیب مطالعه.
++- `DIFF`: اختلاف با مبنا.
++- `ZIP`: فقط پس از ایجاد واقعی و بررسی محتویات/مسیر؛ لینک ساختگی ممنوع.
++
++## 10. فرمان ادامه کار برای عامل بعدی
++
++ابتدا `../HANDOFF.md`, `../STATUS_b18.md`, `../NOT_DONE_b18.md`, `../RBAC_AUDIT_b18.md`, سپس این سند و `docs/01..05` را بخوان. سورس را دوباره ممیزی کن و هیچ ادعایی را فقط از روی این سند قطعی ندان. آخرین ZIP واقعی را مبنا قرار بده؛ وضعیت Git و diff را بررسی کن. ابتدا P0، سپس موارد P1 را بدون رگرسیون پیش ببر. برای هوش مکانی، مرحله 1 ممیزی و قراردادها را انجام بده؛ قبل از تأیید فناوری نقشه و قبل از ایجاد هر جدول، ساختار موجود را بررسی کن. Backend/SQL Server/ERP را تا پایان مرحلهٔ فرانت‌اند و تست‌های مقرر به فاز بعد موکول کن. پیش از پایان ظرفیت کاری، سورس، diff، تست، `NOT_DONE`, `STATUS`, `HANDOFF` و بستهٔ دانلودی واقعی را ذخیره و مسیر را تأیید کن.
++
++---
++
++# الحاقیهٔ اجرایی b19 — وضعیت واقعی پس از توسعهٔ صفحهٔ هوش مکانی
++
++تاریخ: 2026-10-26. این الحاقیه وضعیت جاری را به‌روزرسانی می‌کند؛ متن تاریخی b17 و فهرست جزئیات الزام‌ها در بالا عمداً حفظ شده است.
++
++## A. تغییرات کد و مسیرهای قابل ردیابی
++
++| الزام | شواهد سورس جاری | وضعیت b19 | محدودیت/پذیرش باقی‌مانده |
++|---|---|---|---|
++| صفحه مستقل هوش مکانی | `src/components/GeoIntelligenceWorkspace.tsx`; route در `src/App.tsx` | ناقص ولی به مسیر و منو وصل شده | مرورگر واقعی، طراحی کامل و نقشهٔ واقعی ایران |
++| سه حالت زون/Heatmap/عملیات | `GeoIntelligenceWorkspace.tsx`، حالت‌های `zones`, `heatmap`, `operations` | پوسته و رفتار پایه وجود دارد | حالت عملیات هنوز موتور ایجاد Task وصول نیست؛ Heatmap غیرفعال است |
++| نام و کد یکتا | فرم زون در `GeoIntelligenceWorkspace.tsx` | پیاده شده سمت کلاینت | آزمون end-to-end و قید یکتایی سمت سرور باقی است |
++| ورودی مرز polygon | `parseCoordinates`, `validateZonePolygon` در `src/lib/geoIntelligence.ts` | پیاده شده | ترسیم/ویرایش مستقیم روی نقشه و بررسی polygonهای self-intersecting باقی است |
++| پیش‌نمایش هندسه | `PolygonGeometryPreview` در `GeoIntelligenceWorkspace.tsx` | پیاده شده | این preview نقشهٔ جغرافیایی/ایران نیست |
++| ذخیره و نسخه‌بندی هندسه | `createZoneGeometryVersion`, `zoneGeometryVersions`, `currentGeometryVersionId` | پیاده شده در state محلی | آزمون reload واقعی، migration و persistence در مرورگر باقی است |
++| فعال/پیش‌نویس/بایگانی | `changeZoneStatus` | پیاده شده در UI/state | آزمون نقش/مرورگر و سیاست اثر نسخهٔ هندسه روی وضعیت فعال باقی است |
++| انتساب مشتری داخل polygon | `isPointInsideZone` و `assignCustomersInZone` | پیاده شده برای مشتریان دارای مختصات معتبر | ممیزی schema مختصات و آزمون داده واقعی باقی است |
++| تاریخچه انتساب | `zoneAssignments`؛ بستن `effectiveTo` به‌جای حذف | پیاده شده در state محلی | تراکنش اتمیک/قیود DB و rollback باقی است |
++| مجوزهای مشاهده/مدیریت geo | `CapabilityPermission`, `PERMISSION_LABELS`, `PERMISSION_MATRIX`, `canAccessWorkspace` در `src/lib/rbac.ts` | پیاده شده و قابل تنظیم در پروفایل | تفکیک مجوزهای granular و server-side enforcement باقی است |
++| دسترسی به مسیر | `guard('geo_intelligence', ...)` در `src/App.tsx`; navigation در `src/lib/navigation.ts` | پیاده شده | آزمون مرورگر و تغییر URL/حالت واقعی باقی است |
++| scope مشتریان | `rbac.canActOnRecord('accounts','VIEW',...)` در صفحهٔ geo | پیاده شده در UI/action محلی | scope اختصاصی zone/team/territory و enforcement سرور باقی است |
++| audit تغییرات | `auditLogs` برای ایجاد/تغییر هندسه، وضعیت و انتساب | پیاده شده در state محلی | audit ضد‌دستکاری و ثبت سمت سرور باقی است |
++| سنجه‌های Heatmap | `src/lib/geoIntelligence.ts`، کاتالوگ ۸ سنجه | قرارداد/توضیح موجود، عمداً غیرفعال | اتصال منبع معتبر، فرمول، تازگی، رنگ و تطبیق عددی باقی است |
++| نقشه ایران و tile | در این نسخه provider/MapLibre متصل نیست | پیاده‌سازی نشده | انتخاب و تست provider، هزینه/licensing، دسترسی شبکه، RTL، cache/self-host |
++| task وصول و route | `createCollectionTask` در `GeoIntelligenceWorkspace.tsx`؛ `processTaskCollaborationEvents`؛ `tasks` موجود | ایجاد task برای یک مشتری با مسئول/ناظر/مهلت/اولویت پیاده شده؛ گردش نتیجه ناقص | ثبت مبلغ وصول/علت/evidence، batch assignment، گزارش عملکرد، route/visit واقعی |
++| چاپ، clustering، cross-filter | شاهد اجرایی جدید در b19 وجود ندارد | پیاده‌سازی نشده | پس از نقشه و KPI واقعی |
++
++## B. RBAC — تصمیم و ریسک
++
++- صفحه با مجوزهای `geo.view` و `geo.manage` قابل پیکربندی است. نقش‌های قدیمی با مجوز مدیریتی موجود `settings.manage` یا `roles.manage` نیز برای سازگاری دسترسی دارند.
++- مشاهدهٔ geo به‌تنهایی اجازهٔ مدیریت زون نمی‌دهد؛ `geo.manage` برای تغییرات زون/انتساب لازم است مگر اینکه کاربر از قبل مجوز مدیریت تنظیمات/نقش‌ها داشته باشد.
++- مشاهده و انتساب مشتریان از `accounts` record-scope استفاده می‌کند؛ مجوز geo نباید دسترسی مشتری را گسترش دهد.
++- کنترل‌ها هنوز client-side هستند. امنیت واقعی باید در API/DB/RLS دوباره enforce شود؛ local state و audit log محلی مرز امنیتی نیستند.
++- مجوز granular جداگانه برای ویرایش هندسه، فعال‌سازی، بایگانی، انتساب، export و مشاهدهٔ KPI هنوز باید طراحی/تست شود.
++
++## C. نتیجهٔ آزمون b19
++
++- `npm test`: PASS؛ 471 assertion مجموع suiteها (از جمله 13 تست تنظیم‌پذیری RBAC و 14 تست قراردادی صفحهٔ geo).
++- `node scripts/audit-actions.mjs`: PASS؛ 74 handler تغییردهنده، 74 guard، صفر بدون guard در تحلیل ایستا.
++- `npm run audit:contracts`: PASS ایستا؛ 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped، 44 هدف RLS، 5 view موردنیاز. SQL Server واقعی متصل یا اجرا نشده.
++- `transpileModule`: PASS فقط برای syntax/transpile فایل‌های تغییرکرده؛ typecheck کامل نیست.
++- `npm install --ignore-scripts --no-audit --no-fund`: در محیط فعلی به timeout 120 ثانیه رسید و dependency نصب نشد.
++- `npm run lint`: BLOCKED به‌علت نبود `vite/client`/dependencyها.
++- `npm run build`: BLOCKED؛ `vite: not found`.
++- مرورگر، Safari/iOS، Backend/API، SQL Server runtime و ERP اجرا نشده‌اند.
++
++## D. ماتریس باقی‌مانده به ترتیب اجرا
++
++1. **P0:** دسترسی npm؛ نصب dependency؛ typecheck/lint/build؛ رفع همه خطاهای واقعی.
++2. **P0:** مرورگر دسکتاپ؛ تست CRUD زون، reload، allow/deny RBAC، scope مشتری و رگرسیون.
++3. **P0:** iPhone/Safari واقعی، RTL، لمس، performance و دسترس‌پذیری.
++4. **P1:** ممیزی مختصات واقعی مشتریان و دادهٔ مسیر/ویزیت/تحویل/مالی؛ ثبت منبع و کیفیت.
++5. **P1:** انتخاب MapLibre/tile provider پس از بررسی هزینه، مجوز، ایران، دسترسی و چاپ؛ سپس نقشهٔ واقعی و ابزار رسم.
++6. **P1:** Heatmap معتبر؛ یک شاخص در هر نما، aggregation، freshness، semantics رنگ، فیلترهای مرتبط و cross-filter؛ تطبیق با اسناد مبنا.
++7. **P1:** اتصال زون به task engine موجود؛ مسئول/ناظر/مهلت/اولویت/نتیجه و گزارش بر اساس نتیجه واقعی.
++8. **P1:** تکمیل field-level `SEE/DO/HIDDEN` و scope یکسان در map/report/task/export.
++9. **P2:** Backend/API/Auth، migrationهای SQL Server، RLS واقعی و آزمون امنیت/بازیابی.
++10. **P2:** ERP/ETL با mapping، outbox/retry/idempotency، monitoring و reconciliation.
++
++هیچ بند بالا به دلیل اشاره در roadmap یا وجود مدل داده، «انجام‌شده» محسوب نمی‌شود؛ وضعیت فقط پس از شواهد کد و معیار پذیرش اختصاصی تغییر می‌کند.
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,8 +1,8 @@
+ {
+   "name": "AKHAVAN CRM",
+-  "version": "0.11.4",
+-  "release": "r11-cp9-b18",
+-  "description": "AKHAVAN CRM — ممیزی و قابل‌تنظیم‌سازی RBAC، محدوده داده، سلسله‌مراتب نقش‌ها و سرپرستی مستقیم",
++  "version": "0.11.5",
++  "release": "r11-cp9-b19",
++  "description": "AKHAVAN CRM — RBAC قابل تنظیم و مدیریت زون‌های مکانی با نسخه‌بندی هندسه و انتساب مشتری",
+   "requestFramePermissions": [],
+   "majorCapabilities": [
+     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,7 +1,7 @@
+ {
+   "name": "react-example",
+   "private": true,
+-  "version": "0.11.4",
++  "version": "0.11.5",
+   "type": "module",
+   "scripts": {
+     "dev": "vite --port=3000 --host=0.0.0.0",
+@@ -10,7 +10,7 @@
+     "clean": "rm -rf dist server.js",
+     "lint": "tsc --noEmit",
+     "audit:contracts": "node scripts/audit-sqlserver-contracts.mjs",
+-    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs"
++    "test": "node --experimental-strip-types tests/rbac.test.mjs && node --experimental-strip-types tests/reminders.test.mjs && node --experimental-strip-types tests/policy.test.mjs && node --experimental-strip-types tests/receipt.test.mjs && node --experimental-strip-types tests/onboarding.test.mjs && node --experimental-strip-types tests/financeRequests.test.mjs && node --experimental-strip-types tests/negotiationEngine.test.mjs && node tests/quoteLifecycle.test.mjs && node tests/rbacScopeContracts.test.mjs && node --experimental-strip-types tests/operationsEngine.test.mjs && node --experimental-strip-types tests/operationsSeed.test.mjs && node --experimental-strip-types tests/rbac-configurability.test.mjs && node --experimental-strip-types tests/geoIntelligence.test.mjs && node tests/geoWorkspaceContracts.test.mjs"
+   },
+   "dependencies": {
+     "@google/genai": "^2.4.0",
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -14,6 +14,7 @@
+ import { TasksWorkspace } from './components/TasksWorkspace';
+ import { FinanceWorkspace } from './components/FinanceWorkspace';
+ import { OperationsControlWorkspace } from './components/OperationsControlWorkspace';
++import { GeoIntelligenceWorkspace } from './components/GeoIntelligenceWorkspace';
+ import { ReportsWorkspace } from './components/ReportsWorkspace';
+ import { SettingsWorkspace } from './components/SettingsWorkspace';
+ import { ActivitiesWorkspace } from './components/ActivitiesWorkspace';
+@@ -209,6 +210,7 @@
+           <Route path="/tasks" element={guard('tasks', <TasksWorkspace state={state} updateState={updateState} />)} />
+           <Route path="/finance" element={guard('finance', <FinanceWorkspace state={state} updateState={updateState} />)} />
+           <Route path="/operations" element={guard('operations_control', <OperationsControlWorkspace state={state} updateState={updateState} />)} />
++          <Route path="/geo-intelligence" element={guard('geo_intelligence', <GeoIntelligenceWorkspace state={state} updateState={updateState} />)} />
+           <Route path="/cases" element={guard('cases', <CasesWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
+           <Route path="/marketing" element={guard('marketing', <CampaignsWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
+           <Route path="/knowledge" element={guard('knowledge', <KnowledgeWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,199 @@
++import React, { useMemo, useState } from 'react';
++import { AppState, GeoPoint, GeoPolygonGeometry, GeoZone, ZoneGeometryVersion, Priority } from '../types';
++import { GEO_METRIC_CATALOG, createZoneGeometryVersion, isPointInsideZone, validateZonePolygon } from '../lib/geoIntelligence';
++import { generateId } from '../lib/utils';
++import { processTaskCollaborationEvents } from '../lib/collaboration';
++import { useCan } from '../hooks/useCan';
++import { Card } from './ui/Card';
++import { Button } from './ui/Button';
++import { Input } from './ui/Input';
++import { MapPinned, Plus, Save, ShieldAlert, Layers3, Users, Clock3, Archive, CheckCircle2, AlertTriangle } from 'lucide-react';
++
++interface Props { state: AppState; updateState: (updater: (draft: AppState) => AppState | void) => void; }
++type Mode = 'zones' | 'heatmap' | 'operations';
++
++const readCustomerPoint = (customer: any): GeoPoint | null => {
++  const longitude = Number(customer.longitude ?? customer.lng ?? customer.locationLongitude ?? customer.coordinates?.longitude);
++  const latitude = Number(customer.latitude ?? customer.lat ?? customer.locationLatitude ?? customer.coordinates?.latitude);
++  if (!Number.isFinite(longitude) || !Number.isFinite(latitude) || longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) return null;
++  return { longitude, latitude };
++};
++const parseCoordinates = (text: string): GeoPolygonGeometry => {
++  const points = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map((line, index) => {
++    const parts = line.split(/[;,\s]+/).filter(Boolean);
++    if (parts.length !== 2) throw new Error(`خط ${index + 1}: هر ردیف باید طول و عرض جغرافیایی داشته باشد.`);
++    const lon = Number(parts[0]); const lat = Number(parts[1]);
++    if (!Number.isFinite(lon) || !Number.isFinite(lat)) throw new Error(`خط ${index + 1}: مختصات عددی نیست.`);
++    return [lon, lat];
++  });
++  if (points.length < 3) throw new Error('برای تعریف زون حداقل سه رأس لازم است.');
++  const first = points[0]; const last = points[points.length - 1];
++  if (first[0] !== last[0] || first[1] !== last[1]) points.push([...first]);
++  return { type: 'Polygon', coordinates: [points] };
++};
++const coordinatesToText = (geometry?: GeoPolygonGeometry) => geometry?.coordinates?.[0]?.slice(0, -1).map(point => `${point[0]}, ${point[1]}`).join('\n') || '';
++
++function PolygonGeometryPreview({ geometry }: { geometry: GeoPolygonGeometry }) {
++  const ring = geometry.coordinates[0].slice(0, -1);
++  if (ring.length < 3) return null;
++  const xs = ring.map(point => point[0]); const ys = ring.map(point => point[1]);
++  const minX = Math.min(...xs); const maxX = Math.max(...xs); const minY = Math.min(...ys); const maxY = Math.max(...ys);
++  const width = Math.max(maxX - minX, 0.000001); const height = Math.max(maxY - minY, 0.000001);
++  const points = ring.map(point => `${24 + ((point[0] - minX) / width) * 272},${144 - ((point[1] - minY) / height) * 112}`).join(' ');
++  return <div className="rounded-2xl border border-border bg-canvas p-3"><div className="mb-2 text-xs font-bold text-text-secondary">پیش‌نمایش شکل هندسه (بدون نقشهٔ پس‌زمینه)</div><svg viewBox="0 0 320 168" role="img" aria-label="پیش‌نمایش چندضلعی زون" className="h-36 w-full"><defs><pattern id="geo-grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M 16 0 L 0 0 0 16" fill="none" stroke="currentColor" strokeOpacity="0.08" strokeWidth="1" /></pattern></defs><rect width="320" height="168" rx="12" fill="url(#geo-grid)"/><polygon points={points} fill="var(--se-plum, #71364B)" fillOpacity="0.14" stroke="var(--se-plum, #71364B)" strokeWidth="2.5" strokeLinejoin="round"/>{ring.map((point,index)=><circle key={`${point[0]}-${point[1]}-${index}`} cx={24 + ((point[0] - minX) / width) * 272} cy={144 - ((point[1] - minY) / height) * 112} r="3.5" fill="var(--se-coral, #C96F55)" stroke="white" strokeWidth="1.2"/> )}</svg><p className="mt-1 text-[10px] leading-5 text-text-secondary">این پیش‌نمایش فقط شکل چندضلعی را نشان می‌دهد؛ جایگزین نقشهٔ ایران یا مبنای مکانیابی نیست.</p></div>;
++}
++
++export function GeoIntelligenceWorkspace({ state, updateState }: Props) {
++  const { can, denied } = useCan(state, updateState);
++  const canEdit = can('geo', 'EDIT');
++  const [mode, setMode] = useState<Mode>('zones');
++  const [selectedZoneId, setSelectedZoneId] = useState('');
++  const [zoneName, setZoneName] = useState('');
++  const [zoneCode, setZoneCode] = useState('');
++  const [coordinateText, setCoordinateText] = useState('');
++  const [changeReason, setChangeReason] = useState('');
++  const [statusMessage, setStatusMessage] = useState<{ type: 'ok' | 'error' | 'info'; text: string } | null>(null);
++  const [metricKey, setMetricKey] = useState<keyof typeof GEO_METRIC_CATALOG>('OUTSTANDING_RECEIVABLES');
++  const [dateFrom, setDateFrom] = useState('');
++  const [dateTo, setDateTo] = useState('');
++  const [taskCustomerId, setTaskCustomerId] = useState('');
++  const [taskAssigneeId, setTaskAssigneeId] = useState(state.currentUserId || '');
++  const [taskWatcherId, setTaskWatcherId] = useState('');
++  const [taskDueDate, setTaskDueDate] = useState('');
++  const [taskPriority, setTaskPriority] = useState<Priority>('HIGH');
++  // Reuse the canonical customer-record scope; a geo permission must not widen customer visibility.
++  const visibleCustomers = (state.customers || []).filter(customer => rbac.canActOnRecord('accounts', 'VIEW', { ownerId: customer.ownerId, branchId: customer.branchId, territoryId: customer.territoryId, teamId: customer.teamId, tenantId: customer.tenantId, deletedAt: customer.deletedAt, isDeleted: customer.isDeleted }));
++  const visibleCustomerIdSet = new Set(visibleCustomers.map(customer => customer.id));
++  const zones = state.geoZones || [];
++  const versions = state.zoneGeometryVersions || [];
++  const assignments = state.zoneAssignments || [];
++  const selectedZone = zones.find(zone => zone.id === selectedZoneId) || null;
++  const activeGeometry = selectedZone ? versions.find(version => version.id === selectedZone.currentGeometryVersionId) || versions.filter(version => version.zoneId === selectedZone.id && !version.effectiveTo).sort((a,b) => b.version-a.version)[0] : undefined;
++  const parsedGeometry = useMemo(() => {
++    if (!coordinateText.trim()) return null;
++    try { const geometry = parseCoordinates(coordinateText); const validation = validateZonePolygon(geometry); return validation.valid ? { geometry, error: '' } : { geometry, error: validation.errors.join(' ') }; }
++    catch (error) { return { geometry: null, error: error instanceof Error ? error.message : 'مختصات نامعتبر است.' }; }
++  }, [coordinateText]);
++  const customersInside = useMemo(() => {
++    if (!activeGeometry) return [];
++    return visibleCustomers.filter(customer => { const point = readCustomerPoint(customer); return point ? isPointInsideZone(point, activeGeometry.geometry) : false; });
++  }, [visibleCustomers, activeGeometry]);
++  const activeMetric = GEO_METRIC_CATALOG[metricKey];
++  const selectedZoneAssignments = assignments.filter(item => item.zoneId === selectedZoneId && item.entityType === 'CUSTOMER' && visibleCustomerIdSet.has(item.entityId) && !item.effectiveTo);
++  const actor = state.users?.find(user => user.id === state.currentUserId)?.name || 'کاربر فعال';
++
++  const recordAudit = (draft: AppState, action: string, entityId: string, details: string) => {
++    if (!draft.auditLogs) draft.auditLogs = [];
++    draft.auditLogs.push({ id: generateId(), action, entityType: 'GEO_ZONE', entityId, details, actor, createdAt: new Date().toISOString() } as any);
++  };
++  const selectZone = (zone: GeoZone) => {
++    setSelectedZoneId(zone.id); setZoneName(zone.name); setZoneCode(zone.code);
++    const current = versions.find(version => version.id === zone.currentGeometryVersionId) || versions.filter(version => version.zoneId === zone.id && !version.effectiveTo).sort((a,b) => b.version-a.version)[0];
++    setCoordinateText(coordinatesToText(current?.geometry)); setChangeReason(''); setStatusMessage(null);
++  };
++  const saveZone = () => {
++    if (!canEdit) { denied('مدیریت زون‌های مکانی'); return; }
++    if (!zoneName.trim() || !zoneCode.trim()) { setStatusMessage({ type: 'error', text: 'نام و کد زون الزامی است.' }); return; }
++    if (!parsedGeometry?.geometry || parsedGeometry.error) { setStatusMessage({ type: 'error', text: parsedGeometry?.error || 'مختصات زون را وارد کنید.' }); return; }
++    const now = new Date().toISOString();
++    const existing = zones.find(zone => zone.id === selectedZoneId);
++    if (!existing && zones.some(zone => zone.code.trim().toLowerCase() === zoneCode.trim().toLowerCase())) { setStatusMessage({ type: 'error', text: 'کد زون باید یکتا باشد.' }); return; }
++    const zoneId = existing?.id || generateId();
++    try {
++      const prior = versions.filter(version => version.zoneId === zoneId);
++      const current = prior.find(version => !version.effectiveTo);
++      const nextVersions = current ? prior.map(version => version.id === current.id ? { ...version, effectiveTo: now } : version) : prior;
++      const version = createZoneGeometryVersion({ id: generateId(), zoneId, geometry: parsedGeometry.geometry, effectiveFrom: now, createdBy: state.currentUserId || '', createdAt: now, changeReason: changeReason.trim() || (existing ? 'ویرایش مرز زون' : 'ایجاد زون') }, nextVersions);
++      updateState(draft => {
++        if (!draft.geoZones) draft.geoZones = [];
++        if (!draft.zoneGeometryVersions) draft.zoneGeometryVersions = [];
++        const oldZone = draft.geoZones.find(zone => zone.id === zoneId);
++        if (oldZone) Object.assign(oldZone, { name: zoneName.trim(), code: zoneCode.trim(), updatedAt: now, currentGeometryVersionId: version.id, status: oldZone.status === 'ARCHIVED' ? 'DRAFT' : oldZone.status });
++        else draft.geoZones.push({ id: zoneId, code: zoneCode.trim(), name: zoneName.trim(), status: 'DRAFT', createdAt: now, updatedAt: now, currentGeometryVersionId: version.id, ownerId: draft.currentUserId } as GeoZone);
++        // Preserve prior geometry versions while closing the previous active one.
++        draft.zoneGeometryVersions = (draft.zoneGeometryVersions || []).map(item => item.zoneId === zoneId && !item.effectiveTo ? { ...item, effectiveTo: now } : item);
++        draft.zoneGeometryVersions.push(version);
++        recordAudit(draft, existing ? 'GEO_ZONE_GEOMETRY_VERSION_CREATED' : 'GEO_ZONE_CREATED', zoneId, `زون «${zoneName.trim()}»؛ نسخه هندسه ${version.version} ذخیره شد.`);
++      });
++      setSelectedZoneId(zoneId); setStatusMessage({ type: 'ok', text: `نسخه ${version.version} هندسه ذخیره شد. مرز قبلی حذف نشده است.` });
++    } catch (error) { setStatusMessage({ type: 'error', text: error instanceof Error ? error.message : 'ذخیره زون ناموفق بود.' }); }
++  };
++  const changeZoneStatus = (zone: GeoZone, status: GeoZone['status']) => {
++    if (!canEdit) { denied('تغییر وضعیت زون'); return; }
++    updateState(draft => {
++      const target = draft.geoZones?.find(item => item.id === zone.id); if (!target) return;
++      target.status = status; target.updatedAt = new Date().toISOString();
++      recordAudit(draft, 'GEO_ZONE_STATUS_CHANGED', zone.id, `وضعیت زون «${target.name}» به ${status} تغییر کرد.`);
++    });
++    setStatusMessage({ type: 'ok', text: `وضعیت زون به ${status === 'ACTIVE' ? 'فعال' : status === 'ARCHIVED' ? 'بایگانی' : 'پیش‌نویس'} تغییر کرد.` });
++  };
++  const createCollectionTask = () => {
++    if (!can('tasks', 'CREATE')) { denied('ایجاد وظیفه وصول از زون'); return; }
++    if (!selectedZone || selectedZone.status !== 'ACTIVE' || !activeGeometry) { setStatusMessage({ type: 'error', text: 'برای ایجاد وظیفه، زون فعال با هندسه معتبر انتخاب کنید.' }); return; }
++    const customer = customersInside.find(item => item.id === taskCustomerId);
++    if (!customer) { setStatusMessage({ type: 'error', text: 'یک مشتری قابل مشاهده داخل زون انتخاب کنید.' }); return; }
++    const assignee = (state.users || []).find(user => user.id === taskAssigneeId && (user.isActive ?? user.active) !== false);
++    if (!assignee) { setStatusMessage({ type: 'error', text: 'مسئول فعال و معتبر انتخاب کنید.' }); return; }
++    if (assignee.id !== state.currentUserId && !can('tasks', 'ASSIGN')) { denied('ارجاع وظیفه وصول به کاربر دیگر'); setStatusMessage({ type: 'error', text: 'برای ارجاع به کاربر دیگر به مجوز ارجاع وظیفه نیاز دارید.' }); return; }
++    if (taskWatcherId && !can('tasks', 'ASSIGN')) { denied('تعیین ناظر وظیفه'); setStatusMessage({ type: 'error', text: 'برای تعیین ناظر به مجوز ارجاع وظیفه نیاز دارید.' }); return; }
++    const now = new Date().toISOString();
++    const task: any = {
++      id: generateId(), title: `پیگیری وصول — ${customer.name}`, description: `ایجاد از زون «${selectedZone.name}». نتیجه مورد انتظار: بررسی مانده معتبر و ثبت نتیجه تماس/مراجعه؛ نزدیکی مکانی به‌تنهایی نتیجه موفق محسوب نمی‌شود.`,
++      accountId: customer.id, customerId: customer.id, zoneId: selectedZone.id, taskType: 'COLLECTION', expectedOutcome: 'COLLECTION_RESULT',
++      status: 'OPEN', priority: taskPriority, slaStatus: 'ON_TRACK', dueDate: taskDueDate || undefined, assigneeType: 'USER', assigneeId: assignee.id,
++      watcherIds: taskWatcherId ? [taskWatcherId] : [], createdAt: now, createdBy: state.currentUserId || '', source: 'GEO_ZONE',
++      result: undefined, collectedAmount: undefined, failureReason: undefined, evidence: []
++    };
++    updateState(draft => {
++      if (!draft.tasks) draft.tasks = [];
++      draft.tasks.unshift(task);
++      processTaskCollaborationEvents(task, state, draft, true);
++      recordAudit(draft, 'GEO_COLLECTION_TASK_CREATED', selectedZone.id, `وظیفه وصول برای مشتری ${customer.id} به مسئول ${assignee.id} ارجاع شد.`);
++    });
++    setStatusMessage({ type: 'ok', text: `وظیفه پیگیری وصول برای «${customer.name}» ایجاد شد و در فهرست وظایف قرار گرفت.` });
++    setTaskCustomerId('');
++  };
++
++  const assignCustomersInZone = () => {
++    if (!canEdit) { denied('انتساب مشتری به زون'); return; }
++    if (!selectedZone || selectedZone.status !== 'ACTIVE' || !activeGeometry) { setStatusMessage({ type: 'error', text: 'برای انتساب، زون فعال با هندسه معتبر انتخاب کنید.' }); return; }
++    const now = new Date().toISOString(); const insideIds = new Set(customersInside.map(customer => customer.id));
++    updateState(draft => {
++      if (!draft.zoneAssignments) draft.zoneAssignments = [];
++      // Close previous polygon assignments for this zone, then create a fresh auditable assignment set.
++      draft.zoneAssignments = draft.zoneAssignments.map(item => item.zoneId === selectedZone.id && item.method === 'POLYGON' && !item.effectiveTo && insideIds.has(item.entityId) ? { ...item, effectiveTo: now } : item);
++      for (const customerId of insideIds) draft.zoneAssignments.push({ id: generateId(), zoneId: selectedZone.id, entityType: 'CUSTOMER', entityId: customerId, method: 'POLYGON', effectiveFrom: now, createdBy: draft.currentUserId || '', createdAt: now });
++      recordAudit(draft, 'GEO_ZONE_CUSTOMERS_ASSIGNED', selectedZone.id, `${insideIds.size} مشتری بر اساس مختصات معتبر داخل مرز زون انتساب داده شد.`);
++    });
++    setStatusMessage({ type: 'ok', text: `${insideIds.size} مشتری با مختصات معتبر به‌صورت نسخه‌دار به زون انتساب داده شدند.` });
++  };
++
++  return <div className="mx-auto max-w-7xl space-y-5 p-3 pb-10 sm:p-5" dir="rtl">
++    <header className="relative overflow-hidden rounded-3xl border border-border bg-white p-5 shadow-card sm:p-7">
++      <div className="pointer-events-none absolute -left-8 -top-12 h-44 w-44 rounded-full bg-[var(--se-gold,#D5A15E)]/10 blur-3xl" />
++      <div className="relative flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-primary"><MapPinned size={19}/><span className="text-xs font-black tracking-wide">AKHAVAN · GEO INTELLIGENCE</span></div><h1 className="text-2xl font-black text-text-main sm:text-3xl">هوش مکانی و مدیریت زون‌ها</h1><p className="mt-2 max-w-3xl text-sm leading-7 text-text-secondary">تعریف مرزهای جغرافیایی نسخه‌دار، انتساب مشتری با مختصات معتبر و آماده‌سازی تحلیل مکانی. سنجه‌ها تا اتصال منبع واقعی غیرفعال می‌مانند.</p></div><div className="rounded-2xl border border-warning/30 bg-warning-soft px-3 py-2 text-xs font-bold leading-6 text-warning"><ShieldAlert size={15} className="ml-1 inline"/>صفحهٔ نقشهٔ پایه؛ هنوز tile provider یا نقشهٔ پس‌زمینه متصل نیست.</div></div>
++      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">{[{label:'کل زون‌ها',value:zones.length},{label:'زون فعال',value:zones.filter(zone=>zone.status==='ACTIVE').length},{label:'نسخه‌های هندسه',value:versions.length},{label:'مشتری دارای مختصات معتبر',value:(state.customers||[]).filter(customer=>readCustomerPoint(customer)).length}].map(item=><div key={item.label} className="rounded-2xl border border-border bg-canvas/70 p-3"><div className="text-xs text-text-secondary">{item.label}</div><div className="mt-1 text-2xl font-black tabular-nums text-text-main">{item.value.toLocaleString('fa-IR')}</div></div>)}</div>
++    </header>
++    <div className="flex flex-wrap gap-2" role="tablist" aria-label="حالت‌های هوش مکانی">{([{id:'zones',label:'زون‌ها',icon:Layers3},{id:'heatmap',label:'تحلیل و Heatmap',icon:MapPinned},{id:'operations',label:'عملیات و انتساب',icon:Users}] as const).map(item=><button key={item.id} role="tab" aria-selected={mode===item.id} onClick={()=>setMode(item.id)} className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors ${mode===item.id?'border-primary bg-primary text-white':'border-border bg-white text-text-secondary hover:bg-canvas'}`}><item.icon size={16}/>{item.label}</button>)}</div>
++    {statusMessage && <div role="status" className={`flex items-start gap-2 rounded-xl border p-3 text-sm leading-6 ${statusMessage.type==='error'?'border-danger/30 bg-danger-soft text-danger':statusMessage.type==='ok'?'border-success/30 bg-success-soft text-success':'border-border bg-canvas text-text-secondary'}`}>{statusMessage.type==='error'?<AlertTriangle size={17} className="mt-1 shrink-0"/>:<CheckCircle2 size={17} className="mt-1 shrink-0"/>}{statusMessage.text}</div>}
++    {mode==='zones' && <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.2fr)]">
++      <Card className="space-y-3" padding="lg"><div className="flex items-center justify-between gap-2"><h2 className="text-base font-black text-text-main">زون‌های ذخیره‌شده</h2><Button size="sm" variant="outline" onClick={()=>{setSelectedZoneId('');setZoneName('');setZoneCode('');setCoordinateText('');setChangeReason('');setStatusMessage(null);}} icon={<Plus size={15}/>}>زون جدید</Button></div>
++        {zones.length===0 && <div className="rounded-2xl border border-dashed border-border-strong p-7 text-center"><MapPinned className="mx-auto mb-3 text-text-secondary" size={28}/><p className="text-sm font-bold text-text-main">هنوز زونی تعریف نشده است</p><p className="mt-2 text-xs leading-6 text-text-secondary">برای جلوگیری از دادهٔ ساختگی، زون نمونه ساخته نشده. نام، کد و مختصات واقعی خود را وارد کنید.</p></div>}
++        <div className="space-y-2">{zones.map(zone=>{const v=versions.find(item=>item.id===zone.currentGeometryVersionId)||versions.filter(item=>item.zoneId===zone.id).sort((a,b)=>b.version-a.version)[0];return <button key={zone.id} onClick={()=>selectZone(zone)} className={`w-full rounded-2xl border p-3 text-start transition-colors ${selectedZoneId===zone.id?'border-primary/50 bg-primary/5':'border-border bg-white hover:bg-canvas'}`}><div className="flex items-start justify-between gap-2"><div><div className="font-bold text-text-main">{zone.name}</div><div className="mt-1 text-xs text-text-secondary">کد {zone.code} · نسخه {v?.version||0}</div></div><span className={`rounded-lg px-2 py-1 text-[10px] font-bold ${zone.status==='ACTIVE'?'bg-success-soft text-success':zone.status==='ARCHIVED'?'bg-canvas text-text-secondary':'bg-warning-soft text-warning'}`}>{zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</span></div></button>;})}</div>
++      </Card>
++      <Card className="space-y-4" padding="lg"><div><h2 className="text-base font-black text-text-main">{selectedZone?'ویرایش زون و ثبت نسخهٔ جدید':'تعریف زون جدید'}</h2><p className="mt-1 text-xs leading-6 text-text-secondary">مختصات را در ترتیب طول، عرض جغرافیایی وارد کنید؛ هر رأس در یک خط، نمونهٔ قالب: <code>51.42, 35.72</code>. حلقه هنگام ذخیره بسته می‌شود.</p></div>
++        <div className="grid gap-3 sm:grid-cols-2"><Input label="نام زون" value={zoneName} onChange={event=>setZoneName(event.target.value)} placeholder="مثلاً منطقه شمالی" required/><Input label="کد یکتا" value={zoneCode} onChange={event=>setZoneCode(event.target.value)} placeholder="مثلاً ZN-001" required/></div>
++        <label className="block text-xs font-bold text-text-secondary">رأس‌های مرز (طول، عرض)<textarea value={coordinateText} onChange={event=>setCoordinateText(event.target.value)} rows={7} placeholder={'51.42, 35.72\n51.50, 35.70\n51.48, 35.78'} className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 font-mono text-sm text-text-main outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" /></label>
++        <Input label="دلیل تغییر مرز / توضیح ممیزی" value={changeReason} onChange={event=>setChangeReason(event.target.value)} placeholder="اختیاری؛ مثلاً اصلاح محدوده پوشش"/>
++        {parsedGeometry && <div className={`rounded-xl border p-3 text-xs leading-6 ${parsedGeometry.error?'border-danger/30 bg-danger-soft text-danger':'border-success/30 bg-success-soft text-success'}`}>{parsedGeometry.error || `هندسه معتبر است؛ ${validateZonePolygon(parsedGeometry.geometry!).vertexCount.toLocaleString('fa-IR')} رأس متمایز.`}</div>}{parsedGeometry?.geometry && !parsedGeometry.error && <PolygonGeometryPreview geometry={parsedGeometry.geometry} />}
++        <div className="flex flex-wrap gap-2"><Button onClick={saveZone} disabled={!canEdit || !zoneName.trim() || !zoneCode.trim() || !parsedGeometry?.geometry || !!parsedGeometry.error} icon={<Save size={15}/>}>ذخیره نسخهٔ هندسه</Button>{selectedZone?.status!=='ACTIVE'&&selectedZone&&<Button variant="success" disabled={!canEdit||!activeGeometry} onClick={()=>changeZoneStatus(selectedZone,'ACTIVE')} icon={<CheckCircle2 size={15}/>}>فعال‌سازی زون</Button>}{selectedZone?.status==='ACTIVE'&&<Button variant="outline" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'DRAFT')}>بازگشت به پیش‌نویس</Button>}{selectedZone&&selectedZone.status!=='ARCHIVED'&&<Button variant="ghost" disabled={!canEdit} onClick={()=>changeZoneStatus(selectedZone,'ARCHIVED')} icon={<Archive size={15}/>}>بایگانی</Button>}</div>
++        {!canEdit&&<p className="text-xs text-warning">برای تغییر زون، مجوز مدیریت تنظیمات یا نقش لازم است. مجوز مشاهده به‌تنهایی امکان تغییر نمی‌دهد.</p>}
++      </Card>
++    </div>}
++    {mode==='heatmap' && <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]"><Card padding="lg" className="space-y-4"><div><h2 className="text-base font-black text-text-main">تعریف سنجهٔ تحلیل</h2><p className="mt-1 text-xs leading-6 text-text-secondary">در هر تحلیل فقط یک سنجه انتخاب می‌شود؛ رنگ و اولویت آن تا تعریف دقیق منبع و معنای «بیشتر بهتر است/بدتر است» نباید حدس زده شود.</p></div><label className="block text-xs font-bold text-text-secondary">سنجهٔ اصلی<select value={metricKey} onChange={event=>setMetricKey(event.target.value as keyof typeof GEO_METRIC_CATALOG)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{Object.values(GEO_METRIC_CATALOG).map(metric=><option key={metric.key} value={metric.key}>{metric.label}</option>)}</select></label><div className="grid gap-3 sm:grid-cols-2"><Input label="از تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateFrom} onChange={event=>setDateFrom(event.target.value)}/><Input label="تا تاریخ (اختیاری تا اتصال منبع)" type="date" value={dateTo} onChange={event=>setDateTo(event.target.value)}/></div><div className="rounded-2xl border border-warning/30 bg-warning-soft p-4"><div className="flex items-center gap-2 font-bold text-warning"><ShieldAlert size={17}/>این سنجه هنوز منبع واقعی ندارد</div><p className="mt-2 text-sm leading-7 text-text-main">{activeMetric.limitation}</p></div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">قرارداد سنجه</h2><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">واحد</div><div className="mt-1 font-bold text-text-main">{activeMetric.unit}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">تجمیع</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.aggregation}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">منبع معتبر</div><div className="mt-1 text-sm leading-6 text-text-main">{activeMetric.sourceDescription}</div></div><div className="rounded-xl border border-border p-3"><div className="text-xs text-text-secondary">معنای مقدار بالاتر</div><div className="mt-1 font-bold text-text-main">{activeMetric.higherIsBetter===null?'باید با انتخاب سنجه مشخص شود':activeMetric.higherIsBetter?'مطلوب‌تر':'نامطلوب‌تر'}</div></div><div className="text-xs leading-6 text-text-secondary">هیچ Heatmap، عدد یا رتبهٔ ساختگی نمایش داده نمی‌شود. فیلتر تاریخ پس از اتصال به منبع باید بر همان منبع معتبر اعمال شود.</div></Card></div>}
++    {mode==='operations' && <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">مشتریان داخل زون</h2><label className="block text-xs font-bold text-text-secondary">زون<select value={selectedZoneId} onChange={event=>{const zone=zones.find(item=>item.id===event.target.value);if(zone)selectZone(zone);else setSelectedZoneId('');}} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب زون</option>{zones.map(zone=><option key={zone.id} value={zone.id}>{zone.name} · {zone.status==='ACTIVE'?'فعال':zone.status==='ARCHIVED'?'بایگانی':'پیش‌نویس'}</option>)}</select></label><div className="grid grid-cols-2 gap-3"><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">مشتری داخل مرز</div><div className="mt-1 text-2xl font-black text-text-main">{customersInside.length.toLocaleString('fa-IR')}</div></div><div className="rounded-xl border border-border bg-canvas p-3"><div className="text-xs text-text-secondary">انتساب فعال</div><div className="mt-1 text-2xl font-black text-text-main">{selectedZoneAssignments.length.toLocaleString('fa-IR')}</div></div></div><Button block disabled={!canEdit||!selectedZone||selectedZone.status!=='ACTIVE'||!activeGeometry} onClick={assignCustomersInZone} icon={<Users size={15}/>}>انتساب / به‌روزرسانی مشتریان داخل مرز</Button><p className="text-xs leading-6 text-text-secondary">این عمل فقط مشتریانی را در نظر می‌گیرد که مختصات واقعی و معتبر دارند و از RBAC اجازهٔ مشاهدهٔ آن‌ها را دارید. انتساب‌های قبلی همین مشتریان با پایان اعتبار بسته می‌شوند؛ رکوردهای خارج از محدودهٔ دسترسی تغییر نمی‌کنند.</p>
++      <div className="mt-5 border-t border-border pt-4"><h3 className="mb-1 text-sm font-black text-text-main">ایجاد وظیفهٔ پیگیری وصول از زون</h3><p className="mb-3 text-xs leading-6 text-text-secondary">وظیفه به موتور وظایف موجود اضافه می‌شود؛ مبلغ وصول یا موفقیت مراجعه به‌صورت خودکار فرض نمی‌شود و باید بعداً با نتیجهٔ واقعی ثبت شود.</p>
++      <div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-text-secondary">مشتری<select value={taskCustomerId} onChange={event=>setTaskCustomerId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">انتخاب مشتری داخل زون</option>{customersInside.map(customer=><option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">مسئول اصلی<select value={taskAssigneeId} onChange={event=>setTaskAssigneeId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main">{(state.users||[]).filter(user=>(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label className="block text-xs font-bold text-text-secondary">ناظر / سرپرست اختیاری<select value={taskWatcherId} onChange={event=>setTaskWatcherId(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="">بدون ناظر</option>{(state.users||[]).filter(user=>user.id!==taskAssigneeId&&(user.isActive??user.active)!==false).map(user=><option key={user.id} value={user.id}>{user.name}</option>)}</select></label><Input label="مهلت انجام" type="date" value={taskDueDate} onChange={event=>setTaskDueDate(event.target.value)}/><label className="block text-xs font-bold text-text-secondary">اولویت<select value={taskPriority} onChange={event=>setTaskPriority(event.target.value as Priority)} className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-text-main"><option value="LOW">کم</option><option value="NORMAL">عادی</option><option value="HIGH">زیاد</option><option value="URGENT">فوری</option></select></label></div><Button block className="mt-3" disabled={!can('tasks','CREATE')||!selectedZone||selectedZone.status!=='ACTIVE'||!taskCustomerId||!taskAssigneeId||(taskAssigneeId!==state.currentUserId&&!can('tasks','ASSIGN'))||(!!taskWatcherId&&!can('tasks','ASSIGN'))} onClick={createCollectionTask}>ایجاد وظیفه و ارجاع</Button>{!can('tasks','CREATE')&&<p className="mt-2 text-xs text-warning">برای ساخت وظیفه باید مجوز ایجاد وظایف داشته باشید.</p>}</div></Card><Card padding="lg" className="space-y-3"><h2 className="text-base font-black text-text-main">فهرست مشتریان داخل مرز</h2>{!selectedZone&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm text-text-secondary">زون را انتخاب کنید.</p>}{selectedZone&&customersInside.length===0&&<p className="rounded-xl border border-dashed border-border-strong p-5 text-sm leading-6 text-text-secondary">مشتری دارای مختصات معتبر داخل هندسهٔ فعلی پیدا نشد؛ این وضعیت به‌معنی صفر بودن کل مشتریان زون نیست، ممکن است مختصات ثبت نشده باشند.</p>}{customersInside.slice(0,100).map(customer=>{const point=readCustomerPoint(customer)!;return <div key={customer.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="min-w-0"><div className="truncate text-sm font-bold text-text-main">{customer.name}</div><div className="mt-1 text-[11px] text-text-secondary">کد: {customer.code||customer.id}</div></div><div className="shrink-0 text-left font-mono text-[10px] text-text-secondary">{point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}</div></div>;})}{customersInside.length>100&&<p className="text-xs text-text-secondary">۱۰۰ مورد نخست نمایش داده شده؛ کل مشتریان داخل مرز: {customersInside.length.toLocaleString('fa-IR')}</p>}</Card></div>}
++    <Card padding="md" className="flex items-start gap-3 border-warning/30 bg-warning-soft"><Clock3 size={18} className="mt-1 shrink-0 text-warning"/><div className="text-xs leading-6 text-text-main"><strong>محدودیت این مرحله:</strong> مدیریت زون و انتساب مکانی در state محلی ذخیره می‌شود. نقشهٔ واقعی ایران، ترسیم لمسی روی نقشه، چاپ، اتصال به موتور وظایف وصول، فیلترهای مالی و Heatmap واقعی هنوز به سرویس نقشه و قراردادهای دادهٔ معتبر نیاز دارند. برای این موارد هیچ نتیجهٔ ساختگی نمایش داده نمی‌شود.</div></Card>
++  </div>;
++}
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,7 +1,7 @@
+ import React from 'react';
+ import {
+   LayoutDashboard, Users, UserPlus, Target, FileSpreadsheet, Wallet, CheckSquare, Calendar,
+-  Activity, Settings, Cpu, ShieldCheck, FolderKanban, PieChart, Sparkles, Gauge, UserCheck, Truck, Boxes, ShoppingCart } from 'lucide-react';
++  Activity, Settings, Cpu, ShieldCheck, FolderKanban, PieChart, Sparkles, Gauge, UserCheck, Truck, Boxes, ShoppingCart, MapPinned } from 'lucide-react';
+ 
+ export interface NavItem { id: string; path: string; label: string; icon: React.ElementType }
+ export interface NavSection { id: string; title: string; items: NavItem[] }
+@@ -18,6 +18,7 @@
+   { id: 'finance', title: 'عملیات، قرارداد و مالی', items: [
+     { id: 'quotes', path: '/quotes', label: 'پیش‌فاکتورها و تنظیم پیشنهاد فروش', icon: FileSpreadsheet },
+     { id: 'operations_control', path: '/operations', label: 'مرکز عملیات فروش و پخش', icon: Truck },
++    { id: 'geo_intelligence', path: '/geo-intelligence', label: 'هوش مکانی و مدیریت زون‌ها', icon: MapPinned },
+     { id: 'finance', path: '/finance', label: 'تراکنش‌ها و وصول مطالبات', icon: Wallet },
+     { id: 'reports', path: '/reports', label: 'گزارش‌ها و تحلیل هوشمند', icon: PieChart },
+   ] },
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -33,7 +33,7 @@
+    ========================================================================== */
+ export type PermAction = 'VIEW' | 'CREATE' | 'EDIT' | 'ASSIGN' | 'ALLOCATE' | 'APPROVE' | 'SOFT_DELETE';
+ export type PermModule = 'accounts' | 'leads' | 'opportunities' | 'quotes' | 'tasks' | 'activities' | 'cases' | 'finance' | 'payments'
+-  | 'groups' | 'messages' | 'internal' | 'calendar' | 'reports' | 'settings' | 'users' | 'roles' | 'onboarding' | 'financeRequests';
++  | 'groups' | 'messages' | 'internal' | 'calendar' | 'reports' | 'settings' | 'users' | 'roles' | 'onboarding' | 'financeRequests' | 'geo';
+ 
+ export const PERMISSION_ACTIONS: PermAction[] = ['VIEW', 'CREATE', 'EDIT', 'ASSIGN', 'ALLOCATE', 'APPROVE', 'SOFT_DELETE'];
+ const AD = ['internal.manage', 'settings.manage'] as CapabilityPermission[];
+@@ -52,6 +52,7 @@
+   internal:      { VIEW: ['internal.view', 'internal.manage'], CREATE: ['internal.view', 'internal.manage'], EDIT: ['internal.manage'], ASSIGN: ['internal.manage'], APPROVE: ['internal.manage'], SOFT_DELETE: ['internal.manage'] },
+   calendar:      { VIEW: ['accounts.view', 'internal.view'], CREATE: ['accounts.edit', 'internal.view'], EDIT: ['accounts.edit', 'internal.view'], SOFT_DELETE: ['accounts.edit', 'internal.manage'] },
+   reports:       { VIEW: ['accounts.view', 'finance.view', 'internal.view'] },
++  geo:           { VIEW: ['geo.view'], CREATE: ['geo.manage'], EDIT: ['geo.manage'], ASSIGN: ['geo.manage'], SOFT_DELETE: ['geo.manage'] },
+   // ⚠ نگاشت موقت؛ کلید صریح onboarding.* در permissionSet اولویت دارد
+   // ⚠ نگاشت موقت: ثبت دستور = مدیران/مالی؛ تصمیم = مالی. کلید صریح financeRequests.* اولویت دارد.
+   financeRequests: { VIEW: ['finance.view', 'quotes.approve'], CREATE: ['quotes.approve', 'finance.manage', 'internal.manage'], EDIT: ['quotes.approve', 'finance.manage', 'internal.manage'], APPROVE: ['finance.manage'] },
+@@ -177,6 +178,7 @@
+       case 'calendar': return this.hasPermission('accounts.view') || this.hasPermission('internal.view');
+       case 'reports': return this.hasPermission('accounts.view') || this.hasPermission('finance.view') || this.hasPermission('internal.view');
+       case 'operations_control': return this.hasPermission('quotes.view') || this.hasPermission('finance.view') || this.hasPermission('internal.view');
++      case 'geo_intelligence': return this.hasPermission('geo.view') || this.hasPermission('geo.manage') || this.hasPermission('settings.manage') || this.hasPermission('roles.manage');
+       default: return false;
+     }
+   }
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -148,6 +148,8 @@
+           'roles.manage',
+           'internal.view',
+           'internal.manage',
++          'geo.view',
++          'geo.manage',
+         ],
+       },
+       {
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -1,4 +1,4 @@
+ /** نسخه محصول (منبع واحد؛ با package.json و VERSION.md هم‌خوان نگه داشته شود). */
+-export const APP_VERSION = '0.11.4';
+-export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b18', base: 'r11-cp9-b16' } as const;
++export const APP_VERSION = '0.11.5';
++export const APP_RELEASE = { round: 11, checkpoint: 9, label: 'r11-cp9-b19', base: 'r11-cp9-b16' } as const;
+ export const APP_VERSION_LABEL = `AKHAVAN CRM v${APP_VERSION} · ${APP_RELEASE.label}`;
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -21,7 +21,9 @@
+   | 'users.manage'
+   | 'roles.manage'
+   | 'internal.view'
+-  | 'internal.manage';
++  | 'internal.manage'
++  | 'geo.view'
++  | 'geo.manage';
+ 
+ export type NavigationTab =
+   | 'onboarding'
+@@ -39,7 +41,8 @@
+   | 'activities'
+   | 'calendar'
+   | 'reports'
+-  | 'operations_control';
++  | 'operations_control'
++  | 'geo_intelligence';
+ 
+ export type VisibilityScope = 'ORG' | 'BRANCH' | 'TERRITORY' | 'TEAM' | 'OWNER';
+ export type DevicePermissionType = 'LOCATION' | 'CAMERA' | 'MICROPHONE' | 'NOTIFICATIONS';
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -0,0 +1,23 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++const root = path.resolve(new URL('..', import.meta.url).pathname);
++const workspace = fs.readFileSync(path.join(root, 'src/components/GeoIntelligenceWorkspace.tsx'), 'utf8');
++const app = fs.readFileSync(path.join(root, 'src/App.tsx'), 'utf8');
++const nav = fs.readFileSync(path.join(root, 'src/lib/navigation.ts'), 'utf8');
++const rbac = fs.readFileSync(path.join(root, 'src/lib/rbac.ts'), 'utf8');
++assert.ok(app.includes("path=\"/geo-intelligence\" element={guard('geo_intelligence'"), 'geo page is behind canonical workspace guard');
++assert.ok(nav.includes("id: 'geo_intelligence', path: '/geo-intelligence'"), 'geo page is reachable from main navigation');
++assert.ok(rbac.includes("case 'geo_intelligence': return this.hasPermission('geo.view')"), 'geo workspace has explicit RBAC gate');
++assert.ok(rbac.includes("geo:           { VIEW: ['geo.view'], CREATE: ['geo.manage'], EDIT: ['geo.manage'], ASSIGN: ['geo.manage']"), 'zone mutation actions have explicit geo.manage permission');
++assert.ok(workspace.includes("const canEdit = can('geo', 'EDIT')"), 'administrative workspace access alone does not bypass geo.manage for mutations');
++assert.ok(workspace.includes("rbac.canActOnRecord('accounts', 'VIEW'"), 'customer visibility reuses record scope rather than widening it');
++assert.ok(workspace.includes("isPointInsideZone(point, activeGeometry.geometry)"), 'zone customer matching uses polygon containment');
++assert.ok(workspace.includes('createZoneGeometryVersion'), 'geometry edits are versioned');
++assert.ok(workspace.includes('available: false') || workspace.includes('activeMetric.limitation'), 'unwired metrics explain why live heatmap is unavailable');
++assert.ok(workspace.includes('draft.zoneAssignments = draft.zoneAssignments.map'), 'assignment refresh preserves historical assignments by closing effective dates');
++assert.ok(workspace.includes('visibleCustomerIdSet.has(item.entityId)'), 'assignment counts are scoped to visible customers');
++assert.ok(workspace.includes("taskType: 'COLLECTION'"), 'zone operation creates a typed collection follow-up task');
++assert.ok(workspace.includes('processTaskCollaborationEvents(task, state, draft, true)'), 'task assignment uses the existing collaboration notification engine');
++assert.ok(workspace.includes("can('tasks', 'CREATE')"), 'collection task creation checks task-create permission');
++console.log('PASS: 14 assertions (geo workspace routing, RBAC, scope, geometry, versioning and honest metric availability)');
+diff -ruN --label a/akhavan_dev_b18 --label b/akhavan_dev_b19 a/akhavan_dev_b18 b/akhavan_dev_b19
+--- a/akhavan_dev_b18
++++ b/akhavan_dev_b19
+@@ -17,6 +17,12 @@
+     permissionSets: [{ id: 'p1', permissions: ['accounts.view'] }],
+   };
+   assert.equal(new RBACService(state).can('accounts', 'VIEW'), true, 'permission profile enables configured capability');
++  state.permissionSets[0].permissions = ['geo.view'];
++  assert.equal(new RBACService(state).can('geo', 'VIEW'), true, 'geo visibility is controlled by a configurable permission');
++  assert.equal(new RBACService(state).can('geo', 'EDIT'), false, 'geo viewing does not grant zone-management rights');
++  assert.equal(new RBACService(state).canAccessWorkspace('geo_intelligence'), true, 'geo permission unlocks the geo workspace');
++  state.permissionSets[0].permissions = [];
++  assert.equal(new RBACService(state).canAccessWorkspace('geo_intelligence'), false, 'geo workspace denies users without geo or administrative permission');
+   state.permissionSets[0].permissions = [];
+   assert.equal(new RBACService(state).can('accounts', 'VIEW'), false, 'editing the permission profile immediately revokes capability');
+   state.permissionSets[0].permissions = ['accounts.view'];
+@@ -28,7 +34,7 @@
+   assert.ok(settings.includes('handleUpdateUserManager'), 'settings exposes direct supervisor assignment');
+   assert.ok(settings.includes('چرخه در سلسله‌مراتب نقش‌ها'), 'role hierarchy cycle is rejected');
+   assert.ok(settings.includes('چرخه در زنجیره سرپرستی'), 'user manager cycle is rejected');
+-  console.log('PASS: 9 assertions (configurable RBAC profiles, scopes, hierarchy, direct supervisor and cycle safeguards)');
++  console.log('PASS: 13 assertions (configurable RBAC profiles, geo access, scopes, hierarchy, direct supervisor and cycle safeguards)');
+ } finally {
+   fs.rmSync(tmp, { force: true });
+ }

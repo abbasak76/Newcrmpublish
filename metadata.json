@@ -1,0 +1,10 @@
+{
+  "name": "AKHAVAN CRM",
+  "version": "0.12.30",
+  "release": "r12-cp10-b54-transactional-account-outbox",
+  "description": "AKHAVAN CRM — زیرساخت اولیه Backend و قراردادهای امنیتی b54",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

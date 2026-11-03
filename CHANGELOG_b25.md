@@ -1,0 +1,10 @@
+# CHANGELOG — AKHAVAN CRM b25
+
+- نسخه محصول: `0.12.1`؛ بسته `r11-cp9-b25`؛ مبنا `r11-cp9-b24`. تغییرات افزایشی؛ هیچ ماژول قبلی حذف نشده است.
+- کامپوننت `GeoZoneMapEditor.tsx` افزوده شد: نقشهٔ کاشی‌ای واقعی با مرکز اولیهٔ ایران، حرکت/زوم، رسم polygon با pointer/touch، ویرایش رأس‌ها، خروجی GeoJSON سازگار با موتور نسخه‌بندی فعلی و نمایش انتساب منبع نقشه.
+- ارائه‌دهندهٔ پیش‌فرض OpenStreetMap Standard است؛ گزینهٔ URL سفارشی XYZ با الزام HTTPS و متن attribution، دکمهٔ آزمون دریافت tile و پیام خطا افزوده شد. Attribution نقشه همیشه آشکار است. سیاست رسمی OSM برای سرور عمومی SLA تضمین نمی‌کند و دانلود انبوه/آفلاین ممنوع است؛ برای استفادهٔ تجاری پرترافیک باید سرویس دارای SLA یا self-host انتخاب شود.
+- در تطبیق مطالبات، مدل front-end برای `CreditNoteMirror` آینه‌شده از ERP تفکیک شد از `CreditNoteRequest` محلی. درخواست محلی هیچ‌گاه مانده را کاهش نمی‌دهد و فقط پیش‌نویس→در انتظار تأیید→تأییدشده/باطل دارد؛ منبع رسمی بستانکاری باید از ERP آینه شود.
+- SQL Server از قبل `crm.CreditNoteMirror`، `analytics.vw_InvoiceBalance` و RLS مربوط به CreditNoteMirror را داشت؛ این نسخه جدول موازی/تکراری ایجاد نکرد. موتور فرانت‌اند با فاکتور فعال، تخصیص پرداخت CLEARED، بستانکاری ERP با وضعیت APPROVED/POSTED، شناسهٔ منبع، تطابق مشتری، over-allocation و ماندهٔ ذخیره‌شده تطبیق می‌دهد.
+- رتبه‌بندی مشتریان بر اساس ماندهٔ معتبر نزولی و سپس ماندهٔ معوق/روز تأخیر ساخته می‌شود؛ رتبه‌بندی فقط وقتی نمایش داده و در ساخت وظیفه استفاده می‌شود که `creditNoteSourceStatus=CONNECTED` و هیچ مغایرتی باقی نمانده باشد. در غیر این صورت اولویت دستی اعمال می‌شود و سیستم ادعای اعتبار مالی نمی‌کند.
+- آزمون‌ها: `npm test` PASS؛ 587 assertion در suiteها. `audit-actions`: 77/77 handler تغییردهنده guarded. `audit:contracts`: PASS ایستا؛ 9 فایل SQL، 46 جدول، 44 جدول tenant-scoped/RLS targets، 5 view. TS transpile syntax برای فایل‌های تغییرکرده PASS.
+- Build/TypeCheck/Lint کامل همچنان BLOCKED به دلیل نبود `vite/client` و `vite`; آزمون واقعی شبکهٔ tile در این محیط نیز به‌دلیل خطای DNS (`Could not resolve host`) اجرا نشد. مرورگر/Safari/iOS، SQL Server runtime، Backend/API/RLS و ERP end-to-end تأیید نشده‌اند.

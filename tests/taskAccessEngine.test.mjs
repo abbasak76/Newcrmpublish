@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { getManagerChain, evaluateTaskAccess, canCreateCrossDepartmentTask } from '../src/services/taskAccessEngine.ts';
+const users=[{id:'ceo',name:'CEO',managerId:undefined,isActive:true},{id:'sup',name:'Supervisor',managerId:'ceo',isActive:true},{id:'vis',name:'Visitor',managerId:'sup',isActive:true},{id:'acct',name:'Accountant',managerId:'ceo',isActive:true}];
+assert.deepEqual(getManagerChain(users,'vis'),['sup','ceo']);
+const state={users};
+assert.equal(evaluateTaskAccess(state,{currentUserId:'sup',assigneeId:'vis'}),'FULL_DETAILS');
+assert.equal(evaluateTaskAccess(state,{currentUserId:'acct',assigneeId:'vis'}),'NONE');
+assert.equal(evaluateTaskAccess(state,{currentUserId:'acct',assigneeId:'vis',grants:[{viewerId:'acct',targetUserId:'vis',level:'METRICS_ONLY'}]}),'METRICS_ONLY');
+assert.equal(canCreateCrossDepartmentTask(users[2],users[3],false),false);
+assert.equal(canCreateCrossDepartmentTask(users[2],users[3],true),true);
+console.log('taskAccessEngine.test.mjs: PASS');

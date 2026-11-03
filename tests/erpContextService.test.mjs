@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { ErpContextService } from '../src/services/erpContextService.ts';
+let calls=0;
+const service=new ErpContextService(async request=>{calls++; return {entityId:request.entityId,balance:100};},1000,5);
+const request={tenantId:'t1',sourceSystemCode:'ERP',entityType:'CUSTOMER',entityId:'c1',contextKind:'BALANCE'};
+const first=await service.get(request); const second=await service.get(request);
+assert.equal(calls,1); assert.equal(first.data.balance,100); assert.equal(second.stale,false);
+service.invalidate(request); await service.get(request); assert.equal(calls,2);
+const unconfigured=new ErpContextService(); await assert.rejects(()=>unconfigured.get(request),/پیکربندی نشده/);
+console.log('erpContextService.test.mjs: PASS');

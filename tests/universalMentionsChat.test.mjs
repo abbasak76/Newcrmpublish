@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const chat = fs.readFileSync('src/components/GroupsWorkspace.tsx','utf8');
+const form = fs.readFileSync('src/components/shared/DynamicFormRenderer.tsx','utf8');
+assert.match(chat,/searchMentions\(state, mentionQuery/);
+assert.match(chat,/entityMentions: pendingEntityMentions/);
+assert.match(chat,/pickEntityMention\(entity\)/);
+assert.match(chat,/assignSla\(/);
+assert.match(chat,/proposeOverflow\(/);
+assert.match(chat,/اولین تاریخ پیشنهادی/);
+assert.match(form,/field\.type === 'text' \|\| field\.type === 'textarea'/);
+assert.match(form,/createMentionReference\(entity\)/);
+console.log('universalMentionsChat.test.mjs: PASS (9 cross-surface contracts)');
