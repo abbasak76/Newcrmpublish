@@ -292,6 +292,10 @@ html[data-performance-mode="low"] .se-sky-clouds { display: none !important; }
   padding: 6px;
   border-radius: 9999px;
   touch-action: none;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-lg);
   transition: width var(--motion-emphasis) cubic-bezier(.34, 1.56, .64, 1),
               height var(--motion-emphasis) cubic-bezier(.34, 1.56, .64, 1),
@@ -402,7 +406,8 @@ body.inchat .nav {
   top: 0;
   bottom: 0;
   right: 0;
-  width: clamp(272px, 64vw, 332px);
+  width: min(85vw, 380px);
+  max-width: 400px;
   border-radius: 40px 0 0 40px;
   padding: calc(18px + env(safe-area-inset-top, 0px)) 14px calc(12px + env(safe-area-inset-bottom, 0px));
   gap: 0;

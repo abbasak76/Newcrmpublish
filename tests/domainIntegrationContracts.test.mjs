@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-const contract = fs.readFileSync(new URL('../DOMAIN_INTEGRATION_CONTRACT_b28.md', import.meta.url), 'utf8');
+const contract = fs.readFileSync(new URL('../_cleanup_archive/DOMAIN_INTEGRATION_CONTRACT_b28.md', import.meta.url), 'utf8');
 const migration = fs.readFileSync(new URL('../database/sqlserver/v1/008_sales_dispatch_extension.sql', import.meta.url), 'utf8');
 const preflight = fs.readFileSync(new URL('../database/sqlserver/v1/009_sales_dispatch_preflight.sql', import.meta.url), 'utf8');
 const quote = fs.readFileSync(new URL('../src/components/QuotesWorkspace.tsx', import.meta.url), 'utf8');

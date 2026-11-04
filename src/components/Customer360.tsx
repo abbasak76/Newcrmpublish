@@ -26,6 +26,7 @@ import { SecureField } from './ui/SecureField';
 import { RBACService } from '../lib/rbac';
 import { getDefaultCreditLimit } from '../lib/orgPolicy';
 import { calculateCustomerRiskScore, calculateDaysOverdue } from '../services/collectionEngine';
+import { predictAccountChurn, generateChurnMitigationTask } from '../services/churnPredictionService';
 import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
 import { getPersianStatusLabel } from '../lib/labels';
 import { 
@@ -70,6 +71,31 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
   const [isCaseModalOpen, setIsCaseModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [receiptNotice, setReceiptNotice] = useState<string | null>(null);
+  const [churnNotice, setChurnNotice] = useState<string | null>(null);
+
+  const churnPrediction = useMemo(() => predictAccountChurn(customer, state), [customer, state]);
+
+  const handleCreateRetentionTask = () => {
+    if (!guard(state, updateState, 'tasks', 'CREATE', 'ایجاد وظیفه حفظ مشتری')) return;
+    const currentUserId = state.currentUserId || 'user-admin';
+    const newTask = generateChurnMitigationTask(customer, churnPrediction, currentUserId);
+    updateState(draft => {
+      if (!draft.tasks) draft.tasks = [];
+      draft.tasks.unshift(newTask);
+      if (!draft.auditLogs) draft.auditLogs = [];
+      draft.auditLogs.push({
+        id: generateId(),
+        action: 'TASK_CREATED',
+        entityType: 'TASK',
+        entityId: newTask.id,
+        details: `وظیفه پیشگیرانه حفظ مشتری برای «${customer.name}» (ریسک ریزش: ${churnPrediction.riskTierLabel}) ایجاد شد`,
+        actor: draft.users?.find(u => u.id === currentUserId)?.name || 'System',
+        createdAt: new Date().toISOString()
+      });
+    });
+    setChurnNotice(`وظیفه حفظ مشتری و پیگیری پیشگیرانه برای «${customer.name}» با موفقیت ثبت شد.`);
+    setTimeout(() => setChurnNotice(null), 5000);
+  };
 
   const accountQuotes = (state.quotes || []).filter(q =>
     (q.accountId === customer.id || q.customerId === customer.id) &&
@@ -520,6 +546,13 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
 
   return (
     <div className="w-full space-y-4 pb-12">
+      {churnNotice && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs rounded-2xl flex items-center gap-2 font-bold animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{churnNotice}</span>
+        </div>
+      )}
+
       {/* نوار ناوبری اختصاصی بالای صفحه با فاصله استاندارد از هدر معلق */}
       <div className="flex items-center justify-between gap-2 pt-1 pb-1">
         <button 
@@ -796,6 +829,76 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
       <div className="w-full space-y-4">
         {activeSubTab === 'OVERVIEW' && (
           <div className="space-y-4">
+            {/* تحلیل پیش‌بینی ریسک ریزش مشتری (Customer Churn Prediction) */}
+            <Card padding="md" className={cn(
+              "space-y-3.5 border transition-all",
+              churnPrediction.riskTier === 'CRITICAL' ? "bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800" :
+              churnPrediction.riskTier === 'HIGH' ? "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" :
+              churnPrediction.riskTier === 'MEDIUM' ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" :
+              "bg-surface border-border"
+            )}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                    churnPrediction.riskTier === 'CRITICAL' ? "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300" :
+                    churnPrediction.riskTier === 'HIGH' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300" :
+                    churnPrediction.riskTier === 'MEDIUM' ? "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300" :
+                    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"
+                  )}>
+                    <AlertTriangle size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-ink">هوش تحلیلی پیش‌بینی ریزش مشتری (Churn Prediction)</h3>
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono border",
+                        churnPrediction.riskTier === 'CRITICAL' ? "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300" :
+                        churnPrediction.riskTier === 'HIGH' ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300" :
+                        churnPrediction.riskTier === 'MEDIUM' ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300" :
+                        "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300"
+                      )}>
+                        {churnPrediction.riskTierLabel} — {churnPrediction.churnScore.toLocaleString('fa-IR')}٪
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-soft mt-0.5">
+                      محاسبه مبتنی بر کهنگی سفارش، تعاملات اخیر، مطالبات معوق و تغییرات الگوی خرید
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant={churnPrediction.riskTier === 'CRITICAL' ? 'danger' : 'primary'}
+                  onClick={handleCreateRetentionTask}
+                  icon={<Plus size={13} />}
+                >
+                  ثبت وظیفه پیشگیری از ریزش
+                </Button>
+              </div>
+
+              {/* دلایل و راهکارهای تحلیلی */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                <div className="p-3 rounded-xl bg-surface/90 border border-border/80 space-y-1.5">
+                  <span className="font-bold text-ink block text-[11px]">عوامل محرک ریزش و نشانه‌ها:</span>
+                  <ul className="space-y-1 text-ink-soft text-[11px] pr-3 list-disc">
+                    {churnPrediction.reasons.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-3 rounded-xl bg-surface/90 border border-border/80 space-y-1.5">
+                  <span className="font-bold text-ink block text-[11px]">راهکارهای پیشنهادی حفظ حساب:</span>
+                  <ul className="space-y-1 text-ink-soft text-[11px] pr-3 list-disc">
+                    {churnPrediction.recommendations.map((rec, i) => (
+                      <li key={i}>{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
+
             <Card padding="md" className="space-y-3.5 bg-surface border border-border">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-ink flex items-center gap-2">

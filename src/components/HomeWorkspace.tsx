@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppState } from '../types';
-import { CheckSquare, Clock, AlertTriangle, Building2, ChevronLeft, Calendar, ListChecks, CalendarCheck, Plus } from 'lucide-react';
+import { CheckSquare, Clock, AlertTriangle, Building2, ChevronLeft, Calendar, ListChecks, CalendarCheck, Plus, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { DataSourceStatus } from './ui/DataSourceStatus';
+import { evaluatePortfolioChurn } from '../services/churnPredictionService';
 
 const greeting = (h: number) => (h < 5 ? 'شب بخیر' : h < 12 ? 'صبح بخیر' : h < 17 ? 'ظهر بخیر' : h < 20 ? 'عصر بخیر' : 'شب بخیر');
 const fa = (n: number) => n.toLocaleString('fa-IR');
@@ -19,12 +20,12 @@ const TONES = {
 function StatCard({ label, value, hint, icon: Icon, tone, onClick, index }: StatProps) {
   return (
     <button onClick={onClick} style={{ ['--i' as any]: index }}
-      className="se-card se-interactive se-pressable flex min-h-[44px] cursor-pointer flex-col gap-2 p-4 text-start transition-all hover:-translate-y-1 hover:shadow-float">
+      className="se-card se-interactive flex min-h-[44px] cursor-pointer flex-col gap-2 p-4 text-start transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-float active:scale-[0.97] rounded-2xl border border-border/80 hover:border-primary/40">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-text-secondary">{label}</span>
         <span className={cn('grid h-9 w-9 place-items-center rounded-2xl', TONES[tone])}><Icon size={18} /></span>
       </div>
-      <span className="text-2xl font-black leading-none tracking-tight text-text-main">{fa(value)}</span>
+      <span className="text-2xl font-black leading-none tracking-tight text-text-main font-mono">{fa(value)}</span>
       <span className="text-[11px] font-medium text-text-secondary">{hint}</span>
     </button>
   );
@@ -53,6 +54,7 @@ export function HomeWorkspace({ state }: { state: AppState }) {
   const recentAccounts = [...(state.accounts || [])].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5);
   const todayDateStr = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
   const todayCount = todayMeetings.length + todayActivities.length;
+  const churnPortfolio = evaluatePortfolioChurn(state);
 
   return (
     <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-24 font-premium" dir="rtl">
@@ -69,10 +71,10 @@ export function HomeWorkspace({ state }: { state: AppState }) {
             : `${fa(myTasks.length)} وظیفه باز و ${fa(todayCount)} برنامه برای امروز دارید.`}
         </p>
         <div className="relative mt-3.5 flex flex-wrap gap-2">
-           <button onClick={() => navigate('/tasks?new=1')} className="bg-primary text-white rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-primary-hover transition-all cursor-pointer">
+           <button onClick={() => navigate('/tasks?new=1')} className="bg-primary text-white rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-primary-hover active:scale-95 transition-all cursor-pointer">
              <Plus size={14} /> تسک جدید
            </button>
-           <button onClick={() => navigate('/customers?new=1')} className="glass text-ink rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 transition-all cursor-pointer">
+           <button onClick={() => navigate('/customers?new=1')} className="glass text-ink rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 active:scale-95 transition-all cursor-pointer">
              <Building2 size={14} /> مشتری جدید
            </button>
         </div>
@@ -93,20 +95,22 @@ export function HomeWorkspace({ state }: { state: AppState }) {
         <p className="text-xs text-text-main/90 leading-relaxed">
           {overdueTasks.length > 0
             ? `${fa(overdueTasks.length)} وظیفه در وضعیت نیاز به پیگیری فوری قرار دارد. پیشنهاد می‌کنم ابتدا کارتابل پیگیری را بررسی کنید.`
-            : '۳ حساب تجاری در روزهای اخیر تراکنشی نداشته‌اند و احتمال کاهش نرخ سفارش وجود دارد. پیشنهاد می‌کنم ارتباط دوره‌ای با آن‌ها برقرار فرمایید.'}
+            : churnPortfolio.criticalCount > 0
+            ? `${fa(churnPortfolio.criticalCount)} حساب در وضعیت ریسک ریزش بحرانی شناسایی شده‌اند. پیشنهاد می‌کنم از پرونده مشتریان برای آن‌ها وظیفه حفظ حساب ثبت فرمایید.`
+            : 'وضعیت مشتریان و پیگیری‌ها پایدار است. می‌توانید فرصت‌های جدید فروش و پیش‌فاکتورها را بررسی نمایید.'}
         </p>
         <div className="flex items-center gap-2.5 pt-1">
           <button
             type="button"
             onClick={() => navigate('/tasks')}
-            className="btn yr h-8 px-3.5 rounded-lg text-xs font-bold"
+            className="btn yr h-8 px-3.5 rounded-lg text-xs font-bold active:scale-95 transition-transform"
           >
             مشاهده اقدام‌ها
           </button>
           <button
             type="button"
             onClick={() => navigate('/accounts')}
-            className="btn sec h-8 px-3.5 rounded-lg text-xs font-bold"
+            className="btn sec h-8 px-3.5 rounded-lg text-xs font-bold active:scale-95 transition-transform"
           >
             حساب‌های مشتریان
           </button>

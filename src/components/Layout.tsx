@@ -79,18 +79,44 @@ export function Layout({
   }, [location.pathname]);
 
   const activePageLabel = useMemo(() => {
-    if (isDetailPage) return 'جزئیات';
-    if (location.pathname === '/') return 'داشبورد سازمانی';
-    if (location.pathname.startsWith('/accounts') || location.pathname.startsWith('/customers')) return 'مشتریان و حساب‌ها';
-    if (location.pathname.startsWith('/quotes') || location.pathname.startsWith('/opportunities')) return 'فروش و مذاکرات';
-    if (location.pathname.startsWith('/tasks')) return 'پیگیری و وظایف';
-    if (location.pathname.startsWith('/operations')) return 'صف عملیات و اجرا';
-    if (location.pathname.startsWith('/finance')) return 'امور مالی و خزانه‌داری';
-    if (location.pathname.startsWith('/groups')) return 'پیام‌ها و گفتگوها';
-    if (location.pathname.startsWith('/profile')) return 'پروفایل کاربر';
-    if (location.pathname.startsWith('/settings')) return 'تنظیمات سامانه';
+    if (isDetailPage) return 'جزئیات رکورد';
+    const p = location.pathname;
+    const s = new URLSearchParams(location.search);
+    const tab = s.get('tab');
+
+    if (p === '/') return 'داشبورد سازمانی';
+    if (p === '/command') return 'مرکز فرماندهی مدیریتی';
+    if (p === '/dashboard') return 'داشبورد مدیریتی و شاخص‌ها';
+    if (p.startsWith('/accounts') || p.startsWith('/customers')) return 'حساب‌ها و مشتریان ۳۶۰';
+    if (p.startsWith('/leads')) return 'سرنخ‌های فروش';
+    if (p.startsWith('/opportunities')) return 'فرصت‌های مذاکره';
+    if (p.startsWith('/quotes')) return 'پیش‌فاکتورها و فروش (CPQ)';
+    if (p.startsWith('/tasks')) return 'پیگیری و کارتابل وظایف';
+    if (p.startsWith('/operations')) {
+      if (tab === 'returns') return 'بازگشت کالا و مرجوعی';
+      if (tab === 'fleet') return 'ناوگان و برنامه توزیع';
+      return 'مرکز عملیات فروش و پخش';
+    }
+    if (p.startsWith('/geo-intelligence') || p.startsWith('/geo_intelligence')) return 'هوش مکانی و زون‌ها';
+    if (p.startsWith('/finance')) {
+      if (tab === 'cheques' || tab === 'checks') return 'چک‌ها و تعهدات صیادی';
+      if (tab === 'collection') return 'وصول و مطالبات معوق';
+      if (tab === 'invoices') return 'فاکتورها و صورتحساب‌ها';
+      return 'امور مالی و خزانه‌داری';
+    }
+    if (p.startsWith('/reports')) return 'گزارش‌ها و تحلیل هوشمند';
+    if (p.startsWith('/groups')) return 'پیام‌ها و گفتگوها';
+    if (p.startsWith('/activities')) return 'تاریخچه فعالیت‌ها و تماس';
+    if (p.startsWith('/calendar')) return 'تقویم کاری و جلسات';
+    if (p.startsWith('/cases')) return 'تیکت‌ها و پشتیبانی مشتریان';
+    if (p.startsWith('/marketing')) return 'کمپین‌ها و بازاریابی';
+    if (p.startsWith('/knowledge')) return 'پایگاه دانش سازمانی';
+    if (p.startsWith('/internal_automation')) return 'اتوماسیون و درخواست‌ها';
+    if (p.startsWith('/onboarding') || p.startsWith('/personnel-file')) return 'پرونده پرسنلی و استخدام';
+    if (p.startsWith('/profile')) return 'پروفایل کاربر';
+    if (p.startsWith('/settings')) return 'تنظیمات سامانه';
     return 'AKHAVAN CRM';
-  }, [location.pathname, isDetailPage]);
+  }, [location.pathname, location.search, isDetailPage]);
 
   // محاسبه موارد نیازمند اقدام برای تب عملیات
   const opsBadgeCount = useMemo(() => {
@@ -251,7 +277,7 @@ export function Layout({
             {/* وسط: عنوان صفحه با Scrim/Blur محافظ جهت جلوگیری از هم‌پوشانی محتوا (D1) */}
             <div
               id="ttl"
-              className="px-4 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-border/80 shadow-xs text-xs md:text-sm font-bold text-ink truncate text-center pointer-events-auto flex-initial max-w-xs md:max-w-md transition-all"
+              className="px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border/90 shadow-xs text-xs md:text-sm font-bold text-ink truncate text-center pointer-events-auto flex-initial max-w-xs md:max-w-md transition-all select-none"
             >
               {activePageLabel}
             </div>
@@ -307,7 +333,7 @@ export function Layout({
           {/* محتوای اصلی صفحات — تمام‌صفحه با حاشیه مناسب موبایل */}
           <main
             id="main-scroll-container"
-            className="w-full flex-1 overflow-y-auto pb-[calc(var(--safe-bottom)+92px)] pt-[calc(var(--safe-top)+58px)] px-2 sm:px-4 md:px-6"
+            className="w-full flex-1 overflow-y-auto pb-[calc(var(--safe-bottom)+104px)] pt-[calc(var(--safe-top)+62px)] px-2 sm:px-4 md:px-6 no-scrollbar"
           >
             <div className="mx-auto min-h-full w-full max-w-6xl">
               {children}
@@ -347,7 +373,7 @@ export function Layout({
                   <button
                     key={item.id}
                     type="button"
-                    className={cn(isActive && "on")}
+                    className={cn(isActive && "on", "min-h-[44px] min-w-[44px] transition-transform active:scale-90")}
                     aria-label={item.label}
                     title={item.label}
                     onClick={() => navigate(item.path)}

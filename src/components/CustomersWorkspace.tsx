@@ -16,6 +16,7 @@ import { generateId, matchesSearch, nextSequenceNumber } from '../lib/utils';
 import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
 import { CUSTOMER_FORM_SCHEMA } from '../services/dynamicFormEngine';
 import { activeRecords } from '../lib/recordLifecycle';
+import { predictAccountChurn } from '../services/churnPredictionService';
 
 interface CustomersWorkspaceProps {
   state: AppState;
@@ -222,47 +223,61 @@ export function CustomersWorkspace({ state, updateState }: CustomersWorkspacePro
             <>
               {/* نمای کارتی مخصوص موبایل */}
               <div className="grid grid-cols-1 gap-3 sm:hidden">
-                {filteredAccounts.map((acc, idx) => (
-                  <div
-                    key={acc.id}
-                    onClick={() => {
-                      updateState(draft => {
-                        draft.activeContextAccountId = acc.id;
-                        draft.activeContextCustomerId = acc.id;
-                      });
-                      navigate(`/accounts/${acc.id}`);
-                    }}
-                    className="p-4 rounded-2xl bg-canvas border border-border/80 hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary font-black text-sm flex items-center justify-center shrink-0">
-                          {acc.name ? acc.name.charAt(0) : 'م'}
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-text-main line-clamp-1">{acc.name}</h3>
-                          <span className="text-[11px] font-mono text-text-secondary">{acc.code || 'بدون کد'}</span>
-                        </div>
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-xl">
-                        پرونده ۳۶۰ <ChevronLeft size={12} />
-                      </span>
-                    </div>
+                {filteredAccounts.map((acc, idx) => {
+                  const churn = predictAccountChurn(acc, state);
+                  const hasElevatedChurn = churn.riskTier === 'CRITICAL' || churn.riskTier === 'HIGH';
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40 text-xs text-text-secondary">
-                      {acc.phone ? (
-                        <span className="flex items-center gap-1 font-mono text-text-main" dir="ltr">
-                          <Phone size={12} className="text-primary" /> {acc.phone}
+                  return (
+                    <div
+                      key={acc.id}
+                      onClick={() => {
+                        updateState(draft => {
+                          draft.activeContextAccountId = acc.id;
+                          draft.activeContextCustomerId = acc.id;
+                        });
+                        navigate(`/accounts/${acc.id}`);
+                      }}
+                      className="p-4 rounded-2xl bg-canvas border border-border/80 hover:border-primary/40 hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary font-black text-sm flex items-center justify-center shrink-0">
+                            {acc.name ? acc.name.charAt(0) : 'م'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-sm text-text-main line-clamp-1">{acc.name}</h3>
+                              {hasElevatedChurn && (
+                                <span className={`px-2 py-0.2 rounded-full text-[9px] font-black font-mono border ${
+                                  churn.riskTier === 'CRITICAL' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
+                                  ریزش: {churn.churnScore}٪
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-mono text-text-secondary">{acc.code || 'بدون کد'}</span>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-xl">
+                          پرونده ۳۶۰ <ChevronLeft size={12} />
                         </span>
-                      ) : (
-                        <span className="text-text-muted">بدون شماره تماس</span>
-                      )}
-                      <div>
-                        <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40 text-xs text-text-secondary">
+                        {acc.phone ? (
+                          <span className="flex items-center gap-1 font-mono text-text-main" dir="ltr">
+                            <Phone size={12} className="text-primary" /> {acc.phone}
+                          </span>
+                        ) : (
+                          <span className="text-text-muted">بدون شماره تماس</span>
+                        )}
+                        <div>
+                          <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* جدول کامل در تبلت و دسکتاپ */}
@@ -278,36 +293,49 @@ export function CustomersWorkspace({ state, updateState }: CustomersWorkspacePro
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
-                    {filteredAccounts.map((acc, idx) => (
-                      <tr 
-                        key={acc.id} 
-                        className="hover:bg-canvas transition-colors cursor-pointer group"
-                        onClick={() => {
-                          updateState(draft => {
-                            draft.activeContextAccountId = acc.id;
-                            draft.activeContextCustomerId = acc.id;
-                          });
-                          navigate(`/accounts/${acc.id}`);
-                        }}
-                      >
-                        <td className="py-4 text-center text-text-secondary font-mono">{idx + 1}</td>
-                        <td className="py-4">
-                          <div className="font-bold text-text-main group-hover:text-primary transition-colors flex items-center gap-2">
-                            <Building2 size={14} className="text-text-secondary" /> {acc.name}
-                          </div>
-                          {acc.phone && <div className="text-[10px] text-text-secondary mt-1 flex items-center gap-1 font-mono"><Phone size={10}/> {acc.phone}</div>}
-                        </td>
-                        <td className="py-4 hidden sm:table-cell font-mono text-text-secondary">{acc.code || '-'}</td>
-                        <td className="py-4">
-                          <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
-                        </td>
-                        <td className="py-4 text-left pl-3">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                            ورود ۳۶۰ <ChevronLeft size={12} />
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredAccounts.map((acc, idx) => {
+                      const churn = predictAccountChurn(acc, state);
+                      const hasElevatedChurn = churn.riskTier === 'CRITICAL' || churn.riskTier === 'HIGH';
+
+                      return (
+                        <tr 
+                          key={acc.id} 
+                          className="hover:bg-canvas transition-colors cursor-pointer group"
+                          onClick={() => {
+                            updateState(draft => {
+                              draft.activeContextAccountId = acc.id;
+                              draft.activeContextCustomerId = acc.id;
+                            });
+                            navigate(`/accounts/${acc.id}`);
+                          }}
+                        >
+                          <td className="py-4 text-center text-text-secondary font-mono">{idx + 1}</td>
+                          <td className="py-4">
+                            <div className="font-bold text-text-main group-hover:text-primary transition-colors flex items-center gap-2">
+                              <Building2 size={14} className="text-text-secondary shrink-0" />
+                              <span className="truncate">{acc.name}</span>
+                              {hasElevatedChurn && (
+                                <span className={`px-2 py-0.2 rounded-full text-[9px] font-black font-mono border shrink-0 ${
+                                  churn.riskTier === 'CRITICAL' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                }`}>
+                                  ریزش: {churn.churnScore}٪
+                                </span>
+                              )}
+                            </div>
+                            {acc.phone && <div className="text-[10px] text-text-secondary mt-1 flex items-center gap-1 font-mono"><Phone size={10}/> {acc.phone}</div>}
+                          </td>
+                          <td className="py-4 hidden sm:table-cell font-mono text-text-secondary">{acc.code || '-'}</td>
+                          <td className="py-4">
+                            <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                          </td>
+                          <td className="py-4 text-left pl-3">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                              ورود ۳۶۰ <ChevronLeft size={12} />
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

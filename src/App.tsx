@@ -24,7 +24,7 @@ import { GroupsWorkspace } from './components/GroupsWorkspace';
 import { CalendarWorkspace } from './components/CalendarWorkspace';
 import { ProfileWorkspace } from './workspaces/ProfileWorkspace';
 import { CommandPalette } from './components/CommandPalette';
-import { OnboardingTour } from './components/OnboardingTour';
+import { InteractiveTour } from './components/InteractiveTour';
 import { LoginWorkspace } from './components/LoginWorkspace';
 import { ApplyPage } from './components/onboarding/ApplyPage';
 import { PersonnelFilePage } from './components/onboarding/PersonnelFilePage';
@@ -264,7 +264,7 @@ function AppContent() {
         </div>
       </SideDrawer>
 
-      <OnboardingTour state={state} updateState={updateState} setActiveTab={(t) => navigate(t === 'home' ? '/' : `/${t}`)} />
+      <InteractiveTour state={state} updateState={updateState} />
     </>
   );
 }

@@ -28,12 +28,14 @@ import {
   ShieldCheck,
   UserCheck,
   Cpu,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 import { RBACService } from '../lib/rbac';
 import { APP_VERSION_LABEL } from '../lib/version';
 import { ThemeToggle } from './ThemeToggle';
 import { cn } from '../lib/utils';
+import { triggerTour, triggerWhatsNew } from './InteractiveTour';
 
 interface NavigationDrawerProps {
   isOpen: boolean;
@@ -273,6 +275,32 @@ export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerPro
               <span>تنظیمات</span>
             </button>
           )}
+
+          <button
+            type="button"
+            className="it hover:text-amber-200 transition-colors"
+            style={{ ['--n' as any]: nCounter++ }}
+            onClick={() => {
+              onClose();
+              triggerTour('global');
+            }}
+          >
+            <HelpCircle size={18} />
+            <span>راهنمای تعاملی و آموزش سامانه</span>
+          </button>
+
+          <button
+            type="button"
+            className="it hover:text-amber-200 transition-colors"
+            style={{ ['--n' as any]: nCounter++ }}
+            onClick={() => {
+              onClose();
+              triggerWhatsNew();
+            }}
+          >
+            <Sparkles size={18} className="text-[#F0A46A]" />
+            <span>تازه‌های نگارش (What's New)</span>
+          </button>
 
           <button
             type="button"

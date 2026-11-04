@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AIAdvisorService } from '../services/aiAdvisorService';
 import { AppState } from '../types';
 import { Card } from './ui/Card';
-import { FileText, Hourglass, MessageSquare, MessageCircle, Calendar, Filter } from 'lucide-react';
+import { FileText, Hourglass, MessageSquare, MessageCircle, Calendar, Filter, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { formatAppDate } from '../lib/utils';
 import { DonutChart, GaugeChart, FunnelChart } from './charts';
 import { PageToolbar } from './ui/PageToolbar';
@@ -11,6 +11,7 @@ import { Button } from './ui/Button';
 import { DataSourceStatus } from './ui/DataSourceStatus';
 import { OPPORTUNITY_STAGES } from '../config/pipeline';
 import { activeRecords } from '../lib/recordLifecycle';
+import { evaluatePortfolioChurn } from '../services/churnPredictionService';
 
 export function DashboardWorkspace({ state }: { state: AppState }) {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export function DashboardWorkspace({ state }: { state: AppState }) {
 
   const todayStr = new Date().toISOString().split('T')[0];
   const todayTasks = myTasks.filter(t => t.dueDate === todayStr && t.status !== 'COMPLETED');
+  const churnPortfolio = evaluatePortfolioChurn(state);
 
   return (
     <div className="w-full space-y-5 px-1 py-1 sm:px-3 sm:py-3 pb-32 font-premium" dir="rtl">
@@ -143,6 +145,87 @@ export function DashboardWorkspace({ state }: { state: AppState }) {
             <FunnelChart stages={oppStages} />
           </Card>
         )}
+
+        {/* هوش تحلیلی پیش‌بینی ریزش مشتریان (Customer Churn Prediction) */}
+        <Card padding="lg" className="glass rounded-[28px] p-5 sm:p-6 border border-border/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-extrabold text-ink">پایش هوشمند و پیش‌بینی ریزش مشتریان (Churn Risk)</h3>
+                <p className="text-[11px] text-ink-soft mt-0.5">تحلیل نرخ ریسک بر پایه الگوی خرید، کهنگی سفارشات و شکایات باز</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/accounts')}
+              className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-center"
+            >
+              <span>مشاهده مشتریان</span>
+              <ArrowLeft size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+              <span className="text-[10px] font-bold text-red-700 dark:text-red-300 block">ریزش بحرانی</span>
+              <strong className="text-lg font-black font-mono text-red-800 dark:text-red-200 block mt-0.5">
+                {churnPortfolio.criticalCount.toLocaleString('fa-IR')} <span className="text-[10px] font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 block">ریسک بالا</span>
+              <strong className="text-lg font-black font-mono text-amber-800 dark:text-amber-200 block mt-0.5">
+                {churnPortfolio.highCount.toLocaleString('fa-IR')} <span className="text-[10px] font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 block">هشدار متوسط</span>
+              <strong className="text-lg font-black font-mono text-blue-800 dark:text-blue-200 block mt-0.5">
+                {churnPortfolio.mediumCount.toLocaleString('fa-IR')} <span className="text-[10px] font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 block">سالم / فعال</span>
+              <strong className="text-lg font-black font-mono text-emerald-800 dark:text-emerald-200 block mt-0.5">
+                {churnPortfolio.lowCount.toLocaleString('fa-IR')} <span className="text-[10px] font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+          </div>
+
+          {churnPortfolio.atRiskAccounts.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border/70">
+              <span className="text-[11px] font-bold text-ink-soft block">مشتریان نیازمند مداخله و پیگیری فوری:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                {churnPortfolio.atRiskAccounts.slice(0, 3).map(acc => (
+                  <div
+                    key={acc.accountId}
+                    onClick={() => navigate(`/accounts/${acc.accountId}`)}
+                    className="p-3 rounded-xl bg-surface/90 border border-border/80 hover:border-primary/40 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between gap-2"
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <strong className="text-xs font-bold text-ink truncate">{acc.accountName}</strong>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black font-mono ${
+                        acc.riskTier === 'CRITICAL' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {acc.churnScore.toLocaleString('fa-IR')}٪
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-ink-soft line-clamp-1">
+                      {acc.reasons[0] || 'نیاز به پیگیری تجاری'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       <div className="space-y-3">

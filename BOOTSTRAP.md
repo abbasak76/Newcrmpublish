@@ -4,7 +4,7 @@
 
 ## مرحله ۰ — خواندن اسناد مادر
 برای بارگذاری قوانین حاکم در حافظه کوتاه‌مدت، این دستور را اجرا کنید:
-`cat INSTRUCTIONS.md PROJECT_KNOWLEDGE.md AGENTS.md HANDOFF.md SKILLS_REGISTRY.md BOOTSTRAP.md`
+`cat INSTRUCTIONS.md PROJECT_KNOWLEDGE.md HANDOFF.md SKILLS_REGISTRY.md BOOTSTRAP.md`
 
 ## مرحله ۱ — نصب وابستگی‌ها
 `npm install`
@@ -46,7 +46,7 @@
 
 ## ترتیب خلاصه برای اجرای سریع (Copy-Paste)
 ```bash
-cat INSTRUCTIONS.md PROJECT_KNOWLEDGE.md AGENTS.md HANDOFF.md SKILLS_REGISTRY.md BOOTSTRAP.md
+cat INSTRUCTIONS.md PROJECT_KNOWLEDGE.md HANDOFF.md SKILLS_REGISTRY.md BOOTSTRAP.md
 npm install
 npx compile-applet
 npm run lint
