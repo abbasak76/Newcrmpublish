@@ -151,7 +151,7 @@ export function ReportsWorkspace({ state }: ReportsWorkspaceProps) {
           </div>
           <button 
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-border text-text-main hover:bg-canvas text-xs font-bold rounded-[10px] shadow-sm transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border text-text-main hover:bg-canvas text-xs font-bold rounded-[10px] shadow-sm transition-colors cursor-pointer"
           >
             <Download size={15} className="text-primary" /> استخراج اکسل / CSV
           </button>
@@ -169,32 +169,32 @@ export function ReportsWorkspace({ state }: ReportsWorkspaceProps) {
         {selectedCategory === 'SALES' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card padding="sm" className="space-y-1 bg-white border-border">
+              <Card padding="sm" className="space-y-1 bg-surface border-border">
                 <span className="text-[11px] font-bold text-text-secondary block">فروش ناخالص کل</span>
                 <strong className="text-base font-bold font-mono text-text-main block">{formatCurrency(salesMetrics.totalGrossSales)}</strong>
                 <span className="text-[10px] text-text-secondary">از {salesMetrics.quoteCount} پیش‌فاکتور</span>
               </Card>
 
-              <Card padding="sm" className="space-y-1 bg-white border-border">
+              <Card padding="sm" className="space-y-1 bg-surface border-border">
                 <span className="text-[11px] font-bold text-success block">وصولی تحقق‌یافته (نقد/پاس‌شده)</span>
                 <strong className="text-base font-bold font-mono text-success block">{formatCurrency(salesMetrics.totalRealizedRevenue)}</strong>
                 <span className="text-[10px] text-text-secondary">تسویه قطعی</span>
               </Card>
 
-              <Card padding="sm" className="space-y-1 bg-white border-border">
+              <Card padding="sm" className="space-y-1 bg-surface border-border">
                 <span className="text-[11px] font-bold text-warning block">مطالبات در بازار / چک سررسید</span>
                 <strong className="text-base font-bold font-mono text-warning block">{formatCurrency(salesMetrics.outstandingMarketReceivables)}</strong>
                 <span className="text-[10px] text-text-secondary">مانده حساب مشتریان</span>
               </Card>
 
-              <Card padding="sm" className="space-y-1 bg-white border-border">
+              <Card padding="sm" className="space-y-1 bg-surface border-border">
                 <span className="text-[11px] font-bold text-primary block">حاشیه سود ناخالص سبد</span>
                 <strong className="text-base font-bold font-mono text-primary block">{salesMetrics.overallMargin}٪</strong>
                 <span className="text-[10px] text-text-secondary">میانگین سفارش: {formatCurrency(salesMetrics.avgOrderValue)}</span>
               </Card>
             </div>
 
-            <Card padding="md" className="bg-white border-border">
+            <Card padding="md" className="bg-surface border-border">
               <h3 className="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" /> پرفروش‌ترین اقلام کالایی در سفارشات
               </h3>
@@ -233,7 +233,7 @@ export function ReportsWorkspace({ state }: ReportsWorkspaceProps) {
 
         {selectedCategory === 'DISTRIBUTION' && (
           <div className="space-y-4">
-            <Card padding="md" className="bg-white border-border">
+            <Card padding="md" className="bg-surface border-border">
               <h3 className="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" /> تحلیل عملکرد مسیرهای توزیع و تور ویزیت (Routes)
               </h3>
@@ -269,7 +269,7 @@ export function ReportsWorkspace({ state }: ReportsWorkspaceProps) {
 
         {selectedCategory === 'TEAM' && (
           <div className="space-y-4">
-            <Card padding="md" className="bg-white border-border">
+            <Card padding="md" className="bg-surface border-border">
               <h3 className="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" /> شاخص‌های کلیدی عملکرد تیم فروش و ویزیتورها (KPI)
               </h3>
@@ -305,7 +305,7 @@ export function ReportsWorkspace({ state }: ReportsWorkspaceProps) {
 
         {selectedCategory === 'INVENTORY' && (
           <div className="space-y-4">
-            <Card padding="md" className="bg-white border-border">
+            <Card padding="md" className="bg-surface border-border">
               <h3 className="font-bold text-sm text-text-main mb-3 flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4 text-primary" /> تحلیل کاتالوگ، حاشیه سود پایه و بسته‌های ترکیبی
               </h3>

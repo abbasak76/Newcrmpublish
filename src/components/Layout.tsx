@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Sparkles,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AppState } from '../types';
@@ -20,6 +22,7 @@ import { Sidebar } from './Sidebar';
 import { AtmosphereLayer } from './AtmosphereLayer';
 import { RBACService } from '../lib/rbac';
 import { menuSections, filterSections } from '../lib/navigation';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -49,6 +52,7 @@ export function Layout({
 }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
@@ -232,62 +236,63 @@ export function Layout({
         />
 
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-          {/* ================= ۱. هدر معلق سراسری (Floating Header) ================= */}
+          {/* ================= ۱. هدر معلق سراسری یکپارچه (Unified 2026 Floating Glassmorphic Header) ================= */}
           <header
             id="hd"
-            className="fixed top-0 inset-x-0 z-30 px-4 pt-[calc(8px+env(safe-area-inset-top,0px))] pb-2 pointer-events-none flex items-center justify-between gap-2 transition-all duration-300"
+            className="fixed top-0 inset-x-0 z-30 px-2 sm:px-4 pt-[calc(8px+env(safe-area-inset-top,0px))] pb-2 pointer-events-none"
           >
-            {/* سمت راست: دکمه منو یا بازگشت */}
-            <div className="pointer-events-auto flex items-center gap-2">
-              {isDetailPage ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="cb fl text-ink"
-                  aria-label="بازگشت"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  id="mb0"
-                  onClick={() => setNavDrawerOpen(true)}
-                  className="cb fl text-ink"
-                  aria-label="منو"
-                >
-                  {/* آیکون همبرگری دوخطی با خط دوم کوتاه‌تر مطابق رفرنس */}
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M4 8h16M4 16h10" />
-                  </svg>
-                </button>
-              )}
+            <div className="pointer-events-auto mx-auto max-w-6xl w-full flex items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-surface/90 backdrop-blur-2xl border border-border/80 shadow-sm text-ink transition-all">
+              {/* سمت راست: دکمه منو یا بازگشت + سایدبار */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isDetailPage ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="cb text-ink hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    aria-label="بازگشت"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    id="mb0"
+                    onClick={() => setNavDrawerOpen(true)}
+                    className="cb text-ink hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    aria-label="منو"
+                  >
+                    {/* آیکون همبرگری دوخطی با خط دوم کوتاه‌تر */}
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M4 8h16M4 16h10" />
+                    </svg>
+                  </button>
+                )}
 
-              {/* دسکتاپ: دکمه باز و بسته کردن سایدبار */}
-              <button
-                type="button"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="cb fl text-ink hidden md:grid"
-                aria-label="سایدبار"
+                {/* دسکتاپ: دکمه باز و بسته کردن سایدبار */}
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="cb text-ink hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden md:grid"
+                  aria-label="سایدبار"
+                >
+                  {sidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+                </button>
+              </div>
+
+              {/* وسط: عنوان صفحه با نشانگر زنده */}
+              <div
+                id="ttl"
+                className="px-3.5 py-1.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 text-xs md:text-sm font-bold text-ink truncate text-center flex items-center justify-center gap-2 max-w-[180px] sm:max-w-xs md:max-w-md select-none shrink"
               >
-                {sidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
-              </button>
-            </div>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
+                <span className="truncate">{activePageLabel}</span>
+              </div>
 
-            {/* وسط: عنوان صفحه با Scrim/Blur محافظ جهت جلوگیری از هم‌پوشانی محتوا (D1) */}
-            <div
-              id="ttl"
-              className="px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border/90 shadow-xs text-xs md:text-sm font-bold text-ink truncate text-center pointer-events-auto flex-initial max-w-xs md:max-w-md transition-all select-none"
-            >
-              {activePageLabel}
-            </div>
-
-            {/* سمت چپ: جستجو، اعلان و دکمه یار */}
-            <div className="pointer-events-auto flex items-center gap-2">
-              {/* دسکتاپ: جستجوی سراسری و کلید یار */}
-              <div className="hidden md:flex items-center gap-2">
-                <div className="fl flex items-center gap-2 h-10 w-72 px-3 rounded-xl border border-border bg-white/90">
-                  <Search size={16} className="text-ink-soft shrink-0" />
+              {/* سمت چپ: جستجو، تم، اعلان، یار */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* دسکتاپ: جستجوی سراسری */}
+                <div className="hidden md:flex items-center gap-2 h-9 w-52 lg:w-64 px-3 rounded-xl border border-border/80 bg-slate-50 dark:bg-slate-800/50">
+                  <Search size={15} className="text-ink-soft shrink-0" />
                   <input
                     type="text"
                     placeholder="جستجوی سراسری..."
@@ -295,45 +300,49 @@ export function Layout({
                     onClick={onOpenSearch}
                   />
                 </div>
+
+
+                {/* دکمه تغییر تم روشن/تاریک ۲۰۲۶ */}
                 <button
                   type="button"
-                  onClick={() => navigate('/tasks')}
-                  className="btn yr h-10 px-4 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 shadow-sm bg-primary hover:bg-primary-hover"
+                  onClick={toggleTheme}
+                  className="cb text-ink hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label={theme === 'dark' ? 'تغییر به پوسته روشن' : 'تغییر به پوسته تاریک'}
+                  title={theme === 'dark' ? 'پوسته روشن' : 'پوسته تاریک'}
                 >
-                  <Sparkles size={15} />
-                  <span>یار هوشمند</span>
+                  {theme === 'dark' ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-slate-600 dark:text-slate-300" />}
+                </button>
+
+                {/* موبایل: دکمه جستجو */}
+                <button
+                  type="button"
+                  onClick={onOpenSearch}
+                  className="cb text-ink md:hidden hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="جستجو"
+                >
+                  <Search size={18} />
+                </button>
+
+                {/* دکمه اعلان با بج قرمز */}
+                <button
+                  type="button"
+                  onClick={onOpenNotifications}
+                  className="cb text-ink relative hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="اعلان‌ها"
+                >
+                  <Bell size={18} />
+                  {unreadNotificationsCount > 0 && (
+                    <em>{(unreadNotificationsCount).toLocaleString('fa-IR')}</em>
+                  )}
                 </button>
               </div>
-
-              {/* موبایل: دکمه جستجو */}
-              <button
-                type="button"
-                onClick={onOpenSearch}
-                className="cb fl text-ink md:hidden"
-                aria-label="جستجو"
-              >
-                <Search size={18} />
-              </button>
-
-              {/* دکمه اعلان با بج قرمز */}
-              <button
-                type="button"
-                onClick={onOpenNotifications}
-                className="cb fl text-ink relative"
-                aria-label="اعلان‌ها"
-              >
-                <Bell size={18} />
-                {unreadNotificationsCount > 0 && (
-                  <em>{(unreadNotificationsCount).toLocaleString('fa-IR')}</em>
-                )}
-              </button>
             </div>
           </header>
 
-          {/* محتوای اصلی صفحات — تمام‌صفحه با حاشیه مناسب موبایل */}
+          {/* محتوای اصلی صفحات — تمام‌صفحه با حاشیه مناسب موبایل بدون هم‌پوشانی هدر */}
           <main
             id="main-scroll-container"
-            className="w-full flex-1 overflow-y-auto pb-[calc(var(--safe-bottom)+104px)] pt-[calc(var(--safe-top)+62px)] px-2 sm:px-4 md:px-6 no-scrollbar"
+            className="w-full flex-1 overflow-y-auto main-content-scroll px-2 sm:px-4 md:px-6 no-scrollbar"
           >
             <div className="mx-auto min-h-full w-full max-w-6xl">
               {children}

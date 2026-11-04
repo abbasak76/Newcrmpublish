@@ -19,14 +19,22 @@ const TONES = {
 
 function StatCard({ label, value, hint, icon: Icon, tone, onClick, index }: StatProps) {
   return (
-    <button onClick={onClick} style={{ ['--i' as any]: index }}
-      className="se-card se-interactive flex min-h-[44px] cursor-pointer flex-col gap-2 p-4 text-start transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-float active:scale-[0.97] rounded-2xl border border-border/80 hover:border-primary/40">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-text-secondary">{label}</span>
-        <span className={cn('grid h-9 w-9 place-items-center rounded-2xl', TONES[tone])}><Icon size={18} /></span>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ ['--i' as any]: index }}
+      className="group relative overflow-hidden flex min-h-[52px] cursor-pointer flex-col justify-between p-4 text-start transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.12)] active:scale-[0.98] rounded-2xl bg-surface backdrop-blur-xl border border-border/80 hover:border-primary/50 shadow-sm text-ink"
+    >
+      <div className="flex items-center justify-between w-full">
+        <span className="text-xs font-bold text-text-secondary group-hover:text-text-main transition-colors">{label}</span>
+        <span className={cn('grid h-9 w-9 place-items-center rounded-xl transition-all duration-300 group-hover:scale-110 shadow-sm', TONES[tone])}>
+          <Icon size={18} />
+        </span>
       </div>
-      <span className="text-2xl font-black leading-none tracking-tight text-text-main font-mono">{fa(value)}</span>
-      <span className="text-[11px] font-medium text-text-secondary">{hint}</span>
+      <div className="mt-2">
+        <span className="text-2xl sm:text-3xl font-black leading-none tracking-tight text-text-main font-mono">{fa(value)}</span>
+        <p className="mt-1 text-[11px] font-medium text-text-secondary line-clamp-1">{hint}</p>
+      </div>
     </button>
   );
 }
@@ -35,7 +43,7 @@ function SectionTitle({ title, action, onAction }: { title: string; action?: str
   return (
     <div className="flex items-center justify-between px-1 mt-2">
       <h2 className="text-sm font-extrabold text-text-main">{title}</h2>
-      {action && <button onClick={onAction} className="flex min-h-[44px] cursor-pointer items-center gap-0.5 px-1 text-[11px] font-bold text-primary hover:underline">{action}<ChevronLeft size={13} /></button>}
+      {action && <button type="button" onClick={onAction} className="flex min-h-[44px] cursor-pointer items-center gap-0.5 px-1 text-[11px] font-bold text-primary hover:underline">{action}<ChevronLeft size={13} /></button>}
     </div>
   );
 }
@@ -60,23 +68,42 @@ export function HomeWorkspace({ state }: { state: AppState }) {
     <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-24 font-premium" dir="rtl">
       
       {/* سلام و خلاصه روز */}
-      <section data-tour="header-user" className="se-card relative overflow-hidden p-5 sm:p-6 rounded-[24px]">
-        <p className="relative flex items-center gap-1.5 text-[11px] font-medium text-text-secondary"><Calendar size={13} className="text-primary" />{todayDateStr}</p>
-        <h1 className="relative mt-2 text-xl sm:text-2xl font-bold tracking-tight text-text-main">
-          {greeting(now.getHours())}، {currentUser?.name?.split(' ')[0] || 'همکار گرامی'}
-        </h1>
-        <p className="relative mt-1 text-xs text-text-secondary leading-relaxed">
-          {myTasks.length === 0 && todayCount === 0 
-            ? 'امروز مورد بازی یا برنامه‌ای ندارید؛ می‌توانید از دکمه‌های عملیات درون صفحه، کار جدیدی ثبت کنید.' 
-            : `${fa(myTasks.length)} وظیفه باز و ${fa(todayCount)} برنامه برای امروز دارید.`}
-        </p>
-        <div className="relative mt-3.5 flex flex-wrap gap-2">
-           <button onClick={() => navigate('/tasks?new=1')} className="bg-primary text-white rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-primary-hover active:scale-95 transition-all cursor-pointer">
-             <Plus size={14} /> تسک جدید
-           </button>
-           <button onClick={() => navigate('/customers?new=1')} className="glass text-ink rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 active:scale-95 transition-all cursor-pointer">
-             <Building2 size={14} /> مشتری جدید
-           </button>
+      <section
+        data-tour="header-user"
+        className="relative overflow-hidden p-5 sm:p-6 rounded-[28px] bg-surface backdrop-blur-2xl border border-border/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-ink"
+      >
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+        <div className="relative">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
+            <Calendar size={14} className="text-primary" />
+            {todayDateStr}
+          </p>
+          <h1 className="mt-2 text-xl sm:text-2xl font-black tracking-tight text-text-main">
+            {greeting(now.getHours())}، {currentUser?.name?.split(' ')[0] || 'همکار گرامی'}
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-text-secondary leading-relaxed max-w-xl">
+            {myTasks.length === 0 && todayCount === 0 
+              ? 'امروز مورد بازی یا برنامه‌ای ندارید؛ می‌توانید از دکمه‌های عملیات درون صفحه، کار جدیدی ثبت کنید.' 
+              : `${fa(myTasks.length)} وظیفه باز و ${fa(todayCount)} برنامه برای امروز دارید.`}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            <button
+              type="button"
+              onClick={() => navigate('/tasks?new=1')}
+              className="bg-primary hover:bg-primary-hover text-white rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus size={15} />
+              <span>تسک جدید</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/customers?new=1')}
+              className="bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-text-main rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-2 border border-border/70 active:scale-95 transition-all cursor-pointer"
+            >
+              <Building2 size={15} />
+              <span>مشتری جدید</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -86,13 +113,15 @@ export function HomeWorkspace({ state }: { state: AppState }) {
         isAuthoritative={true}
       />
 
-      {/* کارت پیشنهاد هوشمند یار (الزام دیزاین سیستم: رنگ آلبالویی فقط در کارت یار و منوی همبرگری) */}
-      <section className="yar space-y-2.5">
+      {/* کارت توصیه‌های تحلیلی روز */}
+      <section className="relative overflow-hidden rounded-[24px] p-4 sm:p-5 shadow-sm space-y-3 bg-surface border border-border/80">
         <div className="flex items-center gap-2.5">
-          <span className="yb">یار</span>
-          <b className="yt">پیشنهاد هوشمند امروز</b>
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary/10 text-primary font-bold text-xs">
+            <Sparkles size={16} />
+          </span>
+          <b className="text-sm font-extrabold text-ink">توصیه‌های تحلیلی روز</b>
         </div>
-        <p className="text-xs text-text-main/90 leading-relaxed">
+        <p className="text-xs sm:text-sm text-ink-soft leading-relaxed font-medium">
           {overdueTasks.length > 0
             ? `${fa(overdueTasks.length)} وظیفه در وضعیت نیاز به پیگیری فوری قرار دارد. پیشنهاد می‌کنم ابتدا کارتابل پیگیری را بررسی کنید.`
             : churnPortfolio.criticalCount > 0
@@ -103,14 +132,14 @@ export function HomeWorkspace({ state }: { state: AppState }) {
           <button
             type="button"
             onClick={() => navigate('/tasks')}
-            className="btn yr h-8 px-3.5 rounded-lg text-xs font-bold active:scale-95 transition-transform"
+            className="h-9 px-4 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary-hover active:scale-95 transition-all shadow-xs cursor-pointer"
           >
             مشاهده اقدام‌ها
           </button>
           <button
             type="button"
             onClick={() => navigate('/accounts')}
-            className="btn sec h-8 px-3.5 rounded-lg text-xs font-bold active:scale-95 transition-transform"
+            className="btn sec h-9 px-4 rounded-xl text-xs font-bold active:scale-95 transition-transform shadow-xs cursor-pointer"
           >
             حساب‌های مشتریان
           </button>

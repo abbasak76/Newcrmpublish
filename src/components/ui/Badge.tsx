@@ -23,13 +23,13 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   const variantStyles = {
-    default: "bg-canvas text-text-secondary border border-border",
-    primary: "bg-primary/10 text-primary border border-primary/20 font-bold",
-    success: "bg-success-soft text-success border border-success-line font-bold",
-    warning: "bg-warning-soft text-warning border border-warning-line font-bold",
-    danger: "bg-danger-soft text-danger border border-danger-line font-bold",
-    info: "bg-info-soft text-info border border-info-line font-bold",
-    neutral: "bg-canvas text-text-secondary border border-border font-medium",
+    default: "bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80",
+    primary: "bg-primary/10 dark:bg-primary-950/40 text-primary dark:text-blue-400 border border-primary/25 dark:border-primary-800/50 font-bold",
+    success: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/50 font-bold",
+    warning: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 font-bold",
+    danger: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/50 font-bold",
+    info: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200/80 dark:border-sky-800/50 font-bold",
+    neutral: "bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700/60 font-medium",
   };
 
   const dotColors = {

@@ -182,12 +182,12 @@ export function CalendarWorkspace({ state }: { state: AppState }) {
                   {dayData.count > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {dayData.tasks.length > 0 && (
-                        <span className="px-1 py-0.2 text-[9px] rounded-md bg-blue-100 text-blue-800 font-bold font-mono">
+                        <span className="px-1 py-0.2 text-[9px] rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-bold font-mono">
                           {toPersianDigits(dayData.tasks.length)} وظیفه
                         </span>
                       )}
                       {dayData.cheques.length > 0 && (
-                        <span className="px-1 py-0.2 text-[9px] rounded-md bg-amber-100 text-amber-800 font-bold font-mono">
+                        <span className="px-1 py-0.2 text-[9px] rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold font-mono">
                           {toPersianDigits(dayData.cheques.length)} چک
                         </span>
                       )}
@@ -232,12 +232,12 @@ export function CalendarWorkspace({ state }: { state: AppState }) {
           <div className="space-y-2 max-h-96 overflow-y-auto no-scrollbar">
             {/* Meetings list */}
             {(activeFilter === 'ALL' || activeFilter === 'MEETINGS') && activeDayData.meetings.map((m: any) => (
-              <div key={m.id} className="p-3 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-1">
+              <div key={m.id} className="p-3 rounded-2xl bg-primary-soft/80 border border-primary/20 space-y-1">
                 <div className="flex justify-between items-start">
-                  <strong className="text-xs font-bold text-purple-900">{m.title}</strong>
-                  <span className="text-[10px] font-mono text-purple-700 font-bold">{m.startTime} - {m.endTime}</span>
+                  <strong className="text-xs font-bold text-ink">{m.title}</strong>
+                  <span className="text-[10px] font-mono text-primary font-bold">{m.startTime} - {m.endTime}</span>
                 </div>
-                <div className="text-[10px] text-purple-600 flex items-center gap-1">
+                <div className="text-[10px] text-ink-soft flex items-center gap-1">
                   <Users size={11} /> {m.participantIds?.length || 1} شرکت‌کننده
                 </div>
               </div>

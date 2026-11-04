@@ -1,9 +1,9 @@
 import React from 'react';
 
 const AVATAR_GRADIENTS = [
-  'linear-gradient(135deg,#9A5A73,#71364B)', 'linear-gradient(135deg,#DE8A72,#C96F55)',
-  'linear-gradient(135deg,#8DA48F,#667D68)', 'linear-gradient(135deg,#E3B67B,#D5A15E)',
-  'linear-gradient(135deg,#8A94A1,#687280)', 'linear-gradient(135deg,#8A4B63,#5E293D)',
+  'linear-gradient(135deg,#315EAA,#102552)', 'linear-gradient(135deg,#2FA79B,#1F6F68)',
+  'linear-gradient(135deg,#5B7093,#315EAA)', 'linear-gradient(135deg,#E5B124,#B8860B)',
+  'linear-gradient(135deg,#6C83A6,#102552)', 'linear-gradient(135deg,#1F6F68,#102552)',
 ];
 
 interface AvatarProps {

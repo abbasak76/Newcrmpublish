@@ -1,0 +1,132 @@
+/**
+ * AKHAVAN CRM – Palette & Token Specification (Version 1)
+ * Colors: Midnight Blue (#102552) x Sunlit Yellow (#FFC72C) x Turquoise (#99E1D9/#1F6F68) x Crimson (#8B1221)
+ */
+
+:root {
+  --c-canvas: #F3F6FA;
+  --c-surface: #FFFFFF;
+  --c-sunken: #EAF0F7;
+  --c-border: #E1E8F2;
+  --c-border-strong: #B7C7DC;
+  --c-text: #102552;
+  --c-text-2: #5B7093;
+  --c-brand-deep: #102552;
+  --c-primary: #315EAA;
+  --c-primary-hover: #284F92;
+  --c-primary-pressed: #1F3F75;
+  --c-primary-soft: #E6EDF8;
+  --c-accent: #FFC72C;
+  --c-on-accent: #102552;
+  --c-warning-soft: #FFF1C7;
+  --c-warning-text: #6B4E00;
+  --c-success-fill: #99E1D9;
+  --c-success-soft: #DDF4F1;
+  --c-success-text: #1F6F68;
+  --c-danger: #8B1221;
+  --c-danger-soft: #FCEEF0;
+  --c-danger-border: #F2CDD3;
+
+  /* Aliases for backwards compatibility & CSS variables */
+  --color-canvas: var(--c-canvas);
+  --color-bg: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-card: var(--c-surface);
+  --color-surface-secondary: var(--c-sunken);
+  --color-surface-muted: var(--c-sunken);
+  --color-surface-elevated: var(--c-surface);
+
+  --color-ink: var(--c-text);
+  --color-ink-soft: var(--c-text-2);
+  --color-text-main: var(--c-text);
+  --color-text-secondary: var(--c-text-2);
+  --color-text-tertiary: #8496B3;
+
+  --color-border: var(--c-border);
+  --color-border-subtle: var(--c-border);
+  --color-border-strong: var(--c-border-strong);
+  --color-divider: var(--c-border);
+
+  --color-primary: var(--c-primary);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-dark: var(--c-primary-pressed);
+  --color-brand: var(--c-brand-deep);
+  --color-on-brand: #FFFFFF;
+
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+
+  --color-success: var(--c-success-text);
+  --color-success-soft: var(--c-success-soft);
+  --color-success-line: var(--c-success-fill);
+
+  --color-warning: var(--c-warning-text);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-warning-line: #FFE699;
+
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-danger-line: var(--c-danger-border);
+
+  --color-info: var(--c-primary);
+  --color-info-soft: var(--c-primary-soft);
+  --color-info-line: #BFDBFE;
+
+  --color-status-healthy: var(--c-success-text);
+  --color-status-risk: var(--c-danger);
+  --color-status-warning: var(--c-warning-text);
+
+  /* Glassmorphism Layers */
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-bg-strong: rgba(255, 255, 255, 0.95);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.70);
+  --glass-border: var(--c-border);
+  --glass-border-highlight: rgba(255, 255, 255, 0.9);
+  --glass-border-dark: var(--c-border-strong);
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(16, 37, 82, 0.05);
+  --shadow-card: 0 4px 16px -2px rgba(16, 37, 82, 0.06), 0 0 0 1px var(--c-border);
+  --shadow-floating: 0 12px 32px -4px rgba(16, 37, 82, 0.12);
+  --shadow-modal: 0 20px 48px -8px rgba(16, 37, 82, 0.22);
+}
+
+[data-theme="dark"],
+html.dark {
+  --c-canvas: #0C0C0C;
+  --c-surface: #1D1D1D;
+  --c-sunken: #262626;
+  --c-border: #2A2F3A;
+  --c-border-strong: #3A4150;
+  --c-text: #F2F5FA;
+  --c-text-2: #A9B4C6;
+  --c-brand-deep: #102552;
+  --c-primary: #6E96E0;
+  --c-primary-hover: #86A8E8;
+  --c-primary-pressed: #5A82CC;
+  --c-primary-soft: #14233F;
+  --c-accent: #FFC72C;
+  --c-on-accent: #102552;
+  --c-warning-soft: #3A2F0A;
+  --c-warning-text: #FFC72C;
+  --c-success-fill: #99E1D9;
+  --c-success-soft: #12302D;
+  --c-success-text: #99E1D9;
+  --c-danger: #FF6B7D;
+  --c-danger-soft: #3A1219;
+  --c-danger-border: #5A1E29;
+
+  /* Glassmorphism Layers (Dark) */
+  --glass-bg: rgba(29, 29, 29, 0.88);
+  --glass-bg-strong: rgba(29, 29, 29, 0.95);
+  --glass-bg-subtle: rgba(29, 29, 29, 0.65);
+  --glass-border: var(--c-border);
+  --glass-border-highlight: rgba(255, 255, 255, 0.12);
+  --glass-border-dark: var(--c-border-strong);
+
+  /* Shadows (Dark) */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--c-border);
+  --shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.75);
+  --shadow-modal: 0 20px 48px -8px rgba(0, 0, 0, 0.90);
+}

@@ -473,22 +473,22 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
 
   const getStatusBadge = (status: Quote['status']) => {
     switch (status) {
-      case 'DRAFT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-canvas text-text-secondary">پیش‌نویس (DRAFT)</span>;
-      case 'PENDING_APPROVAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-warning">در انتظار تایید مدیریت</span>;
-      case 'APPROVED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-50 text-info">تایید شده توسط مدیریت</span>;
-      case 'SENT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 text-primary">ارسال به مشتری</span>;
-      case 'ACCEPTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-success-soft text-success">تایید نهایی مشتری</span>;
-      case 'REJECTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-danger">رد شده</span>;
-      case 'CANCELLED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-red-700">لغوشده</span>;
-      case 'PENDING_APPROVAL_ERP': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-700 border border-amber-200">در انتظار تأیید لغو در ERP</span>;
-      case 'HANDOFF_EXTERNAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/20 text-primary-hover">ارسال به ERP (تحویل نهایی)</span>;
-      default: return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">{status}</span>;
+      case 'DRAFT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-canvas text-text-secondary border border-border">پیش‌نویس (DRAFT)</span>;
+      case 'PENDING_APPROVAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 dark:bg-amber-950/40 text-warning dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">در انتظار تایید مدیریت</span>;
+      case 'APPROVED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-50 dark:bg-sky-950/40 text-info dark:text-sky-400 border border-sky-200/60 dark:border-sky-800/40">تایید شده توسط مدیریت</span>;
+      case 'SENT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 dark:bg-primary-950/40 text-primary dark:text-blue-400 border border-primary/20">ارسال به مشتری</span>;
+      case 'ACCEPTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-success-soft dark:bg-emerald-950/40 text-success dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">تایید نهایی مشتری</span>;
+      case 'REJECTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 dark:bg-rose-950/40 text-danger dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">رد شده</span>;
+      case 'CANCELLED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40">لغوشده</span>;
+      case 'PENDING_APPROVAL_ERP': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">در انتظار تأیید لغو در ERP</span>;
+      case 'HANDOFF_EXTERNAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/20 dark:bg-primary-950/60 text-primary-hover dark:text-blue-300 border border-primary/30">ارسال به ERP (تحویل نهایی)</span>;
+      default: return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-border">{status}</span>;
     }
   };
 
   return (
     <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-32 font-premium" dir="rtl">
-      <Card padding="md" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-border">
+      <Card padding="md" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface border-border/80">
         <div>
           <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" /> میز پیش‌فاکتورها و پروپوزال‌های تجاری (CPQ)
@@ -525,7 +525,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                 key={q.id} 
                 padding="md" 
                 onClick={() => setActiveQuoteId(q.id)}
-                className={`cursor-pointer transition-all border ${isSelected ? 'border-border-strong bg-canvas shadow-sm' : 'border-transparent hover:bg-canvas bg-white'}`}
+                className={`cursor-pointer transition-all border ${isSelected ? 'border-primary/60 bg-surface shadow-md' : 'border-border/70 hover:bg-surface-secondary bg-surface'}`}
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -537,7 +537,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                   </div>
                   {getStatusBadge(q.status)}
                 </div>
-                <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-xs">
+                <div className="flex justify-between items-center mt-3 pt-2 border-t border-border/70 text-xs">
                   <span className="text-text-secondary">ارزش کل:</span>
                   <span className="font-bold font-mono text-text-main">{formatCurrency(q.totalAmount)} ریال</span>
                 </div>
@@ -548,7 +548,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
 
         <div className="lg:col-span-2 space-y-4">
           {activeQuote ? (
-            <Card padding="lg" className="space-y-4 bg-white border-border">
+            <Card padding="lg" className="space-y-4 bg-surface border-border/80">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-border gap-3">
                 <div>
                   <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {negotiationScenarios.map(scenario => (
-                      <div key={scenario.key} className="rounded-xl border border-border bg-white p-3 space-y-2">
+                      <div key={scenario.key} className="rounded-xl border border-border bg-surface p-3 space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <strong className="text-xs text-text-main">{scenario.title}</strong>
                           <span className={`text-[10px] rounded-full px-2 py-1 font-bold ${scenario.creditRisk === 'CRITICAL' ? 'bg-danger-soft text-danger' : scenario.creditRisk === 'HIGH' ? 'bg-warning-soft text-warning' : scenario.creditRisk === 'LOW' ? 'bg-success-soft text-success' : 'bg-canvas text-text-secondary'}`}>
@@ -769,7 +769,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
               </div>
             </Card>
           ) : (
-            <Card padding="lg" className="text-center text-text-secondary py-12 bg-white border-border space-y-3">
+            <Card padding="lg" className="text-center text-text-secondary py-12 bg-surface border-border space-y-3">
               <p className="text-xs">یک پیش‌فاکتور از فهرست انتخاب کنید یا پیش‌فاکتور جدید صادر نمایید.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="primary" size="sm" onClick={() => setIsWizardOpen(true)} icon={<Sparkles className="w-3.5 h-3.5" />}>

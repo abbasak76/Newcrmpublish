@@ -29,8 +29,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { const t = setInterval(() => setHour(new Date().getHours()), 5 * 60 * 1000); return () => clearInterval(t); }, []);
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.style.colorScheme = theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#171114' : '#71364B');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#090D16' : '#2563EB');
     try { localStorage.setItem('akhavan-theme', themePreference); } catch { /* ignore */ }
   }, [theme, themePreference]);
   useEffect(() => { try { localStorage.setItem('akhavan-atmosphere', atmosphereMode); } catch { /* ignore */ } }, [atmosphereMode]);

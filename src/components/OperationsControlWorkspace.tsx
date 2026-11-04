@@ -233,7 +233,7 @@ export function OperationsControlWorkspace({ state, updateState }: Props) {
 
   const TabIcon = TABS.find(t => t.id === tab)?.icon || Activity;
   return <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-32 font-premium" dir="rtl">
-    <div className="relative overflow-hidden rounded-[28px] border border-border bg-white p-5 shadow-card md:p-7">
+    <div className="relative overflow-hidden rounded-[28px] border border-border bg-surface p-5 shadow-card md:p-7">
       <div className="pointer-events-none absolute -left-10 -top-16 h-56 w-56 rounded-full bg-gold/10 blur-3xl" />
       <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div><div className="mb-2 flex flex-wrap items-center gap-2"><Badge variant="warning" dot>محیط آزمایشی محلی</Badge><Badge variant="neutral">ذخیره در IndexedDB</Badge></div><h1 className="text-xl font-black text-text-main md:text-2xl">مرکز عملیات فروش و پخش</h1><p className="mt-2 max-w-3xl text-sm leading-7 text-text-secondary">سفارش، مذاکره، کنترل قوانین، برنامه پخش، برگشتی، تطبیق و سودآوری در یک فضای کاری. تغییرات این نسخه فقط در داده آزمایشی CRM ذخیره می‌شوند و هیچ عملیات ERP یا حسابداری واقعی اجرا نمی‌شود.</p></div>
@@ -243,7 +243,7 @@ export function OperationsControlWorkspace({ state, updateState }: Props) {
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       {[{label:'مجموع سفارش‌های غیرلغوشده',value:shortMoney(totalOrderValue),hint:`${orders.filter(o=>o.status!=='CANCELLED').length.toLocaleString('fa-IR')} سفارش`,icon:Package},{label:'برگشت ثبت‌شده',value:shortMoney(totalReturns),hint:'بدون تغییر خودکار مانده مالی',icon:ArrowLeftRight},{label:'برنامه‌های پخش باز',value:activeDispatch.toLocaleString('fa-IR'),hint:'برنامه‌ریزی؛ نه ارسال قطعی',icon:Truck},{label:'پوشش بهای تمام‌شده',value:`${Math.round(costCoverage*100).toLocaleString('fa-IR')}٪`,hint:'سفارش‌های دارای بهای معتبر',icon:Wallet}].map(k=><Card key={k.label} className="min-w-0"><div className="flex items-start justify-between gap-2"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/8 text-primary"><k.icon size={19}/></span><span className="text-[10px] font-medium text-text-secondary">{k.hint}</span></div><div className="mt-4 truncate text-lg font-black text-text-main">{k.value}</div><div className="mt-1 text-xs text-text-secondary">{k.label}</div></Card>)}
     </div>
-    <div className="flex gap-2 overflow-x-auto rounded-2xl border border-border bg-white p-2 shadow-subtle">
+    <div className="flex gap-2 overflow-x-auto rounded-2xl border border-border bg-surface p-2 shadow-subtle">
       {visibleTabs.map(t=>{const Icon=t.icon; return <button key={t.id} onClick={()=>setTab(t.id)} className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-xs font-bold transition ${tab===t.id?'bg-primary text-white shadow-subtle':'text-text-secondary hover:bg-canvas hover:text-text-main'}`}><Icon size={15}/>{t.label}</button>})}
     </div>
 

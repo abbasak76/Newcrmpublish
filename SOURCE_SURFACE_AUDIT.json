@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T09:32:04.793Z",
+  "generatedAt": "2026-11-04T19:18:00.718Z",
   "method": "static relative-import graph from src/main.tsx; dynamic/runtime registries, CSS references, tests and framework conventions may require manual review",
   "sourceFiles": 134,
   "reachableFiles": 125,

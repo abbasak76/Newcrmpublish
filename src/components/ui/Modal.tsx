@@ -58,9 +58,9 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         ref={modalRef}
         className={cn(
-          "relative w-full bg-surface shadow-2xl flex flex-col z-10",
-          "rounded-t-3xl sm:rounded-3xl max-h-[90dvh] sm:max-h-[85vh]",
-          "animate-in slide-in-from-bottom sm:zoom-in-95 duration-300",
+          "relative w-full bg-surface border border-border/70 shadow-[0_24px_60px_-12px_rgba(15,23,42,0.22)] flex flex-col z-10",
+          "rounded-t-[28px] sm:rounded-[28px] max-h-[90dvh] sm:max-h-[85vh]",
+          "animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 ease-out",
           widthClasses[effectiveSize] || 'max-w-lg',
           className
         )}

@@ -1,4 +1,4 @@
-import type { Account, AppState, CustomerTask } from '../types.ts';
+import type { Account, AppState, CustomerTask, Priority } from '../types.ts';
 
 export function generateId(): string {
   return 'id_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
@@ -219,10 +219,14 @@ export function predictAccountChurn(
   }
 
   // اقدام پیشنهادی
-  let suggestedAction = {
+  let suggestedAction: {
+    title: string;
+    taskType: string;
+    priority: 'HIGH' | 'CRITICAL' | 'NORMAL';
+  } = {
     title: 'ارزیابی فصلی و ثبت تعامل دوره‌ای',
     taskType: 'FOLLOW_UP',
-    priority: 'NORMAL' as const,
+    priority: 'NORMAL',
   };
 
   if (riskTier === 'CRITICAL') {
@@ -310,12 +314,12 @@ export function generateChurnMitigationTask(
     title: churnResult.suggestedAction.title,
     description: `ریسک ریزش این مشتری به سطح «${churnResult.riskTierLabel}» با امتیاز ${churnResult.churnScore.toLocaleString('fa-IR')} از ۱۰۰ رسیده است.\n\nدلایل کلیدی:\n${reasonsText}\n\nراهکارهای پیشنهادی:\n${recsText}`,
     status: 'OPEN',
-    priority: churnResult.suggestedAction.priority === 'CRITICAL' ? 'CRITICAL' : 'HIGH',
+    priority: churnResult.suggestedAction.priority,
     assigneeId: assigneeId || account.ownerId || 'user-admin',
     assignedTo: assigneeId || account.ownerId || 'user-admin',
     dueDate,
     createdAt: new Date().toISOString(),
     slaStatus: churnResult.riskTier === 'CRITICAL' ? 'WARNING' : 'HEALTHY',
     type: 'CALL',
-  } as CustomerTask;
+  } as unknown as CustomerTask;
 }

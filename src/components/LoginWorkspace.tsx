@@ -225,14 +225,14 @@ export function LoginWorkspace({
                 <linearGradient id="pbrLitCopper" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#FFF8E7" />
                   <stop offset="30%" stopColor="#E5BA7E" />
-                  <stop offset="65%" stopColor="#C96F55" />
-                  <stop offset="100%" stopColor="#71364B" />
+                  <stop offset="65%" stopColor="#315EAA" />
+                  <stop offset="100%" stopColor="#102552" />
                 </linearGradient>
 
                 <linearGradient id="pbrShadeBronze" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#71364B" />
-                  <stop offset="45%" stopColor="#431C2A" />
-                  <stop offset="100%" stopColor="#1E0C14" />
+                  <stop offset="0%" stopColor="#315EAA" />
+                  <stop offset="45%" stopColor="#1F3F75" />
+                  <stop offset="100%" stopColor="#102552" />
                 </linearGradient>
 
                 <linearGradient id="pbrBevelGold" x1="0%" y1="0%" x2="0%" y2="100%">

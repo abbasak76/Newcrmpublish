@@ -489,7 +489,7 @@ export function SettingsWorkspace({ state, updateState }: SettingsWorkspaceProps
               key={t.id}
               onClick={() => setTab(t.id as any)} 
               aria-current={isActive ? 'page' : undefined}
-              className={`px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer border ${isActive ? 'bg-primary/10 text-primary border-primary/20 font-extrabold shadow-sm' : 'bg-white text-text-secondary border-transparent hover:bg-canvas font-medium'}`}
+              className={`px-4 py-2 text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer border ${isActive ? 'bg-primary/10 text-primary border-primary/20 font-extrabold shadow-sm' : 'bg-surface text-text-secondary border-border/60 hover:bg-canvas font-medium'}`}
             >
               {t.label}
             </button>
@@ -501,7 +501,7 @@ export function SettingsWorkspace({ state, updateState }: SettingsWorkspaceProps
       {tab === 'AGENTS' && (
         <div className="space-y-5">
           {/* Emergency Kill Switch Banner */}
-          <Card padding="lg" className={`border-2 transition-all ${aiKillSwitch ? 'bg-red-50/60 border-red-300' : 'bg-white border-border'}`}>
+          <Card padding="lg" className={`border-2 transition-all ${aiKillSwitch ? 'bg-red-50/60 dark:bg-red-950/40 border-red-300 dark:border-red-800' : 'bg-surface border-border'}`}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-start gap-3">
                 <div className={`p-3 rounded-2xl ${aiKillSwitch ? 'bg-red-500 text-white shadow-md' : 'bg-primary/10 text-primary'}`}>
@@ -534,7 +534,7 @@ export function SettingsWorkspace({ state, updateState }: SettingsWorkspaceProps
           </Card>
 
           {/* AI Agents Registry */}
-          <Card padding="lg" className="bg-white border-border space-y-4">
+          <Card padding="lg" className="bg-surface border-border space-y-4">
             <div className="flex justify-between items-center border-b border-border pb-3">
               <div>
                 <h3 className="font-bold text-base text-text-main flex items-center gap-2">
@@ -836,7 +836,7 @@ export function SettingsWorkspace({ state, updateState }: SettingsWorkspaceProps
                           {ch?.name || log.channelId}
                         </td>
                         <td className="py-2.5">
-                          <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg ${log.direction === 'OUTBOUND' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                          <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg ${log.direction === 'OUTBOUND' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
                             {log.direction === 'OUTBOUND' ? 'ارسال به بیرون' : 'دریافتی از کاربر'}
                           </span>
                         </td>

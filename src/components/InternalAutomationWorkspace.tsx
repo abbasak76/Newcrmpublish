@@ -201,7 +201,7 @@ export function InternalAutomationWorkspace({ state, updateState }: InternalAuto
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${typeMeta.category === 'PERSONNEL' ? 'bg-sky-50 text-info border border-sky-200' : 'bg-amber-50 text-warning border border-amber-200'}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${typeMeta.category === 'PERSONNEL' ? 'bg-sky-50 dark:bg-sky-950/40 text-info dark:text-sky-300 border border-sky-200 dark:border-sky-800/40' : 'bg-amber-50 dark:bg-amber-950/40 text-warning dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'}`}>
                 {typeMeta.category === 'PERSONNEL' ? 'پرسنلی' : 'سازمانی'}
               </span>
               <h4 className="font-bold text-sm text-text-main">{req.title}</h4>
@@ -220,7 +220,7 @@ export function InternalAutomationWorkspace({ state, updateState }: InternalAuto
               )}
             </div>
           </div>
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${req.status === 'APPROVED' ? 'bg-success-soft text-success' : req.status === 'REJECTED' ? 'bg-red-50 text-danger' : req.status === 'WAITING_FOR_INFORMATION' ? 'bg-amber-50 text-warning' : 'bg-sky-50 text-info'}`}>
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${req.status === 'APPROVED' ? 'bg-success-soft dark:bg-emerald-950/40 text-success dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' : req.status === 'REJECTED' ? 'bg-red-50 dark:bg-rose-950/40 text-danger dark:text-rose-300 border-rose-200 dark:border-rose-800/40' : req.status === 'WAITING_FOR_INFORMATION' ? 'bg-amber-50 dark:bg-amber-950/40 text-warning dark:text-amber-300 border-amber-200 dark:border-amber-800/40' : 'bg-sky-50 dark:bg-sky-950/40 text-info dark:text-sky-300 border-sky-200 dark:border-sky-800/40'}`}>
             {req.status === 'APPROVED' ? 'تأیید شده' : req.status === 'REJECTED' ? 'رد شده' : req.status === 'WAITING_FOR_INFORMATION' ? 'در انتظار اطلاعات' : 'در حال بررسی'}
           </span>
         </div>

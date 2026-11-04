@@ -19,7 +19,7 @@ import {
   Plus, CheckCircle2, DollarSign, CreditCard, ShieldAlert, PhoneCall,
   CalendarCheck, AlertTriangle, ArrowUpRight, ShieldCheck, Check
 } from 'lucide-react';
-import { generateId, formatAppDate, nextSequenceNumber } from '../lib/utils';
+import { generateId, formatAppDate, nextSequenceNumber, cleanNumericInput } from '../lib/utils';
 import { CustomDatePicker } from './ui/CustomDatePicker';
 import { 
   evaluateAllCustomerCollections, 

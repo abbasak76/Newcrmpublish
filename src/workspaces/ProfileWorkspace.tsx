@@ -101,8 +101,8 @@ export function ProfileWorkspace({ state, updateState, setActiveTab }: ProfileWo
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card padding="md" className="flex items-center gap-4 bg-white border-border">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+        <Card padding="md" className="flex items-center gap-4 bg-surface border-border/80">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
             <CheckSquare size={24} />
           </div>
           <div>
@@ -111,8 +111,8 @@ export function ProfileWorkspace({ state, updateState, setActiveTab }: ProfileWo
           </div>
         </Card>
 
-        <Card padding="md" className="flex items-center gap-4 bg-white border-border">
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+        <Card padding="md" className="flex items-center gap-4 bg-surface border-border/80">
+          <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 shadow-xs">
             <FileText size={24} />
           </div>
           <div>
@@ -121,8 +121,8 @@ export function ProfileWorkspace({ state, updateState, setActiveTab }: ProfileWo
           </div>
         </Card>
 
-        <Card padding="md" className="flex items-center gap-4 bg-white border-border">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <Card padding="md" className="flex items-center gap-4 bg-surface border-border/80">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary-950/40 text-primary dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs">
             <TrendingUp size={24} />
           </div>
           <div>
@@ -133,7 +133,7 @@ export function ProfileWorkspace({ state, updateState, setActiveTab }: ProfileWo
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card padding="lg" className="space-y-4 bg-white border-border">
+        <Card padding="lg" className="space-y-4 bg-surface border-border/80">
           <h3 className="font-bold text-base text-text-main flex items-center gap-2">
             <User className="w-4 h-4 text-primary" /> مشخصات تماس و اطلاعات فردی
           </h3>
@@ -172,7 +172,7 @@ export function ProfileWorkspace({ state, updateState, setActiveTab }: ProfileWo
           </form>
         </Card>
 
-        <Card padding="lg" className="space-y-4 bg-white border-border">
+        <Card padding="lg" className="space-y-4 bg-surface border-border/80">
           <h3 className="font-bold text-base text-text-main flex items-center gap-2">
             <RefreshCw className="w-4 h-4 text-primary" /> سوییچ سریع بین کاربران سازمانی (RBAC Simulator)
           </h3>

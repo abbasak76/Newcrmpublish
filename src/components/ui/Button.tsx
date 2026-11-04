@@ -21,19 +21,19 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const base = "inline-flex items-center justify-center gap-2 font-bold rounded-xl transition-all active:scale-95 select-none cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
+  const base = "inline-flex items-center justify-center gap-2 font-bold rounded-2xl transition-all duration-150 ease-out active:scale-[0.97] select-none cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2";
   const variants: Record<string, string> = {
-    primary: "bg-primary text-white hover:bg-primary-hover shadow-sm",
-    secondary: "bg-primary-50 text-primary hover:bg-primary-100",
-    outline: "border border-border text-ink hover:bg-canvas",
-    ghost: "text-ink hover:bg-black/5",
-    danger: "bg-danger text-white hover:bg-red-700 shadow-sm",
-    success: "bg-success text-white hover:bg-green-700 shadow-sm"
+    primary: "bg-primary text-white hover:bg-primary-hover shadow-[0_2px_8px_-1px_rgba(37,99,235,0.28)] hover:shadow-[0_4px_14px_-2px_rgba(37,99,235,0.38)]",
+    secondary: "bg-primary-50 dark:bg-primary-950/40 text-primary dark:text-blue-400 hover:bg-primary-100/90 dark:hover:bg-primary-900/60 border border-primary-200/50 dark:border-primary-800/40",
+    outline: "border border-border/80 text-ink bg-surface/80 dark:bg-slate-800/80 hover:bg-surface dark:hover:bg-slate-800 hover:border-border shadow-xs",
+    ghost: "text-ink hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
+    danger: "bg-danger text-white hover:bg-red-700 shadow-[0_2px_8px_-1px_rgba(220,38,38,0.28)]",
+    success: "bg-success text-white hover:bg-green-700 shadow-[0_2px_8px_-1px_rgba(22,163,74,0.28)]"
   };
   const sizes: Record<string, string> = {
     sm: "h-9 px-4 text-xs",
     md: "h-11 px-6 text-sm",
-    lg: "h-14 px-8 text-base",
+    lg: "h-13 px-8 text-base",
     icon: "h-11 w-11 p-0"
   };
 
