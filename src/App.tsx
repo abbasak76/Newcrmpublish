@@ -218,13 +218,17 @@ function AppContent() {
           <Route path="/dashboard" element={guard('dashboard', <DashboardWorkspace state={state} />)} />
           <Route path="/leads" element={guard('leads', <LeadsWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/accounts/*" element={guard('accounts', <CustomersWorkspace state={state} updateState={updateState} />)} />
+          <Route path="/customers/*" element={guard('accounts', <CustomersWorkspace state={state} updateState={updateState} />)} />
           <Route path="/opportunities" element={guard('leads', <NegotiationsWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/quotes" element={guard('quotes', <QuotesWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/activities" element={guard('activities', <ActivitiesWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/tasks" element={guard('tasks', <TasksWorkspace state={state} updateState={updateState} />)} />
           <Route path="/finance" element={guard('finance', <FinanceWorkspace state={state} updateState={updateState} />)} />
           <Route path="/operations" element={guard('operations_control', <OperationsControlWorkspace state={state} updateState={updateState} />)} />
+          <Route path="/operations_control" element={guard('operations_control', <OperationsControlWorkspace state={state} updateState={updateState} />)} />
+          <Route path="/operations-control" element={guard('operations_control', <OperationsControlWorkspace state={state} updateState={updateState} />)} />
           <Route path="/geo-intelligence" element={guard('geo_intelligence', <GeoIntelligenceWorkspace state={state} updateState={updateState} />)} />
+          <Route path="/geo_intelligence" element={guard('geo_intelligence', <GeoIntelligenceWorkspace state={state} updateState={updateState} />)} />
           <Route path="/cases" element={guard('cases', <CasesWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/marketing" element={guard('marketing', <CampaignsWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />
           <Route path="/knowledge" element={guard('knowledge', <KnowledgeWorkspace state={state} updateState={updateState} setActiveTab={(t: string) => navigate(`/${t}`)} />)} />

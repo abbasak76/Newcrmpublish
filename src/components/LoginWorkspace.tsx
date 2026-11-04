@@ -151,6 +151,7 @@ export function LoginWorkspace({
         name: 'احمد اخوان',
         email: 'ahmad@akhavan.ir',
         roleId: 'role-admin',
+        permissionSetId: 'perm-admin',
         active: true
       };
       startWarpFlythrough(() => onAuthenticated?.(fallbackUser));
@@ -167,6 +168,7 @@ export function LoginWorkspace({
         name: 'احمد اخوان',
         email: 'ahmad@akhavan.ir',
         roleId: 'role-admin',
+        permissionSetId: 'perm-admin',
         active: true
       };
       startWarpFlythrough(() => onAuthenticated?.(targetUser));

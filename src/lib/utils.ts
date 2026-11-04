@@ -33,6 +33,18 @@ export function formatCurrency(val: number | string): string {
   return num.toLocaleString('fa-IR');
 }
 
+export function formatRial(val: number | string | null | undefined): string {
+  if (val == null || val === '') return '۰ ریال';
+  const num = typeof val === 'number' ? Math.round(val) : parsePersianNumber(val);
+  return `${num.toLocaleString('fa-IR')} ریال`;
+}
+
+export function formatRialCompact(val: number | string | null | undefined): string {
+  if (val == null || val === '') return '۰ ریال';
+  const num = typeof val === 'number' ? Math.round(val) : parsePersianNumber(val);
+  return `${new Intl.NumberFormat('fa-IR', { notation: 'compact', maximumFractionDigits: 1 }).format(num)} ریال`;
+}
+
 export function cleanNumericInput(val: string): string {
   return String(val || '').replace(/[^0-9]/g, '');
 }

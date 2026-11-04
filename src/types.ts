@@ -661,6 +661,74 @@ export interface ZoneAssignment { id: string; zoneId: string; entityType: 'CUSTO
 export interface GeoMetricDefinition { key: GeoMetricKey; label: string; unit: string; sourceDescription: string; aggregation: string; higherIsBetter: boolean | null; requiresDateRange: boolean; available: boolean; limitation?: string; }
 export interface ZoneMetricSnapshot { id: string; zoneId: string; metricKey: GeoMetricKey; periodStart: string; periodEnd: string; value: number; unit: string; sourceUpdatedAt: string; calculatedAt: string; sourceRecordCount: number; rebuildable: true; }
 
+export type AccountNature = 'DEBIT' | 'CREDIT' | 'BOTH';
+
+export interface CoaMirror {
+  id: string;
+  code: string;
+  name: string;
+  nature: AccountNature;
+  level: 1 | 2 | 3 | 4;
+  parentCode?: string | null;
+  isActive: boolean;
+  tenantId?: string;
+  updatedAt: string;
+}
+
+export interface ReportBucket {
+  id: string;
+  key: string;
+  title: string;
+  standardNature: AccountNature;
+  calculationExpression?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface AccountMapRule {
+  id: string;
+  crmEntityType: 'CUSTOMER' | 'VENDOR' | 'PAYMENT' | 'RECEIPT' | 'SALES_RETURN' | 'EXPENSE' | 'DISCOUNT' | 'TAX';
+  crmSubType?: string;
+  erpAccountCode: string;
+  erpContraAccountCode?: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface BankMap {
+  id: string;
+  bankName: string;
+  accountNumber: string;
+  erpAccountCode: string;
+  isActive: boolean;
+}
+
+export interface CashboxMap {
+  id: string;
+  cashboxName: string;
+  collectorUserId?: string;
+  erpAccountCode: string;
+  isActive: boolean;
+}
+
+export type OutboxStatus = 'PENDING' | 'SENT' | 'FAILED' | 'DEAD_LETTER';
+
+export interface OutboxMessage {
+  id: string;
+  eventType: string;
+  aggregateType: string;
+  aggregateId: string;
+  payload: any;
+  status: OutboxStatus;
+  retryCount: number;
+  maxRetries?: number;
+  errorDetails?: string | null;
+  createdAt: string;
+  sentAt?: string | null;
+  tenantId?: string;
+  idempotencyKey?: string;
+}
+
 export interface AppState {
   /** درخواست‌های همکاری و پرونده‌های پرسنلی (ماژول ثبت‌نام؛ ذخیره محلی تا اتصال backend) */
   /** دستور پرداخت / مجوز واریز (درخواست به حسابدار؛ اجرا در ERP) */
@@ -671,6 +739,14 @@ export interface AppState {
   zoneAssignments?: ZoneAssignment[];
   geoMetricDefinitions?: GeoMetricDefinition[];
   zoneMetricSnapshots?: ZoneMetricSnapshot[];
+  /** ساختار آینه کدینگ و نگاشت حسابداری ERP */
+  coaMirror?: CoaMirror[];
+  reportBuckets?: ReportBucket[];
+  accountMapRules?: AccountMapRule[];
+  bankMaps?: BankMap[];
+  cashboxMaps?: CashboxMap[];
+  /** صف پیام‌های مبادله مطمئن Outbox */
+  outbox?: OutboxMessage[];
   onboardingApplications?: any[];
   personnelFiles?: any[];
   schemaVersion?: number;

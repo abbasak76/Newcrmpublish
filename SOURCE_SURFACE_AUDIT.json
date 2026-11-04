@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-03T21:44:25.828Z",
+  "generatedAt": "2026-11-04T07:49:38.154Z",
   "method": "static relative-import graph from src/main.tsx; dynamic/runtime registries, CSS references, tests and framework conventions may require manual review",
-  "sourceFiles": 129,
-  "reachableFiles": 121,
+  "sourceFiles": 131,
+  "reachableFiles": 123,
   "unreachableCandidates": 8,
   "unreachableCandidatesFiles": [
     "src/components/ui/Progress.tsx",

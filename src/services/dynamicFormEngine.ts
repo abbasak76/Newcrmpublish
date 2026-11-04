@@ -947,7 +947,7 @@ type AccountOpt = { id: string; name: string; code?: string; phone?: string };
 const accountOptions = (accounts: AccountOpt[]): FormFieldOption[] =>
   accounts.map(a => ({ value: a.id, label: `${a.name}${a.code || a.phone ? ` (${a.code || a.phone})` : ''}` }));
 
-export function createInvoiceFormSchema(accounts: AccountOpt[], quotes: { id: string; label: string }[]): DynamicFormSchema {
+export function createInvoiceFormSchema(accounts: AccountOpt[], quotes: Array<{ value?: string; id?: string; label: string }>): DynamicFormSchema {
   return {
     id: 'invoice_form_schema',
     title: 'صدور فاکتور رسمی',
@@ -959,7 +959,8 @@ export function createInvoiceFormSchema(accounts: AccountOpt[], quotes: { id: st
         validation: { required: true }, colSpan: 2
       },
       {
-        id: 'quoteId', name: 'quoteId', label: 'پیش‌فاکتور مرجع', type: 'select', options: quotes,
+        id: 'quoteId', name: 'quoteId', label: 'پیش‌فاکتور مرجع', type: 'select',
+        options: quotes.map(q => ({ value: q.value || q.id || '', label: q.label })),
         dependsOn: [{ field: 'source', operator: 'equals', value: 'FROM_QUOTE' }],
         validation: { required: true, requiredMessage: 'انتخاب پیش‌فاکتور الزامی است' }, colSpan: 2,
         description: 'اقلام و مبلغ مستقیماً از پیش‌فاکتور منتقل می‌شود.'

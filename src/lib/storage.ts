@@ -3,6 +3,7 @@ import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
 import { AppState } from '../types';
 import { idbGet, idbSet, idbDel } from './idb';
 import { generateSeedData } from './seed';
+import { DEFAULT_COA_MIRROR, DEFAULT_REPORT_BUCKETS, DEFAULT_ACCOUNT_MAP_RULES } from './accountingMapping';
 
 const STORAGE_VERSION = 19;
 const STORAGE_NAME = 'akhavan_app_state';
@@ -44,7 +45,7 @@ const ensureStateIntegrity = (state: AppState): AppState => {
 
   // Remove only known placeholder gateway credentials from earlier demo seeds. Never expose them as live integrations.
   const placeholderTokens = new Set(['bot_eitaa_akhavan_9921', 'rubika_auth_882194', 'bot_bale_crm_34807', 'kav_api_771829', 'wh_secret_8912']);
-  const safeMessagingChannels = (Array.isArray(state?.messagingChannels) ? state.messagingChannels : base.messagingChannels).map((channel: any) => {
+  const safeMessagingChannels = (Array.isArray(state?.messagingChannels) ? state.messagingChannels : (base.messagingChannels || [])).map((channel: any) => {
     const isPlaceholder = placeholderTokens.has(channel?.botToken || '');
     if (isPlaceholder) {
       return { ...channel, active: false, status: 'NOT_CONFIGURED', botToken: '', webhookUrl: '', autoReply: false, lastPing: undefined, latencyMs: undefined };
@@ -82,6 +83,12 @@ const ensureStateIntegrity = (state: AppState): AppState => {
     campaigns: Array.isArray(state?.campaigns) && state.campaigns.length > 0 ? state.campaigns : (base as any).campaigns || [],
     creditNotes: Array.isArray(state?.creditNotes) && state.creditNotes.length > 0 ? state.creditNotes : (base as any).creditNotes || [],
     financeRequests: Array.isArray(state?.financeRequests) && state.financeRequests.length > 0 ? state.financeRequests : (base as any).financeRequests || [],
+    coaMirror: Array.isArray(state?.coaMirror) && state.coaMirror.length > 0 ? state.coaMirror : DEFAULT_COA_MIRROR,
+    reportBuckets: Array.isArray(state?.reportBuckets) && state.reportBuckets.length > 0 ? state.reportBuckets : DEFAULT_REPORT_BUCKETS,
+    accountMapRules: Array.isArray(state?.accountMapRules) && state.accountMapRules.length > 0 ? state.accountMapRules : DEFAULT_ACCOUNT_MAP_RULES,
+    bankMaps: Array.isArray(state?.bankMaps) ? state.bankMaps : [],
+    cashboxMaps: Array.isArray(state?.cashboxMaps) ? state.cashboxMaps : [],
+    outbox: Array.isArray(state?.outbox) ? state.outbox : [],
     onboardingApplications: Array.isArray(state?.onboardingApplications) && state.onboardingApplications.length > 0 ? state.onboardingApplications : (base as any).onboardingApplications || [],
     personnelFiles: Array.isArray(state?.personnelFiles) && state.personnelFiles.length > 0 ? state.personnelFiles : (base as any).personnelFiles || [],
     internalRequests: Array.isArray(state?.internalRequests) && state.internalRequests.length > 0 ? state.internalRequests : (base as any).internalRequests || [],

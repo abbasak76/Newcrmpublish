@@ -8,6 +8,7 @@ import { formatAppDate } from '../lib/utils';
 import { DonutChart, GaugeChart, FunnelChart } from './charts';
 import { PageToolbar } from './ui/PageToolbar';
 import { Button } from './ui/Button';
+import { DataSourceStatus } from './ui/DataSourceStatus';
 import { OPPORTUNITY_STAGES } from '../config/pipeline';
 import { activeRecords } from '../lib/recordLifecycle';
 
@@ -58,6 +59,12 @@ export function DashboardWorkspace({ state }: { state: AppState }) {
         }
       />
 
+      <DataSourceStatus 
+        source="CRM" 
+        sourceName="پایگاه عملیاتی و انبار داده‌های تحلیلی" 
+        isAuthoritative={true}
+      />
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card padding="sm" className="glass shadow-subtle rounded-3xl cursor-pointer hover:shadow-card hover:border-primary/40 transition-all p-5" onClick={() => navigate('/tasks')}>
           <div className="w-10 h-10 rounded-2xl bg-ink/[.06] flex items-center justify-center text-ink-soft mb-3 ">
@@ -95,18 +102,21 @@ export function DashboardWorkspace({ state }: { state: AppState }) {
       <div className="space-y-3">
         <div className="flex justify-between items-center px-1">
           <h2 className="text-xs font-extrabold text-ink-soft uppercase tracking-wider">شاخص‌های بهره‌وری</h2>
-          <div className="relative">
-            <select 
-              value={filterPeriod} 
-              onChange={(e) => setFilterPeriod(e.target.value)}
-              className="glass rounded-xl px-3 py-1.5 text-[11px] font-bold text-ink outline-none cursor-pointer shadow-subtle"
-            >
-              <option value="هفتگی">هفتگی ˅</option>
-              <option value="ماهانه">ماهانه ˅</option>
-              <option value="فصلی">فصلی ˅</option>
-            </select>
+            <div className="flex items-center gap-1 bg-canvas p-0.5 rounded-xl border border-border">
+              {(['هفتگی', 'ماهانه', 'فصلی'] as const).map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setFilterPeriod(p)}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                    filterPeriod === p ? 'bg-primary text-white shadow-xs' : 'text-text-secondary hover:text-text-main'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card padding="lg" className="glass rounded-[28px] p-6 lg:col-span-2">

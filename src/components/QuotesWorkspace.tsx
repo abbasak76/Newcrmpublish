@@ -14,6 +14,7 @@ import { FileText, Send, CheckCircle2, AlertTriangle, Plus, Trash2, ArrowRight, 
 import { CustomerInvoicePrint } from './PrintLayouts';
 import { ProfitModal } from './ProfitModal';
 import { QuoteWizardModal } from './QuoteWizardModal';
+import { DataSourceStatus } from './ui/DataSourceStatus';
 
 interface QuotesWorkspaceProps {
   state: AppState;
@@ -478,6 +479,8 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
       case 'SENT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 text-primary">ارسال به مشتری</span>;
       case 'ACCEPTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-success-soft text-success">تایید نهایی مشتری</span>;
       case 'REJECTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-danger">رد شده</span>;
+      case 'CANCELLED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-red-700">لغوشده</span>;
+      case 'PENDING_APPROVAL_ERP': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-700 border border-amber-200">در انتظار تأیید لغو در ERP</span>;
       case 'HANDOFF_EXTERNAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/20 text-primary-hover">ارسال به ERP (تحویل نهایی)</span>;
       default: return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">{status}</span>;
     }
@@ -503,6 +506,12 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
           </Button>
         </div>
       </Card>
+
+      <DataSourceStatus 
+        source="CRM" 
+        sourceName="موتور قیمت‌گذاری و پیش‌فاکتور تجاری (CPQ)" 
+        isAuthoritative={false}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="space-y-3">

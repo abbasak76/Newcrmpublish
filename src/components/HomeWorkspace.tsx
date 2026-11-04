@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppState } from '../types';
 import { CheckSquare, Clock, AlertTriangle, Building2, ChevronLeft, Calendar, ListChecks, CalendarCheck, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { DataSourceStatus } from './ui/DataSourceStatus';
 
 const greeting = (h: number) => (h < 5 ? 'شب بخیر' : h < 12 ? 'صبح بخیر' : h < 17 ? 'ظهر بخیر' : h < 20 ? 'عصر بخیر' : 'شب بخیر');
 const fa = (n: number) => n.toLocaleString('fa-IR');
@@ -58,7 +59,6 @@ export function HomeWorkspace({ state }: { state: AppState }) {
       
       {/* سلام و خلاصه روز */}
       <section data-tour="header-user" className="se-card relative overflow-hidden p-5 sm:p-6 rounded-[24px]">
-        <div aria-hidden className="pointer-events-none absolute -top-16 end-[-40px] h-44 w-44 rounded-full bg-gold/20 blur-3xl" />
         <p className="relative flex items-center gap-1.5 text-[11px] font-medium text-text-secondary"><Calendar size={13} className="text-primary" />{todayDateStr}</p>
         <h1 className="relative mt-2 text-xl sm:text-2xl font-bold tracking-tight text-text-main">
           {greeting(now.getHours())}، {currentUser?.name?.split(' ')[0] || 'همکار گرامی'}
@@ -72,11 +72,17 @@ export function HomeWorkspace({ state }: { state: AppState }) {
            <button onClick={() => navigate('/tasks?new=1')} className="bg-primary text-white rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm hover:bg-primary-hover transition-all cursor-pointer">
              <Plus size={14} /> تسک جدید
            </button>
-           <button onClick={() => navigate('/accounts?new=1')} className="glass text-ink rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 transition-all cursor-pointer">
+           <button onClick={() => navigate('/customers?new=1')} className="glass text-ink rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 hover:bg-ink/10 transition-all cursor-pointer">
              <Building2 size={14} /> مشتری جدید
            </button>
         </div>
       </section>
+
+      <DataSourceStatus 
+        source="CRM" 
+        sourceName="فضای کاری شخصی و تقویم وظایف" 
+        isAuthoritative={true}
+      />
 
       {/* کارت پیشنهاد هوشمند یار (الزام دیزاین سیستم: رنگ آلبالویی فقط در کارت یار و منوی همبرگری) */}
       <section className="yar space-y-2.5">

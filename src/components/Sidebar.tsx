@@ -94,7 +94,7 @@ export function Sidebar({ sections, user, roleName, stats, collapsed: propCollap
             </span>
           )}
         </button>
-        <button onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'} aria-expanded={!collapsed}
+        <button onClick={() => setCollapsed()} aria-label={collapsed ? 'باز کردن سایدبار' : 'جمع کردن سایدبار'} aria-expanded={!collapsed}
           className="se-interactive grid h-9 w-full cursor-pointer place-items-center rounded-xl text-ink-soft hover:bg-ink/10">
           {collapsed ? <ChevronsLeft size={16} /> : <ChevronsRight size={16} />}
         </button>

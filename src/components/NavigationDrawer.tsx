@@ -53,6 +53,7 @@ export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerPro
     finance: true,
     knowledge_org: true,
   });
+  const [showAbout, setShowAbout] = useState(false);
 
   const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
   const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
@@ -145,7 +146,7 @@ export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerPro
       title: 'امور مالی و خزانه‌داری',
       items: [
         { label: 'دریافت و پرداخت / مطالبات', icon: Wallet, path: '/finance', perm: 'finance' },
-        { label: 'چک و تعهدات', icon: CreditCard, path: '/finance?tab=checks', perm: 'finance' },
+        { label: 'چک و تعهدات', icon: CreditCard, path: '/finance?tab=cheques', perm: 'finance' },
         { label: 'گزارش‌ها و تحلیل‌های مالی', icon: PieChart, path: '/reports', perm: 'reports' },
       ],
     },
@@ -277,13 +278,19 @@ export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerPro
             type="button"
             className="it"
             style={{ ['--n' as any]: nCounter++ }}
-            onClick={() => {
-              alert(`سامانه مدیریت هوشمند اخوان (AKHAVAN CRM)\nنسخه: ${APP_VERSION_LABEL}\nمعماری: PWA موبایل‌محور با توکن‌های Solar Ember`);
-            }}
+            onClick={() => setShowAbout(prev => !prev)}
           >
             <Info size={18} />
             <span>درباره نرم‌افزار</span>
           </button>
+
+          {showAbout && (
+            <div className="mx-2 my-1 rounded-xl bg-white/10 p-3 text-xs leading-6 text-white/90 border border-white/15">
+              <div className="font-bold">سامانه مدیریت هوشمند AKHAVAN CRM</div>
+              <div className="text-[11px] text-white/70 mt-1">نگارش: {APP_VERSION_LABEL}</div>
+              <div className="text-[10px] text-white/60 mt-0.5">مبتنی بر استانداردهای گزارش‌محور، موبایل‌اول و بازیابی داده رسمی</div>
+            </div>
+          )}
 
           <div
             className="it flex items-center justify-between"

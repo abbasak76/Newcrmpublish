@@ -11,6 +11,7 @@ import { EmptyState } from './ui/EmptyState';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { DataSourceStatus } from './ui/DataSourceStatus';
 import { generateId, matchesSearch, nextSequenceNumber } from '../lib/utils';
 import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
 import { CUSTOMER_FORM_SCHEMA } from '../services/dynamicFormEngine';
@@ -140,6 +141,12 @@ export function CustomersWorkspace({ state, updateState }: CustomersWorkspacePro
           <span>{successNotice}</span>
         </div>
       )}
+
+      <DataSourceStatus 
+        source="ERP" 
+        sourceName="دفتر مرکزی مشتریان و طرف‌های تجاری ERP" 
+        isAuthoritative={true}
+      />
       
       <div className="flex gap-3 relative">
         <div className="flex-1 se-card px-4 py-3 flex items-center gap-3">
@@ -212,51 +219,99 @@ export function CustomersWorkspace({ state, updateState }: CustomersWorkspacePro
           </button>
 
           {filteredAccounts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right text-xs">
-                <thead>
-                  <tr className="text-text-secondary border-b border-border/60 text-[11px] font-bold">
-                    <th className="pb-3 w-12 text-center">ردیف</th>
-                    <th className="pb-3">نام حساب / شرکت</th>
-                    <th className="pb-3 hidden sm:table-cell">کد / شناسه</th>
-                    <th className="pb-3">مخاطبین</th>
-                    <th className="pb-3 text-left pl-3">عملیات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {filteredAccounts.map((acc, idx) => (
-                    <tr 
-                      key={acc.id} 
-                      className="hover:bg-canvas transition-colors cursor-pointer group"
-                      onClick={() => {
-                        updateState(draft => {
-                          draft.activeContextAccountId = acc.id;
-                          draft.activeContextCustomerId = acc.id;
-                        });
-                        navigate(`/accounts/${acc.id}`);
-                      }}
-                    >
-                      <td className="py-4 text-center text-text-secondary font-mono">{idx + 1}</td>
-                      <td className="py-4">
-                        <div className="font-bold text-text-main group-hover:text-primary transition-colors flex items-center gap-2">
-                          <Building2 size={14} className="text-text-secondary" /> {acc.name}
+            <>
+              {/* نمای کارتی مخصوص موبایل */}
+              <div className="grid grid-cols-1 gap-3 sm:hidden">
+                {filteredAccounts.map((acc, idx) => (
+                  <div
+                    key={acc.id}
+                    onClick={() => {
+                      updateState(draft => {
+                        draft.activeContextAccountId = acc.id;
+                        draft.activeContextCustomerId = acc.id;
+                      });
+                      navigate(`/accounts/${acc.id}`);
+                    }}
+                    className="p-4 rounded-2xl bg-canvas border border-border/80 hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary font-black text-sm flex items-center justify-center shrink-0">
+                          {acc.name ? acc.name.charAt(0) : 'م'}
                         </div>
-                        {acc.phone && <div className="text-[10px] text-text-secondary mt-1 flex items-center gap-1 font-mono"><Phone size={10}/> {acc.phone}</div>}
-                      </td>
-                      <td className="py-4 hidden sm:table-cell font-mono text-text-secondary">{acc.code || '-'}</td>
-                      <td className="py-4">
-                        <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
-                      </td>
-                      <td className="py-4 text-left pl-3">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                          ورود ۳۶۰ <ChevronLeft size={12} />
+                        <div>
+                          <h3 className="font-bold text-sm text-text-main line-clamp-1">{acc.name}</h3>
+                          <span className="text-[11px] font-mono text-text-secondary">{acc.code || 'بدون کد'}</span>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-xl">
+                        پرونده ۳۶۰ <ChevronLeft size={12} />
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40 text-xs text-text-secondary">
+                      {acc.phone ? (
+                        <span className="flex items-center gap-1 font-mono text-text-main" dir="ltr">
+                          <Phone size={12} className="text-primary" /> {acc.phone}
                         </span>
-                      </td>
+                      ) : (
+                        <span className="text-text-muted">بدون شماره تماس</span>
+                      )}
+                      <div>
+                        <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* جدول کامل در تبلت و دسکتاپ */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-right text-xs">
+                  <thead>
+                    <tr className="text-text-secondary border-b border-border/60 text-[11px] font-bold">
+                      <th className="pb-3 w-12 text-center">ردیف</th>
+                      <th className="pb-3">نام حساب / شرکت</th>
+                      <th className="pb-3 hidden sm:table-cell">کد / شناسه</th>
+                      <th className="pb-3">مخاطبین</th>
+                      <th className="pb-3 text-left pl-3">عملیات</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {filteredAccounts.map((acc, idx) => (
+                      <tr 
+                        key={acc.id} 
+                        className="hover:bg-canvas transition-colors cursor-pointer group"
+                        onClick={() => {
+                          updateState(draft => {
+                            draft.activeContextAccountId = acc.id;
+                            draft.activeContextCustomerId = acc.id;
+                          });
+                          navigate(`/accounts/${acc.id}`);
+                        }}
+                      >
+                        <td className="py-4 text-center text-text-secondary font-mono">{idx + 1}</td>
+                        <td className="py-4">
+                          <div className="font-bold text-text-main group-hover:text-primary transition-colors flex items-center gap-2">
+                            <Building2 size={14} className="text-text-secondary" /> {acc.name}
+                          </div>
+                          {acc.phone && <div className="text-[10px] text-text-secondary mt-1 flex items-center gap-1 font-mono"><Phone size={10}/> {acc.phone}</div>}
+                        </td>
+                        <td className="py-4 hidden sm:table-cell font-mono text-text-secondary">{acc.code || '-'}</td>
+                        <td className="py-4">
+                          <AvatarGroup users={(acc.contacts || []).map(c => ({ name: c.name }))} size="xs" />
+                        </td>
+                        <td className="py-4 text-left pl-3">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                            ورود ۳۶۰ <ChevronLeft size={12} />
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <EmptyState 
               icon={<Building2 className="w-8 h-8 text-text-secondary opacity-50" />} 

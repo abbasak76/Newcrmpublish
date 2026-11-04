@@ -33,10 +33,10 @@ interface LayoutProps {
 // تب‌های ۵گانه مطابق سند مرجع (راست به چپ)
 const NAV_ITEMS = [
   { id: 'home', path: '/', label: 'خانه', icon: Home },
-  { id: 'accounts', path: '/accounts', label: 'مشتریان', icon: Users },
+  { id: 'accounts', path: '/customers', label: 'مشتریان', icon: Users },
   { id: 'sales', path: '/quotes', label: 'فروش', icon: TrendingUp },
   { id: 'tasks', path: '/tasks', label: 'پیگیری', icon: CheckSquare },
-  { id: 'operations', path: '/operations', label: 'عملیات', icon: LayoutGrid },
+  { id: 'operations', path: '/operations_control', label: 'عملیات', icon: LayoutGrid },
 ] as const;
 
 export function Layout({
@@ -64,24 +64,24 @@ export function Layout({
   const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
 
   // تشخیص صفحه جزئیات
-  const isDetailPage = /^\/(accounts|tasks|quotes|operations)\/.+/.test(location.pathname);
+  const isDetailPage = /^\/(customers|accounts|tasks|quotes|operations_control|finance)\/.+/.test(location.pathname);
   const inChat = location.pathname.startsWith('/groups');
 
   // عنوان صفحه فعال در هدر
   const activeTabId = useMemo(() => {
     const p = location.pathname;
     if (p === '/') return 'home';
-    if (p.startsWith('/accounts')) return 'accounts';
-    if (p.startsWith('/quotes') || p.startsWith('/opportunities') || p.startsWith('/sales')) return 'sales';
+    if (p.startsWith('/customers') || p.startsWith('/accounts')) return 'accounts';
+    if (p.startsWith('/quotes') || p.startsWith('/opportunities') || p.startsWith('/sales') || p.startsWith('/negotiations')) return 'sales';
     if (p.startsWith('/tasks')) return 'tasks';
-    if (p.startsWith('/operations')) return 'operations';
+    if (p.startsWith('/operations_control') || p.startsWith('/operations')) return 'operations';
     return '';
   }, [location.pathname]);
 
   const activePageLabel = useMemo(() => {
     if (isDetailPage) return 'جزئیات';
     if (location.pathname === '/') return 'داشبورد سازمانی';
-    if (location.pathname.startsWith('/accounts')) return 'مشتریان و حساب‌ها';
+    if (location.pathname.startsWith('/accounts') || location.pathname.startsWith('/customers')) return 'مشتریان و حساب‌ها';
     if (location.pathname.startsWith('/quotes') || location.pathname.startsWith('/opportunities')) return 'فروش و مذاکرات';
     if (location.pathname.startsWith('/tasks')) return 'پیگیری و وظایف';
     if (location.pathname.startsWith('/operations')) return 'صف عملیات و اجرا';
@@ -154,13 +154,12 @@ export function Layout({
     };
   }, [isMini]);
 
-  // محاسبه شاخص تب فعال
+  // محاسبه شاخص تب فعال (-1 در صورت عدم حضور در ۵ تب اصلی)
   const activeIndex = useMemo(() => {
-    const idx = NAV_ITEMS.findIndex(item => item.id === activeTabId);
-    return idx >= 0 ? idx : 0;
+    return NAV_ITEMS.findIndex(item => item.id === activeTabId);
   }, [activeTabId]);
 
-  const currentDisplayIndex = dragIndex !== null ? dragIndex : activeIndex;
+  const currentDisplayIndex = dragIndex !== null ? dragIndex : (activeIndex !== -1 ? activeIndex : null);
 
   // کشیدن روان روی ناوبری پایین مطابق رفرنس کد
   const handleNavPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -249,10 +248,10 @@ export function Layout({
               </button>
             </div>
 
-            {/* وسط: عنوان صفحه (۱۴ پیکسل، وزن ۷۰۰، بدون کادر سنگین) */}
+            {/* وسط: عنوان صفحه با Scrim/Blur محافظ جهت جلوگیری از هم‌پوشانی محتوا (D1) */}
             <div
               id="ttl"
-              className="text-sm font-bold text-ink truncate px-2 text-center pointer-events-auto flex-1 max-w-xs md:max-w-md"
+              className="px-4 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-border/80 shadow-xs text-xs md:text-sm font-bold text-ink truncate text-center pointer-events-auto flex-initial max-w-xs md:max-w-md transition-all"
             >
               {activePageLabel}
             </div>
@@ -330,16 +329,18 @@ export function Layout({
             onPointerUp={handleNavPointerUp}
           >
             <div className="tr" id="tr">
-              {/* حباب فعال شناور */}
-              <div
-                className={cn("ind", dragIndex !== null && "drag")}
-                id="ind"
-                style={{ ['--i' as any]: currentDisplayIndex }}
-              />
+              {/* حباب فعال شناور — فقط در صورت حضور در یکی از ۵ تب اصلی */}
+              {currentDisplayIndex !== null && (
+                <div
+                  className={cn("ind", dragIndex !== null && "drag")}
+                  id="ind"
+                  style={{ ['--i' as any]: currentDisplayIndex }}
+                />
+              )}
 
               {NAV_ITEMS.map((item, idx) => {
                 const Icon = item.icon;
-                const isActive = idx === currentDisplayIndex;
+                const isActive = currentDisplayIndex !== null && idx === currentDisplayIndex;
                 const isOps = item.id === 'operations';
 
                 return (
@@ -348,11 +349,12 @@ export function Layout({
                     type="button"
                     className={cn(isActive && "on")}
                     aria-label={item.label}
+                    title={item.label}
                     onClick={() => navigate(item.path)}
                   >
                     <Icon />
                     {isOps && opsBadgeCount > 0 && (
-                      <span className="bd">{(opsBadgeCount).toLocaleString('fa-IR')}</span>
+                      <span className="bd">{Math.min(99, opsBadgeCount).toLocaleString('fa-IR')}</span>
                     )}
                   </button>
                 );

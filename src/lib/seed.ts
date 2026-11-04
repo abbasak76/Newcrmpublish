@@ -499,9 +499,13 @@ export function generateSeedData(): AppState {
     creditNotes: [
       {
         id: 'cn-base-1',
+        externalCreditNoteId: 'ERP-CN-1001',
+        sourceSystemCode: 'SEPIDAR',
+        sourceType: 'ERP_MIRROR',
         creditNoteNumber: 'CN-1403-01',
         accountId: 'cust-1',
         customerId: 'cust-1',
+        invoiceId: 'inv-1',
         amount: 5000000,
         reason: 'بستانکاری بابت تخفیف نقدی تسویه فاکتور INV-1001',
         status: 'POSTED',
@@ -862,7 +866,7 @@ export function applyDemoSeed(draft: AppState, now: Date = new Date()): DemoSeed
     const assigned = demoOrders.filter((_, index) => index % 12 === i);
     return { id: `${DEMO_PREFIX}dispatch-${i + 1}`, planNumber: `DP-DEMO-${i + 1}`, name: ['مسیر مرکز', 'مسیر شمال', 'مسیر جنوب'][i % 3] + ` ${i + 1}`, vehicleLabel: `خودروی آزمایشی ${i + 1}`, capacityKg: [1200, 1600, 2000][i % 3], plannedWeightKg: assigned.every(o => Number.isFinite(o.weightKg)) ? sum(assigned.map(o => o.weightKg)) : null, zone: ['CENTER', 'NORTH', 'SOUTH'][i % 3], orderIds: assigned.map(o => o.id), status: i === 0 ? 'IN_TRANSIT' : 'DRAFT', source: 'LOCAL_TEST', createdBy: staff[i % staff.length].id, createdAt: iso(-i) };
   });
-  demoOrders.forEach(order => { const plan = demoDispatchPlans.find(p => p.orderIds.includes(order.id)); if (plan) order.dispatchPlanId = plan.id; });
+  demoOrders.forEach((order: any) => { const plan = demoDispatchPlans.find(p => p.orderIds.includes(order.id)); if (plan) order.dispatchPlanId = plan.id; });
   add('salesOrders', demoOrders);
   add('dispatchPlans', demoDispatchPlans);
   add('commercialPolicies', [

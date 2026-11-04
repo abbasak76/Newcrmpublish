@@ -296,7 +296,7 @@ export function DynamicFormRenderer({
                       : 'border-border/80 focus:border-primary focus:ring-1 focus:ring-primary/20'
                   }`}
                 />
-                {((field as any).enableMentions || field.type === 'text' || field.type === 'textarea') && mentionMenu?.fieldName === field.name && mentionMenu.results.length > 0 && (
+                {((field as any).enableMentions || (field.type as string) === 'text' || (field.type as string) === 'textarea') && mentionMenu?.fieldName === field.name && mentionMenu.results.length > 0 && (
                   <div role="listbox" aria-label="نتایج منشن" className="mt-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-surface shadow-lg">
                     {mentionMenu.results.map(entity => <button type="button" role="option" aria-selected="false" key={`${entity.entityType}:${entity.entityId}`} className="flex w-full items-center justify-between gap-3 border-b border-border/50 px-3 py-2 text-right last:border-b-0 hover:bg-primary/5" onMouseDown={event => event.preventDefault()} onClick={() => {
                       const current = String(formValues[field.name] ?? '');

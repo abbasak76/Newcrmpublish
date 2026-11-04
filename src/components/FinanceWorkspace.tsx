@@ -1,13 +1,15 @@
 import { guard } from '../hooks/useCan';
 import { useCan } from '../hooks/useCan';
 import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppState, Cheque, Payment, Invoice, CreditNote, CreditNoteRequest } from '../types';
 import { reconcileReceivables } from '../lib/receivableReconciliation';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { DataSourceStatus } from './ui/DataSourceStatus';
 import { checkFinanceRequest, buildFinanceRequest, decideFinanceRequest, FINANCE_KIND_LABEL, FINANCE_STATUS_LABEL, FinanceRequestKind } from '../lib/financeRequests';
 import { FINANCE_REQUEST_SCHEMA } from '../services/dynamicFormEngine';
 import { DocumentField, DocFile } from './shared/DocumentField';
@@ -34,7 +36,29 @@ interface FinanceWorkspaceProps {
 
 export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) {
   const { can, canOn, denied } = useCan(state, updateState);
-  const [activeTab, setLocalTab] = useState<'overview' | 'invoices' | 'payments' | 'cheques' | 'collection' | 'requests' | 'expenses' | 'treasury' | 'credits'>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const validTabs = ['overview', 'invoices', 'payments', 'cheques', 'collection', 'requests', 'expenses', 'treasury', 'credits'] as const;
+  type FinanceTab = typeof validTabs[number];
+  const rawTab = searchParams.get('tab');
+  const tabFromUrl = (rawTab === 'checks' ? 'cheques' : rawTab) as FinanceTab | null;
+  const [activeTab, setLocalTabState] = useState<FinanceTab>(() => {
+    return tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'overview';
+  });
+
+  const setLocalTab = (tab: FinanceTab) => {
+    setLocalTabState(tab);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', tab);
+      return next;
+    }, { replace: true });
+  };
+
+  useEffect(() => {
+    if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setLocalTabState(tabFromUrl);
+    }
+  }, [tabFromUrl]);
   const [notice, setNotice] = useState<string | null>(null);
   const [creditInvoiceId, setCreditInvoiceId] = useState('');
   const [creditAmount, setCreditAmount] = useState('');
@@ -118,19 +142,18 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
     days90Plus: 0
   };
 
+  const recMap = new Map(receivableReconciliation.invoices.map(r => [r.invoiceId, r]));
   invoices.forEach(inv => {
-    const balance = inv.totalAmount - inv.paidAmount;
+    const reconciled = recMap.get(inv.id);
+    const balance = reconciled ? reconciled.outstandingAmount : Math.max(0, inv.totalAmount - (inv.paidAmount || 0));
     if (balance > 0) {
       totalReceivables += balance;
-      if (inv.dueDate && inv.dueDate < today) {
+      const days = reconciled ? reconciled.daysOverdue : (inv.dueDate && inv.dueDate < today ? Math.ceil(Math.abs(new Date(today).getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24)) : 0);
+      if (days > 0) {
         totalOverdue += balance;
-        
-        const diffTime = Math.abs(new Date(today).getTime() - new Date(inv.dueDate).getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays <= 30) aging.days30 += balance;
-        else if (diffDays <= 60) aging.days60 += balance;
-        else if (diffDays <= 90) aging.days90 += balance;
+        if (days <= 30) aging.days30 += balance;
+        else if (days <= 60) aging.days60 += balance;
+        else if (days <= 90) aging.days90 += balance;
         else aging.days90Plus += balance;
       } else {
         aging.current += balance;
@@ -281,26 +304,32 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
   const handleCreateCheque = (values: Record<string, any>) => {
     if (!can('finance', 'CREATE')) return denied('ثبت چک');
     if (!updateState) return;
-    const num = String(values.chequeNumber || '').trim(); // شماره‌ی چک را بانک صادر می‌کند؛ مقدار ساختگی تولید نمی‌شود
+    const num = String(values.chequeNumber || '').trim();
+    const cleanNum = cleanNumericInput(num);
+    if (cleanNum.length !== 16) {
+      setNotice('شناسه صیادی چک باید دقیقاً ۱۶ رقم عددی باشد.');
+      setTimeout(() => setNotice(null), 5000);
+      return;
+    }
     const amountNum = Number(values.amount) || 0;
     if (!values.accountId || !num || amountNum <= 0) return;
-    if ((state.cheques || []).some(c => c.chequeNumber === num)) {
+    if ((state.cheques || []).some(c => c.chequeNumber === cleanNum)) {
       setNotice('چک دیگری با همین شناسه صیاد قبلاً ثبت شده است.'); setTimeout(() => setNotice(null), 5000); return;
     }
 
     const newCheque: Cheque = {
-      id: generateId(), chequeNumber: num, bankName: values.bankName, amount: amountNum, dueDate: values.dueDate,
+      id: generateId(), chequeNumber: cleanNum, bankName: values.bankName, amount: amountNum, dueDate: values.dueDate,
       status: 'RECEIVED', customerId: values.accountId, accountId: values.accountId
     };
 
     updateState(draft => {
       if (!draft.cheques) draft.cheques = [];
-      if (draft.cheques.some(c => c.chequeNumber === num)) return;
+      if (draft.cheques.some(c => c.chequeNumber === cleanNum)) return;
       draft.cheques.unshift(newCheque);
     });
 
     setShowChequeModal(false);
-    setNotice(`چک صیادی شماره ${num} به مبلغ ${amountNum.toLocaleString()} ریال ثبت گردید.`);
+    setNotice(`چک صیادی شماره ${cleanNum} به مبلغ ${amountNum.toLocaleString()} ریال ثبت گردید.`);
     setTimeout(() => setNotice(null), 4000);
   };
 
@@ -453,6 +482,12 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
           </div>
         )}
       </div>
+
+      <DataSourceStatus 
+        source="ERP" 
+        sourceName="آینه مالی سپیدار / راهکاران ERP" 
+        isAuthoritative={receivableReconciliation.authoritative}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card padding="md" className="bg-surface border border-border/80 shadow-subtle rounded-3xl p-5">
@@ -719,6 +754,49 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
 
       {activeTab === 'expenses' && (
         <div className="space-y-4">
+          {/* کارت هوشمند بررسی هزینه‌های مشکوک (D58) */}
+          {expenses.some(e => Number(e.amount) >= 50000000 || e.isSuspicious) && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-xs text-amber-800">
+                  <AlertTriangle size={16} className="text-amber-600" />
+                  <span>هشدار هزینه نامتعارف / مشکوک به مغایرت</span>
+                </div>
+                <span className="text-[10px] font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">نیاز به بازبینی مالی</span>
+              </div>
+              <p className="text-xs text-amber-800/90 leading-relaxed">
+                یک یا چند قلم هزینه با مبالغ درشت یا بدون فاکتور ضمیمه شناسایی شده است که نیازمند تأیید مدیر مالی و انطباق با اسناد ERP است.
+              </p>
+              <div className="pt-1 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (updateState) {
+                      updateState(draft => {
+                        if (!draft.tasks) draft.tasks = [];
+                        draft.tasks.unshift({
+                          id: generateId(),
+                          title: 'بررسی و ممیزی هزینه نامتعارف در دفتر هزینه‌ها',
+                          description: 'بررسی هزینه‌های مشکوک با مبالغ بالای ۵۰ میلیون ریال و ثبت سند تطبیق با حسابداری.',
+                          status: 'OPEN',
+                          priority: 'HIGH',
+                          dueDate: new Date().toISOString().split('T')[0],
+                          slaStatus: 'ON_TRACK',
+                          createdAt: new Date().toISOString()
+                        });
+                      });
+                      setNotice('تسک ارجاع و بازبینی به کارتابل حسابدار افزوده شد.');
+                      setTimeout(() => setNotice(null), 4000);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus size={13} /> ارجاع تسک به حسابدار
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card padding="md" className="rounded-2xl"><div className="text-[11px] text-text-secondary">کل هزینه پرداخت‌شده</div><div className="text-base font-black font-mono mt-2">{paidExpenses.toLocaleString('fa-IR')} ریال</div></Card>
             <Card padding="md" className="rounded-2xl"><div className="text-[11px] text-text-secondary">هزینه‌های سررسید/پرداخت‌نشده</div><div className="text-base font-black font-mono mt-2 text-warning">{dueExpenses.toLocaleString('fa-IR')} ریال</div></Card>

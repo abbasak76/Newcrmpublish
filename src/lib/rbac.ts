@@ -21,7 +21,9 @@ export const PERMISSION_LABELS: Record<CapabilityPermission, string> = {
   'users.manage': 'مدیریت کاربران سیستم',
   'roles.manage': 'مدیریت نقش‌ها و دسترسی‌ها',
   'internal.view': 'مشاهده اتوماسیون داخلی',
-  'internal.manage': 'مدیریت و تایید اتوماسیون داخلی'
+  'internal.manage': 'مدیریت و تایید اتوماسیون داخلی',
+  'geo.view': 'مشاهده هوش مکانی و زون‌ها',
+  'geo.manage': 'مدیریت و ویرایش زون‌های مکانی'
 };
 
 /* ==========================================================================

@@ -36,7 +36,7 @@ export function applyTaskWorkflow<T extends Record<string, any>>(task: T, input:
   if (input.nextAction?.trim()) next.nextAction = input.nextAction.trim();
   if (input.action === 'COMPLETE') next.completedAt = input.at || new Date().toISOString();
   const details = [input.reason?.trim() ? `مانع/دلیل: ${input.reason.trim()}` : '', input.result?.trim() ? `نتیجه: ${input.result.trim()}` : '', input.nextAction?.trim() ? `اقدام بعدی: ${input.nextAction.trim()}` : ''].filter(Boolean).join('؛ ');
-  const updated = appendTaskActivity(next, { action: rule.event, actorId: input.actorId || 'UNKNOWN', at: input.at, summary: rule.summary, details: details || undefined });
+  const updated = appendTaskActivity(next, { action: rule.event, actorId: input.actorId || 'UNKNOWN', at: input.at, summary: rule.summary, details: details || undefined }) as T;
   return { ok: true, task: updated };
 }
 

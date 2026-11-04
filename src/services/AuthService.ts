@@ -39,6 +39,7 @@ export const AuthService = {
         name: 'احمد اخوان',
         email: 'ahmad@akhavan.ir',
         roleId: 'role-admin',
+        permissionSetId: 'perm-admin',
         active: true
       };
       return { status: 'AUTHENTICATED', user: adminUser };
