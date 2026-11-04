@@ -251,7 +251,7 @@ export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerPro
                           onClick={() => go(item.path)}
                         >
                           <Icon size={18} className="shrink-0" />
-                          <span className="truncate">{item.label}</span>
+                          <span className="whitespace-normal leading-tight text-right flex-1 font-medium">{item.label}</span>
                         </button>
                       );
                     })}

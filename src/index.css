@@ -222,7 +222,7 @@ html[data-performance-mode="low"] .se-sky-clouds { display: none !important; }
 
 .main-content-scroll {
   padding-top: calc(env(safe-area-inset-top, 0px) + 78px) !important;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 110px) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 140px) !important;
 }
 
 /* Floating Header Button & Layout */

@@ -20,6 +20,7 @@ import { AppState } from '../types';
 import { NavigationDrawer } from './NavigationDrawer';
 import { Sidebar } from './Sidebar';
 import { AtmosphereLayer } from './AtmosphereLayer';
+import { BottomNav } from './BottomNav';
 import { RBACService } from '../lib/rbac';
 import { menuSections, filterSections } from '../lib/navigation';
 import { useTheme } from '../theme/ThemeProvider';
@@ -342,61 +343,16 @@ export function Layout({
           {/* محتوای اصلی صفحات — تمام‌صفحه با حاشیه مناسب موبایل بدون هم‌پوشانی هدر */}
           <main
             id="main-scroll-container"
-            className="w-full flex-1 overflow-y-auto main-content-scroll px-2 sm:px-4 md:px-6 no-scrollbar"
+            className="w-full flex-1 overflow-y-auto main-content-scroll pb-28 md:pb-8 px-2 sm:px-4 md:px-6 no-scrollbar"
           >
-            <div className="mx-auto min-h-full w-full max-w-6xl">
+            <div className="mx-auto min-h-full w-full max-w-6xl pb-16 md:pb-4">
               {children}
             </div>
           </main>
         </div>
 
-        {/* ================= ۲. ناوبری پایین کشسان سبک اینستاگرام (۵ تب) ================= */}
-        {!inChat && (
-          <nav
-            id="nav"
-            className={cn(
-              "nav fl select-none md:hidden",
-              isMini && "mini",
-              isPopping && "pop"
-            )}
-            onPointerDown={handleNavPointerDown}
-            onPointerMove={handleNavPointerMove}
-            onPointerUp={handleNavPointerUp}
-          >
-            <div className="tr" id="tr">
-              {/* حباب فعال شناور — فقط در صورت حضور در یکی از ۵ تب اصلی */}
-              {currentDisplayIndex !== null && (
-                <div
-                  className={cn("ind", dragIndex !== null && "drag")}
-                  id="ind"
-                  style={{ ['--i' as any]: currentDisplayIndex }}
-                />
-              )}
-
-              {NAV_ITEMS.map((item, idx) => {
-                const Icon = item.icon;
-                const isActive = currentDisplayIndex !== null && idx === currentDisplayIndex;
-                const isOps = item.id === 'operations';
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={cn(isActive && "on", "min-h-[44px] min-w-[44px] transition-transform active:scale-90")}
-                    aria-label={item.label}
-                    title={item.label}
-                    onClick={() => navigate(item.path)}
-                  >
-                    <Icon />
-                    {isOps && opsBadgeCount > 0 && (
-                      <span className="bd">{Math.min(99, opsBadgeCount).toLocaleString('fa-IR')}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-        )}
+        {/* ناوبری کپسولی شناور پایین (موبایل و تبلت) */}
+        {!inChat && <BottomNav opsBadgeCount={opsBadgeCount} className="md:hidden" />}
       </div>
 
       {/* منوی همبرگری کشویی شرابی با هاله لوکس مطابق عکس رفرنس */}

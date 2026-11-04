@@ -23,13 +23,13 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   const variantStyles = {
-    default: "bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80",
-    primary: "bg-primary/10 dark:bg-primary-950/40 text-primary dark:text-blue-400 border border-primary/25 dark:border-primary-800/50 font-bold",
-    success: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/50 font-bold",
-    warning: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 font-bold",
-    danger: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/50 font-bold",
-    info: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200/80 dark:border-sky-800/50 font-bold",
-    neutral: "bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700/60 font-medium",
+    default: "bg-[var(--c-sunken)] text-[var(--c-text-primary)] border border-[var(--c-border)]",
+    primary: "bg-[var(--c-primary-soft)] text-[var(--c-primary)] border border-[var(--c-border)] font-bold",
+    success: "bg-[var(--c-success-soft)] text-[var(--c-success)] border border-[var(--c-success-border)] font-bold",
+    warning: "bg-[var(--c-warning-soft)] text-[var(--c-warning)] border border-[var(--c-warning-border)] font-bold",
+    danger: "bg-[var(--c-danger-soft)] text-[var(--c-danger)] border border-[var(--c-danger-border)] font-bold",
+    info: "bg-[var(--c-primary-soft)] text-[var(--c-primary)] border border-[var(--c-border)] font-bold",
+    neutral: "bg-[var(--c-sunken)] text-[var(--c-text-secondary)] border border-[var(--c-border)] font-medium",
   };
 
   const dotColors = {

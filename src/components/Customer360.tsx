@@ -48,19 +48,16 @@ interface Customer360Props {
 }
 
 type TabKey = 
-  | 'OVERVIEW' 
-  | 'TIMELINE' 
-  | 'ACTIVITIES' 
-  | 'NOTES' 
-  | 'QUOTES' 
-  | 'OPPORTUNITIES' 
-  | 'TASKS' 
-  | 'CASES' 
-  | 'FINANCE' 
-  | 'AUDIT';
+  | 'OVERVIEW'
+  | 'ACTIVITIES_TASKS'
+  | 'SALES_FINANCE'
+  | 'CASES_AUDIT';
 
 export function Customer360({ customer, state, onBack, updateState, setActiveTab }: Customer360Props) {
   const [activeSubTab, setActiveSubTab] = useState<TabKey>('OVERVIEW');
+  const [activitiesFilter, setActivitiesFilter] = useState<'ALL' | 'ACTIVITIES' | 'NOTES' | 'TASKS'>('ALL');
+  const [salesFilter, setSalesFilter] = useState<'ALL' | 'QUOTES' | 'OPPORTUNITIES' | 'PAYMENTS'>('ALL');
+  const [casesFilter, setCasesFilter] = useState<'ALL' | 'CASES' | 'AUDIT'>('ALL');
 
   const [contactModal, setContactModal] = useState<null | { initial?: any }>(null);
   const canEditAccount = new RBACService(state).canActOnRecord('accounts', 'EDIT', { ownerId: (customer as any).ownerId, branchId: (customer as any).branchId, territoryId: (customer as any).territoryId, teamId: (customer as any).teamId });
@@ -780,20 +777,14 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
         </div>
       </div>
 
-      {/* نوار تب‌های فرعی پرونده ۳۶۰ به سبک تب‌های قطعه‌بندی‌شده مدرن با آیکون و شمارنده */}
-      <div className="shrink-0 p-1.5 bg-surface border border-border rounded-2xl overflow-x-auto no-scrollbar shadow-xs">
-        <div className="flex items-center gap-1.5 min-w-max">
+      {/* 4 تب اصلی یکپارچه مطابق استانداردهای طراحی سیستم AKHAVAN CRM */}
+      <div className="shrink-0 p-1.5 bg-surface border border-border/80 rounded-2xl shadow-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
           {[
-            { id: 'OVERVIEW', label: 'اطلاعات پایه', icon: Building2 },
-            { id: 'TIMELINE', label: 'تایم‌لاین', count: unifiedTimeline.length, icon: History },
-            { id: 'ACTIVITIES', label: 'فعالیت‌ها', count: accountActivities.length, icon: ActivityIcon },
-            { id: 'NOTES', label: 'یادداشت‌ها', count: accountNotes.length, icon: MessageSquare },
-            { id: 'QUOTES', label: 'پیش‌فاکتورها', count: accountQuotes.length, icon: FileText },
-            { id: 'OPPORTUNITIES', label: 'فرصت‌ها', count: accountOpportunities.length, icon: TrendingUp },
-            { id: 'TASKS', label: 'وظایف', count: accountTasks.length, icon: CheckSquare },
-            { id: 'CASES', label: 'پشتیبانی', count: accountCases.length, icon: ShieldAlert },
-            { id: 'FINANCE', label: 'مالی', count: accountPayments.length, icon: Wallet },
-            { id: 'AUDIT', label: 'ردپا', count: accountAuditLogs.length, icon: Clock }
+            { id: 'OVERVIEW', label: 'خلاصه و شناسنامه', icon: Building2, count: (customer.contacts || []).length },
+            { id: 'ACTIVITIES_TASKS', label: 'فعالیت و پیگیری', icon: ActivityIcon, count: accountActivities.length + accountNotes.length + accountTasks.length },
+            { id: 'SALES_FINANCE', label: 'فروش و مالی', icon: FileText, count: accountQuotes.length + accountOpportunities.length + accountPayments.length },
+            { id: 'CASES_AUDIT', label: 'پشتیبانی و ردپا', icon: ShieldAlert, count: accountCases.length + accountAuditLogs.length }
           ].map(t => {
             const isActive = activeSubTab === t.id;
             const Icon = t.icon;
@@ -804,17 +795,17 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
                 onClick={() => setActiveSubTab(t.id as TabKey)}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer select-none",
+                  "flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none min-h-[44px]",
                   isActive 
                     ? "bg-primary text-white shadow-xs font-black" 
                     : "text-ink-soft hover:text-ink hover:bg-canvas"
                 )}
               >
-                <Icon size={14} className={isActive ? "text-white" : "text-primary"} />
-                <span>{t.label}</span>
-                {t.count !== undefined && t.count > 0 && (
+                <Icon size={15} className={isActive ? "text-white" : "text-primary shrink-0"} />
+                <span className="truncate">{t.label}</span>
+                {t.count > 0 && (
                   <span className={cn(
-                    "px-1.5 py-0.2 rounded-full text-[10px] font-mono",
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-mono shrink-0",
                     isActive ? "bg-white/25 text-white font-black" : "bg-canvas text-ink-soft border border-border/50"
                   )}>
                     {t.count}
@@ -826,7 +817,7 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
         </div>
       </div>
 
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-4 pb-16">
         {activeSubTab === 'OVERVIEW' && (
           <div className="space-y-4">
             {/* تحلیل پیش‌بینی ریسک ریزش مشتری (Customer Churn Prediction) */}
@@ -997,309 +988,286 @@ export function Customer360({ customer, state, onBack, updateState, setActiveTab
               )}
             </Card>
 
+            {/* تایم‌لاین رویدادها در انتهای شناسنامه */}
             <Card padding="md" className="space-y-3 bg-surface border border-border">
-              <h3 className="text-sm font-bold text-ink">مشخصات حقوقی و مالیاتی</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-canvas rounded-xl border border-border/60">
-                  <span className="text-ink-soft block text-[11px] font-medium">شناسه / کد ملی:</span>
-                  <span className="font-mono font-bold text-ink mt-1 block">{customer.nationalId || '-'}</span>
+              <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" /> جریان زمانی تعاملات و رخدادها (Timeline)
+              </h3>
+              {unifiedTimeline.length > 0 ? (
+                <div className="relative border-r-2 border-primary/20 mr-3 pr-4 space-y-3 pt-2">
+                  {unifiedTimeline.slice(0, 8).map(ev => {
+                    const Icon = ev.icon;
+                    return (
+                      <div key={ev.id} className="relative group">
+                        <div className="absolute -right-[25px] top-1.5 w-6 h-6 rounded-full flex items-center justify-center border-2 border-surface bg-primary text-white shadow-xs">
+                          <Icon size={12} />
+                        </div>
+                        <div className="p-3 bg-canvas/80 border border-border/80 rounded-xl hover:border-primary/40 transition-all shadow-xs">
+                          <div className="flex justify-between items-start">
+                            <strong className="text-xs font-bold text-ink">{ev.title}</strong>
+                            <span className="text-[10px] text-ink-soft font-mono">
+                              {formatAppDate(ev.date, state.settings?.locale)}
+                            </span>
+                          </div>
+                          {ev.description && (
+                            <p className="text-xs text-ink-soft mt-1 leading-relaxed">{ev.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="p-3 bg-canvas rounded-xl border border-border/60">
-                  <span className="text-ink-soft block text-[11px] font-medium">آدرس کامل ثبت‌شده:</span>
-                  <span className="font-medium text-ink mt-1 block">{customer.address || '-'}</span>
-                </div>
-              </div>
+              ) : (
+                <EmptyState icon={<History className="w-8 h-8 text-ink-soft opacity-50" />} title="رویدادی ثبت نشده است" description="" />
+              )}
             </Card>
           </div>
         )}
 
-        {activeSubTab === 'TIMELINE' && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-ink-soft px-1">جریان زمانی یکپارچه رویدادهای مشتری</h3>
-            {unifiedTimeline.length > 0 ? (
-              <div className="relative border-r-2 border-primary/20 mr-3 pr-4 space-y-3">
-                {unifiedTimeline.map(ev => {
-                  const Icon = ev.icon;
-                  return (
-                    <div key={ev.id} className="relative group">
-                      <div className="absolute -right-[25px] top-1.5 w-6 h-6 rounded-full flex items-center justify-center border-2 border-surface bg-primary text-white shadow-xs">
-                        <Icon size={12} />
+        {activeSubTab === 'ACTIVITIES_TASKS' && (
+          <div className="space-y-4">
+            {/* زیرفیلترهای ۳گانه برای دسترسی سریع */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {[
+                { id: 'ALL', label: 'همه موارد', count: accountActivities.length + accountNotes.length + accountTasks.length },
+                { id: 'ACTIVITIES', label: 'فعالیت‌ها', count: accountActivities.length },
+                { id: 'NOTES', label: 'یادداشت‌ها', count: accountNotes.length },
+                { id: 'TASKS', label: 'تسک‌ها', count: accountTasks.length }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setActivitiesFilter(f.id as any)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                    activitiesFilter === f.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "bg-surface text-ink-soft border border-border hover:bg-canvas"
+                  )}
+                >
+                  {f.label} <span className="font-mono text-[11px]">({f.count})</span>
+                </button>
+              ))}
+            </div>
+
+            {(activitiesFilter === 'ALL' || activitiesFilter === 'ACTIVITIES') && accountActivities.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><ActivityIcon size={14} className="text-primary" /> فعالیت‌های ثبت‌شده ({accountActivities.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsActivityModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ثبت فعالیت</Button>
+                </div>
+                {accountActivities.map(a => (
+                  <Card key={a.id} padding="md" className="space-y-2 bg-surface border border-border">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">{a.type}</span>
+                        <strong className="text-sm font-bold text-ink">{a.title}</strong>
                       </div>
-                      <div className="p-3.5 bg-surface border border-border rounded-2xl hover:border-primary/40 transition-all shadow-xs">
-                        <div className="flex justify-between items-start">
-                          <strong className="text-xs font-bold text-ink">{ev.title}</strong>
-                          <span className="text-[10px] text-ink-soft font-mono">
-                            {formatAppDate(ev.date, state.settings?.locale)}
-                          </span>
-                        </div>
-                        {ev.description && (
-                          <p className="text-xs text-ink-soft mt-1.5 leading-relaxed">{ev.description}</p>
-                        )}
-                      </div>
+                      <span className="text-[11px] font-mono text-ink-soft">{formatAppDate(a.dateTime, state.settings?.locale)}</span>
                     </div>
+                    {a.description && <p className="text-xs text-ink-soft leading-relaxed">{a.description}</p>}
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(activitiesFilter === 'ALL' || activitiesFilter === 'NOTES') && accountNotes.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><MessageSquare size={14} className="text-indigo-600" /> یادداشت‌های استراتژیک ({accountNotes.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsNoteModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ثبت یادداشت</Button>
+                </div>
+                {accountNotes.map((n: any) => {
+                  const author = state.users?.find(u => u.id === n.authorId);
+                  return (
+                    <Card key={n.id} padding="md" className="space-y-2 bg-surface border border-border">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-ink flex items-center gap-1.5"><User size={13} className="text-ink-soft" />{author ? author.name : 'کاربر سیستم'}</span>
+                        <span className="text-[10px] font-mono text-ink-soft">{formatAppDate(n.createdAt, state.settings?.locale)}</span>
+                      </div>
+                      <p className="text-xs text-ink leading-relaxed bg-canvas/60 p-3 rounded-xl border border-border/70">{n.content}</p>
+                    </Card>
                   );
                 })}
               </div>
-            ) : (
-              <EmptyState icon={<History className="w-8 h-8 text-ink-soft opacity-50" />} title="رویدادی ثبت نشده است" description="" />
             )}
-          </div>
-        )}
 
-        {activeSubTab === 'ACTIVITIES' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">فعالیت‌های ثبت‌شده ({accountActivities.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsActivityModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                ثبت فعالیت جدید
-              </Button>
-            </div>
-            {accountActivities.length > 0 ? (
-              accountActivities.map(a => (
-                <Card key={a.id} padding="md" className="space-y-2 bg-surface border border-border">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
-                        {a.type}
-                      </span>
-                      <strong className="text-sm font-bold text-ink">{a.title}</strong>
-                    </div>
-                    <span className="text-[11px] font-mono text-ink-soft">
-                      {formatAppDate(a.dateTime, state.settings?.locale)}
-                    </span>
-                  </div>
-                  {a.description && <p className="text-xs text-ink-soft leading-relaxed">{a.description}</p>}
-                  {a.mentions && a.mentions.length > 0 && (
-                    <div className="flex gap-1 pt-1">
-                      {a.mentions.map((m: any) => (
-                        <span key={m.id} className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
-                          {m.display}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<ActivityIcon className="w-8 h-8 text-ink-soft opacity-50" />} title="فعالیتی یافت نشد" description="اولین ویزیت، تماس یا جلسه را ثبت کنید." />
-            )}
-          </div>
-        )}
-
-        {activeSubTab === 'NOTES' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">سوابق و یادداشت‌های استراتژیک ({accountNotes.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsNoteModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                ثبت سابقه جدید
-              </Button>
-            </div>
-            {accountNotes.length > 0 ? (
-              accountNotes.map((n: any) => {
-                const author = state.users?.find(u => u.id === n.authorId);
-                return (
-                  <Card key={n.id} padding="md" className="space-y-2 bg-surface border border-border">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-ink flex items-center gap-1.5">
-                        <User size={13} className="text-ink-soft" />
-                        {author ? author.name : 'کاربر سیستم'}
-                      </span>
-                      <span className="text-[10px] font-mono text-ink-soft">
-                        {formatAppDate(n.createdAt, state.settings?.locale)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-ink leading-relaxed bg-canvas/60 p-3 rounded-xl border border-border/70">
-                      {n.content}
-                    </p>
-                    {n.mentions && n.mentions.length > 0 && (
-                      <div className="flex gap-1">
-                        {n.mentions.map((m: any) => (
-                          <span key={m.id} className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
-                            {m.display}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                );
-              })
-            ) : (
-              <EmptyState icon={<MessageSquare className="w-8 h-8 text-ink-soft opacity-50" />} title="هیچ یادداشتی ثبت نشده است" description="سابقه و جزئیات مذاکرات قبلی را اینجا یادداشت کنید." />
-            )}
-          </div>
-        )}
-
-        {activeSubTab === 'QUOTES' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">پیش‌فاکتورها و پیشنهادهای CPQ ({accountQuotes.length})</h3>
-              <Button size="sm" variant="primary" onClick={handleCreateNewQuote} icon={<Plus className="w-3.5 h-3.5" />}>
-                صدور پیش‌فاکتور جدید
-              </Button>
-            </div>
-            {accountQuotes.length > 0 ? (
-              accountQuotes.map(q => (
-                <Card key={q.id} padding="md" className="flex justify-between items-center bg-surface border border-border hover:border-primary/40 transition">
-                  <div>
-                    <strong className="text-sm font-bold text-ink font-mono">{q.quoteNumber}</strong>
-                    <div className="text-xs text-ink-soft mt-1 font-mono">
-                      {formatAppDate(q.createdAt, state.settings?.locale)} | اقلام: {q.lines?.length || 0}
-                    </div>
-                  </div>
-                  <div className="text-left flex items-center gap-3">
-                    <div>
-                      <strong className="text-sm font-bold text-ink font-mono block">{formatCurrency(q.totalAmount)} ریال</strong>
-                      <span className="text-[10px] text-ink-soft font-mono block">مارجین: {q.marginPercent}٪</span>
-                    </div>
-                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-canvas text-ink-soft border border-border/60">{getPersianStatusLabel(q.status)}</span>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<FileText className="w-8 h-8 text-ink-soft opacity-50" />} title="پیش‌فاکتوری ثبت نشده است" description="" />
-            )}
-          </div>
-        )}
-
-        {activeSubTab === 'OPPORTUNITIES' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">فرصت‌های تجاری و پروپوزال‌ها ({accountOpportunities.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsOppModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                ثبت فرصت تجاری
-              </Button>
-            </div>
-            {accountOpportunities.length > 0 ? (
-              accountOpportunities.map(opp => (
-                <Card key={opp.id} padding="md" className="flex justify-between items-center bg-surface border border-border hover:border-primary/40 transition">
-                  <div>
-                    <strong className="text-sm font-bold text-ink">{opp.title}</strong>
-                    <div className="text-xs text-ink-soft mt-1 flex items-center gap-2">
-                      <span className="font-mono">{formatCurrency(opp.amount)} ریال</span>
-                      <span>•</span>
-                      <span>بستن احتمالی: {formatAppDate(opp.expectedCloseDate, state.settings?.locale)}</span>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 text-primary border border-primary/20">
-                    {getPersianStatusLabel(opp.stage)}
-                  </span>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<TrendingUp className="w-8 h-8 text-ink-soft opacity-50" />} title="فرصت تجاری ثبت نشده است" description="" />
-            )}
-          </div>
-        )}
-
-        {activeSubTab === 'TASKS' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">وظایف و پیگیری‌ها ({accountTasks.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsTaskModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                تعریف وظیفه جدید
-              </Button>
-            </div>
-            {accountTasks.length > 0 ? (
-              accountTasks.map(t => {
-                let assigneeName = 'ناشناس';
-                if (t.assigneeType === 'GROUP') {
-                  assigneeName = state.groups?.find(g => g.id === t.assigneeId)?.name || 'گروه نامشخص';
-                } else {
-                  assigneeName = state.users?.find(u => u.id === t.assigneeId)?.name || 'کارشناس نامشخص';
-                }
-
-                return (
-                  <Card key={t.id} padding="md" className="flex justify-between items-center bg-surface border border-border hover:border-primary/40 transition">
+            {(activitiesFilter === 'ALL' || activitiesFilter === 'TASKS') && accountTasks.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><CheckSquare size={14} className="text-emerald-600" /> وظایف و تسک‌های پیگیری ({accountTasks.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsTaskModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ایجاد تسک</Button>
+                </div>
+                {accountTasks.map(t => (
+                  <Card key={t.id} padding="md" className="flex justify-between items-center bg-surface border border-border">
                     <div>
                       <h4 className="text-sm font-bold text-ink">{t.title}</h4>
                       {t.description && <p className="text-xs text-ink-soft mt-0.5">{t.description}</p>}
-                      <div className="text-xs text-ink-soft mt-1 flex flex-wrap gap-2">
-                        <span className="font-mono flex items-center gap-1">
-                          <Clock size={12} /> {formatAppDate(t.dueDate, state.settings?.locale)}
-                        </span>
-                        <span>•</span>
-                        <span className="text-primary font-medium">
-                          مسئول: {assigneeName} ({t.assigneeType === 'GROUP' ? 'تیمی' : 'فردی'})
-                        </span>
-                      </div>
+                      <div className="text-xs text-ink-soft mt-1 font-mono"><Clock size={12} className="inline ml-1" /> مهلت: {formatAppDate(t.dueDate, state.settings?.locale)}</div>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-1 rounded bg-canvas text-ink-soft border border-border/60">{getPersianStatusLabel(t.status)}</span>
                   </Card>
-                );
-              })
-            ) : (
-              <EmptyState icon={<CheckSquare className="w-8 h-8 text-ink-soft opacity-50" />} title="تسک بازی وجود ندارد" description="" />
+                ))}
+              </div>
+            )}
+
+            {accountActivities.length === 0 && accountNotes.length === 0 && accountTasks.length === 0 && (
+              <EmptyState icon={<ActivityIcon className="w-8 h-8 text-ink-soft opacity-50" />} title="هیچ فعالیت یا وظیفه‌ای برای این حساب ثبت نشده است" description="با دکمه‌های بالای صفحه می‌توانید فعالیت، یادداشت یا تسک ثبت کنید." />
             )}
           </div>
         )}
 
-        {activeSubTab === 'CASES' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">تیکت‌ها و شکایات خدمات مشتری ({accountCases.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsCaseModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                ثبت مورد خدمات
-              </Button>
+        {activeSubTab === 'SALES_FINANCE' && (
+          <div className="space-y-4">
+            {/* زیرفیلترهای فروش و مالی */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {[
+                { id: 'ALL', label: 'همه موارد', count: accountQuotes.length + accountOpportunities.length + accountPayments.length },
+                { id: 'QUOTES', label: 'پیش‌فاکتورها', count: accountQuotes.length },
+                { id: 'OPPORTUNITIES', label: 'فرصت‌های فروش', count: accountOpportunities.length },
+                { id: 'PAYMENTS', label: 'وصولی و دریافت', count: accountPayments.length }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setSalesFilter(f.id as any)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                    salesFilter === f.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "bg-surface text-ink-soft border border-border hover:bg-canvas"
+                  )}
+                >
+                  {f.label} <span className="font-mono text-[11px]">({f.count})</span>
+                </button>
+              ))}
             </div>
-            {accountCases.length > 0 ? (
-              accountCases.map((c: any) => (
-                <Card key={c.id} padding="md" className="flex justify-between items-center bg-surface border border-border hover:border-primary/40 transition">
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">{c.subject}</h4>
-                    <span className="text-xs text-ink-soft font-mono mt-1 block">شماره: {c.caseNumber}</span>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-canvas text-ink-soft border border-border/60">{getPersianStatusLabel(c.status)}</span>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<ShieldAlert className="w-8 h-8 text-ink-soft opacity-50" />} title="بدون سابقه پشتیبانی" description="" />
+
+            {(salesFilter === 'ALL' || salesFilter === 'QUOTES') && accountQuotes.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><FileText size={14} className="text-primary" /> پیش‌فاکتورها و پیشنهادهای CPQ ({accountQuotes.length})</h3>
+                  <Button size="sm" variant="primary" onClick={handleCreateNewQuote} icon={<Plus className="w-3.5 h-3.5" />}>صدور پیش‌فاکتور</Button>
+                </div>
+                {accountQuotes.map(q => (
+                  <Card key={q.id} padding="md" className="flex justify-between items-center bg-surface border border-border hover:border-primary/40 transition">
+                    <div>
+                      <strong className="text-sm font-bold text-ink font-mono">{q.quoteNumber}</strong>
+                      <div className="text-xs text-ink-soft mt-1 font-mono">{formatAppDate(q.createdAt, state.settings?.locale)} | اقلام: {q.lines?.length || 0}</div>
+                    </div>
+                    <div className="text-left font-mono">
+                      <strong className="text-sm font-bold text-ink block">{formatCurrency(q.totalAmount)} ریال</strong>
+                      <span className="text-[10px] text-ink-soft block">مارجین: {q.marginPercent}٪</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(salesFilter === 'ALL' || salesFilter === 'OPPORTUNITIES') && accountOpportunities.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><TrendingUp size={14} className="text-amber-600" /> فرصت‌های تجاری و پروپوزال‌ها ({accountOpportunities.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsOppModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ثبت فرصت</Button>
+                </div>
+                {accountOpportunities.map(opp => (
+                  <Card key={opp.id} padding="md" className="flex justify-between items-center bg-surface border border-border">
+                    <div>
+                      <strong className="text-sm font-bold text-ink">{opp.title}</strong>
+                      <div className="text-xs text-ink-soft mt-1 font-mono">{formatCurrency(opp.amount)} ریال</div>
+                    </div>
+                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 text-primary border border-primary/20">{getPersianStatusLabel(opp.stage)}</span>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(salesFilter === 'ALL' || salesFilter === 'PAYMENTS') && accountPayments.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><Wallet size={14} className="text-success" /> اسناد دریافت و وصولی‌ها ({accountPayments.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsPaymentModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ثبت وصولی</Button>
+                </div>
+                {accountPayments.map(p => (
+                  <Card key={p.id} padding="sm" className="flex justify-between items-center text-xs bg-surface border border-border">
+                    <div>
+                      <span className="font-bold text-ink">{p.method || 'واریز نقدی'}</span>
+                      <span className="text-ink-soft font-mono block text-[11px] mt-0.5">{formatAppDate(p.date, state.settings?.locale)}</span>
+                    </div>
+                    <div className="text-left font-mono">
+                      <span className="font-bold text-primary block">{formatCurrency(p.amount)} ریال</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {accountQuotes.length === 0 && accountOpportunities.length === 0 && accountPayments.length === 0 && (
+              <EmptyState icon={<FileText className="w-8 h-8 text-ink-soft opacity-50" />} title="هیچ سند مالی یا فروش برای این حساب ثبت نشده است" description="" />
             )}
           </div>
         )}
 
-        {activeSubTab === 'FINANCE' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="text-xs font-bold text-ink-soft">اسناد دریافت و وصولی‌ها ({accountPayments.length})</h3>
-              <Button size="sm" variant="primary" onClick={() => setIsPaymentModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>
-                ثبت تسویه جدید
-              </Button>
+        {activeSubTab === 'CASES_AUDIT' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {[
+                { id: 'ALL', label: 'همه موارد', count: accountCases.length + accountAuditLogs.length },
+                { id: 'CASES', label: 'تیکت‌های پشتیبانی', count: accountCases.length },
+                { id: 'AUDIT', label: 'ردپا و تاریخچه سیستمی', count: accountAuditLogs.length }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setCasesFilter(f.id as any)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                    casesFilter === f.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "bg-surface text-ink-soft border border-border hover:bg-canvas"
+                  )}
+                >
+                  {f.label} <span className="font-mono text-[11px]">({f.count})</span>
+                </button>
+              ))}
             </div>
-            {accountPayments.length > 0 ? (
-              accountPayments.map(p => (
-                <Card key={p.id} padding="sm" className="flex justify-between items-center text-xs bg-surface border border-border hover:border-primary/40 transition">
-                  <div>
-                    <span className="font-bold text-ink">{p.method || 'واریز نقدی'}</span>
-                    <span className="text-ink-soft font-mono block text-[11px] mt-0.5">{formatAppDate(p.date, state.settings?.locale)}</span>
-                  </div>
-                  <div className="text-left font-mono">
-                    <span className="font-bold text-primary block">{formatCurrency(p.amount)} ریال</span>
-                    <span className="text-[10px] text-ink-soft font-semibold">{getPersianStatusLabel(p.status)}</span>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<Wallet className="w-8 h-8 text-ink-soft opacity-50" />} title="سند پرداختی یافت نشد" description="" />
-            )}
-          </div>
-        )}
 
-        {activeSubTab === 'AUDIT' && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-ink-soft px-1">تاریخچه تغییرات و رخدادهای سیستمی (Audit Trail)</h3>
-            {accountAuditLogs.length > 0 ? (
-              accountAuditLogs.map(l => (
-                <Card key={l.id} padding="sm" className="text-xs space-y-1 bg-surface border border-border">
-                  <div className="flex justify-between text-ink-soft font-mono text-[10px]">
-                    <span className="font-bold text-ink">{l.action}</span>
-                    <span>{formatAppDate(l.createdAt, state.settings?.locale)}</span>
-                  </div>
-                  <p className="text-ink">{l.details}</p>
-                  <span className="text-[10px] text-ink-soft block">مجری: {l.actor}</span>
-                </Card>
-              ))
-            ) : (
-              <EmptyState icon={<History className="w-8 h-8 text-ink-soft opacity-50" />} title="لاگی یافت نشد" description="" />
+            {(casesFilter === 'ALL' || casesFilter === 'CASES') && accountCases.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-xs font-bold text-ink flex items-center gap-1.5"><ShieldAlert size={14} className="text-rose-600" /> تیکت‌ها و پرونده‌های پشتیبانی ({accountCases.length})</h3>
+                  <Button size="sm" variant="outline" onClick={() => setIsCaseModalOpen(true)} icon={<Plus className="w-3.5 h-3.5" />}>ثبت تیکت</Button>
+                </div>
+                {accountCases.map((c: any) => (
+                  <Card key={c.id} padding="md" className="flex justify-between items-center bg-surface border border-border">
+                    <div>
+                      <h4 className="text-sm font-bold text-ink">{c.subject}</h4>
+                      <span className="text-xs text-ink-soft font-mono mt-1 block">شماره: {c.caseNumber}</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded bg-canvas text-ink-soft border border-border/60">{getPersianStatusLabel(c.status)}</span>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(casesFilter === 'ALL' || casesFilter === 'AUDIT') && accountAuditLogs.length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-ink flex items-center gap-1.5 px-1"><Clock size={14} className="text-primary" /> تاریخچه سیستمی و ردپای تغییرات ({accountAuditLogs.length})</h3>
+                {accountAuditLogs.map(l => (
+                  <Card key={l.id} padding="sm" className="text-xs space-y-1 bg-surface border border-border">
+                    <div className="flex justify-between text-ink-soft font-mono text-[10px]">
+                      <span className="font-bold text-ink">{l.action}</span>
+                      <span>{formatAppDate(l.createdAt, state.settings?.locale)}</span>
+                    </div>
+                    <p className="text-ink">{l.details}</p>
+                    <span className="text-[10px] text-ink-soft block">مجری: {l.actor}</span>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {accountCases.length === 0 && accountAuditLogs.length === 0 && (
+              <EmptyState icon={<ShieldAlert className="w-8 h-8 text-ink-soft opacity-50" />} title="پرونده پشتیبانی یا لاگی یافت نشد" description="" />
             )}
           </div>
         )}

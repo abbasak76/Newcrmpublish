@@ -1,33 +1,58 @@
 /**
- * AKHAVAN CRM – Palette & Token Specification (Version 1)
- * Colors: Midnight Blue (#102552) x Sunlit Yellow (#FFC72C) x Turquoise (#99E1D9/#1F6F68) x Crimson (#8B1221)
+ * AKHAVAN CRM — System-Wide Color Architecture (2026 Enterprise Palette)
+ * Quantum Ultramarine (#2563EB) x Perlin Pearl (#F8FAFC) x Obsidian Crystal (#090D16)
  */
 
 :root {
-  --c-canvas: #F3F6FA;
+  /* Canvas & Surfaces (Light - Perlin Pearl & Spatial Glass) */
+  --c-canvas: #F8FAFC;
   --c-surface: #FFFFFF;
-  --c-sunken: #EAF0F7;
-  --c-border: #E1E8F2;
-  --c-border-strong: #B7C7DC;
-  --c-text: #102552;
-  --c-text-2: #5B7093;
-  --c-brand-deep: #102552;
-  --c-primary: #315EAA;
-  --c-primary-hover: #284F92;
-  --c-primary-pressed: #1F3F75;
-  --c-primary-soft: #E6EDF8;
-  --c-accent: #FFC72C;
-  --c-on-accent: #102552;
-  --c-warning-soft: #FFF1C7;
-  --c-warning-text: #6B4E00;
-  --c-success-fill: #99E1D9;
-  --c-success-soft: #DDF4F1;
-  --c-success-text: #1F6F68;
-  --c-danger: #8B1221;
-  --c-danger-soft: #FCEEF0;
-  --c-danger-border: #F2CDD3;
+  --c-surface-glass: rgba(255, 255, 255, 0.75);
+  --c-sunken: #F1F5F9;
+  --c-border: rgba(226, 232, 240, 0.8);
+  --c-border-strong: #CBD5E1;
 
-  /* Aliases for backwards compatibility & CSS variables */
+  /* Typography & Ink */
+  --c-text-primary: #0F172A;
+  --c-text-secondary: #475569;
+  --c-text-muted: #94A3B8;
+
+  /* Primary Brand & Interaction (Quantum Ultramarine) */
+  --c-primary: #2563EB;
+  --c-primary-hover: #1D4ED8;
+  --c-primary-pressed: #1E40AF;
+  --c-primary-soft: #EFF6FF;
+
+  /* Accent & Highlights (Sunlit Warm Gold - Fills/Badges Only) */
+  --c-accent: #F59E0B;
+  --c-on-accent: #0F172A;
+
+  /* Semantic Status Tokens */
+  --c-success: #059669;
+  --c-success-soft: #ECFDF5;
+  --c-success-border: #A7F3D0;
+  
+  --c-warning: #D97706;
+  --c-warning-soft: #FFFBEB;
+  --c-warning-border: #FDE68A;
+
+  --c-danger: #E11D48;
+  --c-danger-soft: #FFF1F2;
+  --c-danger-border: #FECDD3;
+
+  /* Shadows & Spatial Glows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 8px 24px -4px rgba(37, 99, 235, 0.12);
+
+  /* System aliases */
+  --c-text: var(--c-text-primary);
+  --c-text-2: var(--c-text-secondary);
+  --c-brand-deep: #0F172A;
+  --c-warning-text: var(--c-warning);
+  --c-success-text: var(--c-success);
+  --c-success-fill: var(--c-success-border);
+
   --color-canvas: var(--c-canvas);
   --color-bg: var(--c-canvas);
   --color-surface: var(--c-surface);
@@ -36,11 +61,11 @@
   --color-surface-muted: var(--c-sunken);
   --color-surface-elevated: var(--c-surface);
 
-  --color-ink: var(--c-text);
-  --color-ink-soft: var(--c-text-2);
-  --color-text-main: var(--c-text);
-  --color-text-secondary: var(--c-text-2);
-  --color-text-tertiary: #8496B3;
+  --color-ink: var(--c-text-primary);
+  --color-ink-soft: var(--c-text-secondary);
+  --color-text-main: var(--c-text-primary);
+  --color-text-secondary: var(--c-text-secondary);
+  --color-text-tertiary: var(--c-text-muted);
 
   --color-border: var(--c-border);
   --color-border-subtle: var(--c-border);
@@ -50,19 +75,19 @@
   --color-primary: var(--c-primary);
   --color-primary-hover: var(--c-primary-hover);
   --color-primary-dark: var(--c-primary-pressed);
-  --color-brand: var(--c-brand-deep);
+  --color-brand: var(--c-primary);
   --color-on-brand: #FFFFFF;
 
   --color-accent: var(--c-accent);
   --color-on-accent: var(--c-on-accent);
 
-  --color-success: var(--c-success-text);
+  --color-success: var(--c-success);
   --color-success-soft: var(--c-success-soft);
-  --color-success-line: var(--c-success-fill);
+  --color-success-line: var(--c-success-border);
 
-  --color-warning: var(--c-warning-text);
+  --color-warning: var(--c-warning);
   --color-warning-soft: var(--c-warning-soft);
-  --color-warning-line: #FFE699;
+  --color-warning-line: var(--c-warning-border);
 
   --color-danger: var(--c-danger);
   --color-danger-soft: var(--c-danger-soft);
@@ -72,12 +97,12 @@
   --color-info-soft: var(--c-primary-soft);
   --color-info-line: #BFDBFE;
 
-  --color-status-healthy: var(--c-success-text);
+  --color-status-healthy: var(--c-success);
   --color-status-risk: var(--c-danger);
-  --color-status-warning: var(--c-warning-text);
+  --color-status-warning: var(--c-warning);
 
   /* Glassmorphism Layers */
-  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-bg: var(--c-surface-glass);
   --glass-bg-strong: rgba(255, 255, 255, 0.95);
   --glass-bg-subtle: rgba(255, 255, 255, 0.70);
   --glass-border: var(--c-border);
@@ -85,48 +110,52 @@
   --glass-border-dark: var(--c-border-strong);
 
   /* Shadows */
-  --shadow-subtle: 0 1px 3px rgba(16, 37, 82, 0.05);
-  --shadow-card: 0 4px 16px -2px rgba(16, 37, 82, 0.06), 0 0 0 1px var(--c-border);
-  --shadow-floating: 0 12px 32px -4px rgba(16, 37, 82, 0.12);
-  --shadow-modal: 0 20px 48px -8px rgba(16, 37, 82, 0.22);
+  --shadow-subtle: var(--shadow-sm);
+  --shadow-floating: var(--shadow-glow);
+  --shadow-modal: 0 20px 48px -8px rgba(15, 23, 42, 0.22);
 }
 
 [data-theme="dark"],
 html.dark {
-  --c-canvas: #0C0C0C;
-  --c-surface: #1D1D1D;
-  --c-sunken: #262626;
-  --c-border: #2A2F3A;
-  --c-border-strong: #3A4150;
-  --c-text: #F2F5FA;
-  --c-text-2: #A9B4C6;
-  --c-brand-deep: #102552;
-  --c-primary: #6E96E0;
-  --c-primary-hover: #86A8E8;
-  --c-primary-pressed: #5A82CC;
-  --c-primary-soft: #14233F;
-  --c-accent: #FFC72C;
-  --c-on-accent: #102552;
-  --c-warning-soft: #3A2F0A;
-  --c-warning-text: #FFC72C;
-  --c-success-fill: #99E1D9;
-  --c-success-soft: #12302D;
-  --c-success-text: #99E1D9;
-  --c-danger: #FF6B7D;
-  --c-danger-soft: #3A1219;
-  --c-danger-border: #5A1E29;
+  /* Canvas & Surfaces (Dark - Obsidian Crystal & Deep Slate) */
+  --c-canvas: #090D16;
+  --c-surface: #111827;
+  --c-surface-glass: rgba(17, 24, 39, 0.75);
+  --c-sunken: #1F2937;
+  --c-border: rgba(255, 255, 255, 0.08);
+  --c-border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Glassmorphism Layers (Dark) */
-  --glass-bg: rgba(29, 29, 29, 0.88);
-  --glass-bg-strong: rgba(29, 29, 29, 0.95);
-  --glass-bg-subtle: rgba(29, 29, 29, 0.65);
-  --glass-border: var(--c-border);
-  --glass-border-highlight: rgba(255, 255, 255, 0.12);
-  --glass-border-dark: var(--c-border-strong);
+  /* Typography & Ink */
+  --c-text-primary: #F8FAFC;
+  --c-text-secondary: #94A3B8;
+  --c-text-muted: #64748B;
 
-  /* Shadows (Dark) */
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--c-border);
-  --shadow-floating: 0 12px 32px -4px rgba(0, 0, 0, 0.75);
-  --shadow-modal: 0 20px 48px -8px rgba(0, 0, 0, 0.90);
+  /* Primary Brand & Interaction */
+  --c-primary: #3B82F6;
+  --c-primary-hover: #60A5FA;
+  --c-primary-pressed: #1D4ED8;
+  --c-primary-soft: #1E293B;
+
+  /* Semantic Status Tokens (Dark) */
+  --c-success: #10B981;
+  --c-success-soft: #064E3B;
+  --c-success-border: #047857;
+
+  --c-warning: #F59E0B;
+  --c-warning-soft: #451A03;
+  --c-warning-border: #78350F;
+
+  --c-danger: #F43F5E;
+  --c-danger-soft: #4C0519;
+  --c-danger-border: #881337;
+
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 8px 24px -4px rgba(59, 130, 246, 0.2);
+
+  --c-text: var(--c-text-primary);
+  --c-text-2: var(--c-text-secondary);
+
+  --glass-bg: var(--c-surface-glass);
+  --glass-bg-strong: rgba(17, 24, 39, 0.95);
+  --glass-bg-subtle: rgba(17, 24, 39, 0.65);
 }
