@@ -1,11 +1,13 @@
 {
-  "generatedAt": "2026-11-05T13:46:02.175Z",
+  "generatedAt": "2026-11-05T17:28:18.989Z",
   "method": "static relative-import graph from src/main.tsx; dynamic/runtime registries, CSS references, tests and framework conventions may require manual review",
-  "sourceFiles": 135,
-  "reachableFiles": 126,
-  "unreachableCandidates": 9,
+  "sourceFiles": 136,
+  "reachableFiles": 125,
+  "unreachableCandidates": 11,
   "unreachableCandidatesFiles": [
     "src/components/OnboardingTour.tsx",
+    "src/components/Sidebar.tsx",
+    "src/components/ThemeToggle.tsx",
     "src/components/ui/Progress.tsx",
     "src/components/ui/SearchableSelect.tsx",
     "src/components/ui/Skeleton.tsx",

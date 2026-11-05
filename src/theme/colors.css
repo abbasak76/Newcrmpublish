@@ -4,76 +4,72 @@
  */
 
 :root {
-  /* --- Neutral & Surfaces (Reporting-First Clarity) --- */
+  /* --- Neutral & Surfaces --- */
   --c-white: #FFFFFF;
   --c-mist: #F4F6F8;
   --c-canvas: #F0F2F5;
   --c-surface: #FFFFFF;
   --c-surface-glass: rgba(255, 255, 255, 0.85);
   --c-sunken: #F8FAFC;
-  
+
   --c-border-light: rgba(38, 58, 80, 0.08);
   --c-border: rgba(38, 58, 80, 0.15);
   --c-border-strong: rgba(38, 58, 80, 0.3);
 
-  /* --- Typography & Ink --- */
-  --c-ink-main: #1A2634; /* Deepest Navy for text */
+  /* --- Typography & Ink (muted darkened for WCAG AA >= 4.5:1) --- */
+  --c-ink-main: #1A2634;
   --c-ink-secondary: #4A5C70;
-  --c-ink-muted: #8295A9;
+  --c-ink-muted: #5C6F84;
 
   /* --- Core Brand Identity --- */
-  /* Executive Navy: Structure, Authority, Headers */
   --c-navy-light: #3A5370;
   --c-navy: #263A50;
   --c-navy-dark: #152233;
 
-  /* Analytical Cobalt: Interaction, Links, Active States, Data */
   --c-cobalt-light: #4A7ACF;
   --c-cobalt: #315EAA;
   --c-cobalt-dark: #20427D;
 
-  /* Forest Slate: Complementary Brand Details */
   --c-forest-light: #4B6E67;
   --c-forest: #344F49;
   --c-forest-dark: #1E302C;
 
   /* --- Semantic & Status Tokens --- */
-  /* Success Green: Real success, cleared payments, completed ops */
   --c-success-soft: #E6F3EB;
   --c-success-border: #99CBAE;
   --c-success: #246B45;
 
-  /* Strategic Copper: Opportunities, Priority, Next Best Action */
   --c-copper-soft: #F6EBE5;
   --c-copper-border: #DFA98B;
   --c-copper: #B97850;
 
-  /* Burgundy Risk: Bounced cheques, critical overdue, hard errors */
   --c-burgundy-soft: #F2E6EA;
   --c-burgundy-border: #B88B9C;
   --c-burgundy: #71364B;
 
-  /* --- System Aliases (Mapping to components) --- */
+  /* --- System Aliases --- */
   --c-primary: var(--c-cobalt);
   --c-primary-hover: var(--c-cobalt-dark);
   --c-primary-pressed: #173263;
   --c-primary-soft: #EAF0F8;
+  --c-on-primary: var(--c-white);
 
   --c-accent: var(--c-copper);
   --c-on-accent: var(--c-white);
 
   --c-text-primary: var(--c-ink-main);
   --c-text-secondary: var(--c-ink-secondary);
-  
+
   --c-warning: var(--c-copper);
   --c-warning-soft: var(--c-copper-soft);
   --c-warning-border: var(--c-copper-border);
-  
+
   --c-danger: var(--c-burgundy);
   --c-danger-soft: var(--c-burgundy-soft);
   --c-danger-border: var(--c-burgundy-border);
+  --c-on-danger: var(--c-white);
 
-  /* --- Shadows & Elevation (Enterprise Flat/Subtle) --- */
+  /* --- Shadows & Elevation --- */
   --shadow-sm: 0 1px 2px 0 rgba(38, 58, 80, 0.05);
   --shadow-card: 0 4px 12px -2px rgba(38, 58, 80, 0.08), 0 1px 3px -1px rgba(38, 58, 80, 0.04);
   --shadow-floating: 0 12px 32px -8px rgba(38, 58, 80, 0.15), 0 4px 12px -4px rgba(38, 58, 80, 0.08);
@@ -82,28 +78,51 @@
 
 [data-theme="dark"],
 html.dark {
-  /* Dark mode mappings (Preserving Navy/Cobalt identity but inverted for readability) */
   --c-canvas: #0D141C;
   --c-surface: #15202B;
   --c-surface-glass: rgba(21, 32, 43, 0.85);
   --c-sunken: #1A2736;
-  
+
   --c-border-light: rgba(255, 255, 255, 0.05);
   --c-border: rgba(255, 255, 255, 0.1);
   --c-border-strong: rgba(255, 255, 255, 0.2);
 
   --c-ink-main: #F4F6F8;
   --c-ink-secondary: #A3B1C2;
-  --c-ink-muted: #6B7D91;
+  --c-ink-muted: #8A9BAF;
 
   --c-primary: #4A7ACF;
   --c-primary-hover: #6B94DF;
-  --c-primary-soft: rgba(49, 94, 170, 0.2);
+  --c-primary-pressed: #8FAEE8;
+  --c-primary-soft: rgba(74, 122, 207, 0.2);
 
-  --c-success-soft: rgba(36, 107, 69, 0.2);
-  --c-copper-soft: rgba(185, 120, 80, 0.2);
-  --c-burgundy-soft: rgba(113, 54, 75, 0.2);
+  /* Readable status colors on dark surfaces */
+  --c-success: #6FCF97;
+  --c-success-soft: rgba(111, 207, 151, 0.16);
+  --c-success-border: rgba(111, 207, 151, 0.4);
 
+  --c-copper: #E0A07A;
+  --c-copper-soft: rgba(224, 160, 122, 0.16);
+  --c-copper-border: rgba(224, 160, 122, 0.4);
+
+  --c-burgundy: #E39BB5;
+  --c-burgundy-soft: rgba(227, 155, 181, 0.16);
+  --c-burgundy-border: rgba(227, 155, 181, 0.4);
+
+  /* Aliases re-declared so they stay correct even if data-theme is on a child element */
+  --c-warning: var(--c-copper);
+  --c-warning-soft: var(--c-copper-soft);
+  --c-warning-border: var(--c-copper-border);
+  --c-danger: var(--c-burgundy);
+  --c-danger-soft: var(--c-burgundy-soft);
+  --c-danger-border: var(--c-burgundy-border);
+  --c-on-danger: #2A0F1A;
+  --c-accent: var(--c-copper);
+  --c-text-primary: var(--c-ink-main);
+  --c-text-secondary: var(--c-ink-secondary);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
   --shadow-floating: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
 }

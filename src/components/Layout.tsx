@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Bell, PanelLeftClose, PanelLeft, Sun, Moon, Menu, ChevronRight } from 'lucide-react';
-import { cn } from '../lib/utils';
 import { AppState } from '../types';
 import { NavigationDrawer } from './NavigationDrawer';
-import { Sidebar } from './Sidebar';
+import { DesktopSidebar } from './DesktopSidebar';
 import { BottomNav } from './BottomNav';
 import { RBACService } from '../lib/rbac';
+import { makeCanAccess } from '../lib/navigation';
 import { useTheme } from '../theme/ThemeProvider';
 import { AtmosphereLayer } from './AtmosphereLayer';
 
@@ -15,6 +15,8 @@ interface LayoutProps {
   onOpenSearch?: () => void;
   unreadNotificationsCount?: number;
   onOpenNotifications?: () => void;
+  /** Real logout handler of the app (clears session/token). Falls back to navigating to /login. */
+  onLogout?: () => void;
   state?: AppState;
   updateState?: (updater: (draft: AppState) => AppState | void) => void;
 }
@@ -24,8 +26,8 @@ export function Layout({
   onOpenSearch,
   unreadNotificationsCount = 0,
   onOpenNotifications,
+  onLogout,
   state,
-  updateState
 }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +39,7 @@ export function Layout({
   const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
   const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
   const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
+  const canAccess = useMemo(() => makeCanAccess(rbac), [rbac]);
 
   const isDetailPage = /^\/(customers|accounts|tasks|quotes|operations_control|finance)\/.+/.test(location.pathname);
   const inChat = location.pathname.startsWith('/groups');
@@ -71,22 +74,21 @@ export function Layout({
   }, [state?.tasks]);
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-canvas font-sans select-none" dir="rtl">
+    <div className="relative isolate h-[100dvh] w-full overflow-hidden bg-canvas font-sans" dir="rtl">
       <AtmosphereLayer />
 
       <div className="relative z-10 flex h-full w-full overflow-hidden">
-        <Sidebar
-          sections={[]}
+        <DesktopSidebar
           user={currentUser}
           roleName={currentRole?.name}
           collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          canAccess={canAccess}
         />
 
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
           {/* Enterprise Floating Header */}
-          <header className="se-floating-header fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between transition-all md:static md:bg-transparent md:border-none md:backdrop-filter-none md:shadow-none md:pt-4">
-            
+          <header className="se-floating-header fixed top-0 inset-x-0 z-30 px-4 pb-3 pt-[calc(var(--safe-top)+0.75rem)] flex items-center justify-between md:static md:pt-4 md:pb-2">
+
             <div className="flex items-center gap-2 shrink-0">
               {isDetailPage ? (
                 <button onClick={() => navigate(-1)} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="بازگشت">
@@ -109,17 +111,22 @@ export function Layout({
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <div className="hidden md:flex items-center gap-2 h-9 w-64 px-3 rounded-lg border border-border bg-surface text-ink-secondary focus-within:border-primary transition-colors cursor-text" onClick={onOpenSearch}>
+              <button
+                type="button"
+                onClick={onOpenSearch}
+                className="hidden md:flex items-center gap-2 h-9 w-64 px-3 rounded-lg border border-border bg-surface text-ink-secondary hover:border-primary transition-colors cursor-text"
+                aria-label="جستجوی سراسری"
+              >
                 <Search size={16} />
                 <span className="text-xs">جستجوی سراسری...</span>
-              </div>
-              <button onClick={onOpenSearch} className="md:hidden p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+              </button>
+              <button onClick={onOpenSearch} className="md:hidden p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="جستجو">
                 <Search size={18} />
               </button>
-              <button onClick={toggleTheme} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+              <button onClick={toggleTheme} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="تغییر تم">
                 {theme === 'dark' ? <Sun size={18} className="text-warning" /> : <Moon size={18} />}
               </button>
-              <button onClick={onOpenNotifications} className="relative p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+              <button onClick={onOpenNotifications} className="relative p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="اعلان‌ها">
                 <Bell size={18} />
                 {unreadNotificationsCount > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger ring-2 ring-surface animate-pulse" />
@@ -128,20 +135,31 @@ export function Layout({
             </div>
           </header>
 
-          <main id="main-scroll-container" className="w-full flex-1 overflow-y-auto main-content-scroll no-scrollbar md:!pt-2">
+          <main
+            id="main-scroll-container"
+            data-chat={inChat ? 'true' : 'false'}
+            className="w-full flex-1 overflow-y-auto main-content-scroll no-scrollbar"
+          >
             <div className="mx-auto min-h-full w-full max-w-7xl pb-6">
               {children}
             </div>
           </main>
         </div>
-
-        {!inChat && <BottomNav opsBadgeCount={opsBadgeCount} className="md:hidden" />}
       </div>
+
+      {!inChat && (
+        <BottomNav
+          opsBadgeCount={opsBadgeCount}
+          canAccess={canAccess}
+          className="md:hidden"
+        />
+      )}
 
       <NavigationDrawer
         isOpen={navDrawerOpen}
         onClose={() => setNavDrawerOpen(false)}
         state={state}
+        onLogout={onLogout}
       />
     </div>
   );

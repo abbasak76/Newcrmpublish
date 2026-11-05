@@ -209,6 +209,12 @@ function AppContent() {
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         unreadNotificationsCount={unreadNotificationsCount}
+        onLogout={() => {
+          updateState(draft => {
+            draft.currentUserId = '';
+          });
+          navigate('/login');
+        }}
         state={state}
         updateState={updateState}
       >

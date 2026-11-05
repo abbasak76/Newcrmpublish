@@ -1,30 +1,52 @@
 @import "tailwindcss";
 @import "./theme/colors.css";
 
-/* Fonts: Vazirmatn (RTL) & Urbanist (LTR/Numbers) */
+/* Fonts: Vazirmatn (Persian) & Urbanist (Latin / numbers).
+   Urbanist falls back silently if the file is absent. */
 @font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
 @font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Urbanist"; src: local("Urbanist"), url("/fonts/webfonts/Urbanist-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 
-@theme {
+/* dark: variant follows the app's theme switch (data-theme or .dark) */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+/* "inline" keeps utilities pointing at the live CSS variables, so dark mode works */
+@theme inline {
   --color-primary: var(--c-primary);
   --color-primary-hover: var(--c-primary-hover);
   --color-primary-soft: var(--c-primary-soft);
-  
+  --color-on-primary: var(--c-on-primary);
+
   --color-success: var(--c-success);
-  --color-warning: var(--c-warning); /* Mapped to Copper */
-  --color-danger: var(--c-danger);   /* Mapped to Burgundy */
+  --color-success-soft: var(--c-success-soft);
+  --color-warning: var(--c-warning);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-on-danger: var(--c-on-danger);
   --color-info: var(--c-cobalt);
 
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
+  --color-surface-glass: var(--c-surface-glass);
+  --color-sunken: var(--c-sunken);
   --color-border: var(--c-border);
-  
+  --color-border-light: var(--c-border-light);
+  --color-border-strong: var(--c-border-strong);
+
+  --color-ink-main: var(--c-ink-main);
+  --color-ink-secondary: var(--c-ink-secondary);
+  --color-ink-muted: var(--c-ink-muted);
   --color-text-main: var(--c-ink-main);
   --color-text-secondary: var(--c-ink-secondary);
 
-  /* Radius System */
+  --color-navy: var(--c-navy);
+  --color-navy-dark: var(--c-navy-dark);
+  --color-cobalt: var(--c-cobalt);
+  --color-copper: var(--c-copper);
+
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -34,77 +56,110 @@
   --font-sans: "Urbanist", "Vazirmatn", system-ui, sans-serif;
 }
 
+/* Shadow utilities bound to the theme-aware variables (work with md:, hover: ...) */
+@utility shadow-card { box-shadow: var(--shadow-card); }
+@utility shadow-floating { box-shadow: var(--shadow-floating); }
+@utility shadow-modal { box-shadow: var(--shadow-modal); }
+
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-html { direction: rtl; -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0; 
-  font-family: var(--font-sans); 
-  background: var(--c-canvas); 
-  color: var(--c-ink-main);
-  line-height: 1.6; 
-  -webkit-font-smoothing: antialiased; 
-  overflow-x: hidden;
+@layer base {
+  html { direction: rtl; -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--c-canvas);
+    color: var(--c-ink-main);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  button { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+
+  /* iOS input zoom fix: mobile only, text-like inputs only */
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+    select,
+    textarea { font-size: 16px !important; }
+  }
 }
 
-/* iOS Input Zoom Fix (min 16px) */
-input, select, textarea { font-size: 16px !important; }
-@media (min-width: 768px) {
-  input, select, textarea { font-size: inherit !important; }
-}
-
-/* Tabular Numbers for Financial Data */
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
-/* --- Enterprise Typography Scale (v4.0) --- */
-.se-display { font-size: 32px; font-weight: 700; line-height: 40px; letter-spacing: -0.02em; }
-.se-h1 { font-size: 24px; font-weight: 600; line-height: 32px; letter-spacing: -0.01em; }
-.se-h2 { font-size: 20px; font-weight: 600; line-height: 28px; letter-spacing: 0; }
-.se-title { font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0; }
-.se-body { font-size: 14px; font-weight: 400; line-height: 20px; letter-spacing: 0; }
-.se-body-sm { font-size: 12px; font-weight: 400; line-height: 16px; letter-spacing: 0.01em; }
-.se-caption { font-size: 11px; font-weight: 500; line-height: 14px; letter-spacing: 0.02em; color: var(--c-ink-secondary); }
+@layer components {
+  /* --- Enterprise Typography Scale (v4.0) --- */
+  .se-display { font-size: 32px; font-weight: 700; line-height: 40px; letter-spacing: -0.02em; }
+  .se-h1 { font-size: 24px; font-weight: 600; line-height: 32px; letter-spacing: -0.01em; }
+  .se-h2 { font-size: 20px; font-weight: 600; line-height: 28px; letter-spacing: 0; }
+  .se-title { font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0; }
+  .se-body { font-size: 14px; font-weight: 400; line-height: 20px; letter-spacing: 0; }
+  .se-body-sm { font-size: 12px; font-weight: 400; line-height: 16px; letter-spacing: 0.01em; }
+  .se-caption { font-size: 11px; font-weight: 500; line-height: 14px; letter-spacing: 0.02em; color: var(--c-ink-secondary); }
 
-/* --- Enterprise Components --- */
-.se-card {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  .se-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  /* Floating header: glass on mobile only; plain on desktop */
+  .se-floating-header { background: transparent; }
+  @media (max-width: 767px) {
+    .se-floating-header {
+      background: var(--c-surface-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--c-border);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  /* Scroll container safe areas */
+  .main-content-scroll { padding-top: 8px; padding-bottom: 24px; }
+  @media (max-width: 767px) {
+    .main-content-scroll {
+      padding-top: calc(var(--safe-top) + 72px);
+      padding-bottom: calc(var(--safe-bottom) + 110px);
+    }
+    /* Chat screen hides the bottom nav, so no reserved space */
+    .main-content-scroll[data-chat="true"] { padding-bottom: var(--safe-bottom); }
+  }
+
+  /* Drawer / overlay motion (no plugin required) */
+  .se-drawer-enter { animation: se-slide-in-right 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .se-backdrop-enter { animation: se-fade-in 0.2s ease-out both; }
 }
 
-/* Floating Header (Clean, Glassy, No Overlap) */
-.se-floating-header {
-  background: var(--c-surface-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--c-border);
-  box-shadow: var(--shadow-sm);
+@keyframes se-slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes se-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .se-drawer-enter, .se-backdrop-enter { animation: none; }
 }
 
-/* Main Content Safe Area */
-.main-content-scroll {
-  padding-top: calc(var(--safe-top) + 72px) !important;
-  padding-bottom: calc(var(--safe-bottom) + 90px) !important;
-}
-
-/* Utilities */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Clean Atmosphere (Removing heavy neon/glows, keeping subtle enterprise feel) */
 .se-atmosphere-root { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--c-canvas); }
-.se-sky-clouds { position: absolute; z-index: 0; inset: 0; overflow: hidden; opacity: 0; }
-.se-sky-cloud-1 { top: 4%; }
-.se-sky-cloud-2 { top: 13%; opacity: .72; }
-.se-atmosphere-root[data-performance="high"][data-reduced="false"] .se-sky-cloud-1,
-.se-atmosphere-root[data-performance="auto"][data-reduced="false"] .se-sky-cloud-1 { animation: se-cloud-drift 96s ease-in-out infinite alternate; }
-@keyframes se-cloud-drift { from { translate: -1.5% 0; } to { translate: 1.5% 5px; } }
-html[data-performance-mode="low"] .se-atmosphere-root .se-sky-clouds { display: none !important; }
-@media (prefers-reduced-motion: reduce) {
-  .se-sky-cloud-1, .se-sky-cloud-2 { animation: none !important; }
+
+@keyframes se-cloud-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-18px, 6px, 0); }
 }
+
+[data-performance-mode="low"] .se-sky-clouds,
+[data-performance="low"] .se-sky-clouds {
+  display: none !important;
+}
+
+.se-sky-clouds {
+  animation: se-cloud-drift 96s ease-in-out infinite alternate;
+}
+
