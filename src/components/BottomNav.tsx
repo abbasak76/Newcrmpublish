@@ -1,13 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  Home,
-  Users,
-  TrendingUp,
-  CheckSquare,
-  LayoutGrid
-} from 'lucide-react';
+import { Home, Users, TrendingUp, CheckSquare, LayoutGrid } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export const NAV_ITEMS = [
@@ -30,9 +23,9 @@ export function BottomNav({ className, opsBadgeCount = 0 }: BottomNavProps) {
   const getActiveTabId = (pathname: string) => {
     if (pathname === '/') return 'home';
     if (pathname.startsWith('/customers') || pathname.startsWith('/accounts')) return 'accounts';
-    if (pathname.startsWith('/quotes') || pathname.startsWith('/opportunities') || pathname.startsWith('/sales') || pathname.startsWith('/negotiations')) return 'sales';
+    if (pathname.startsWith('/quotes') || pathname.startsWith('/opportunities') || pathname.startsWith('/leads')) return 'sales';
     if (pathname.startsWith('/tasks')) return 'tasks';
-    if (pathname.startsWith('/operations_control') || pathname.startsWith('/operations')) return 'operations';
+    if (pathname.startsWith('/operations') || pathname.startsWith('/geo-intelligence')) return 'operations';
     return '';
   };
 
@@ -40,13 +33,12 @@ export function BottomNav({ className, opsBadgeCount = 0 }: BottomNavProps) {
 
   return (
     <nav
-      id="bottom-nav"
       aria-label="ناوبری اصلی"
       dir="rtl"
       className={cn(
         "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md",
-        "bg-[var(--c-surface-glass)] backdrop-blur-xl border border-[var(--c-border)] shadow-lg rounded-2xl",
-        "p-1.5 flex items-center justify-around gap-1 select-none transition-all duration-300",
+        "bg-surface-glass backdrop-blur-xl border border-border shadow-floating rounded-2xl",
+        "p-1.5 flex items-center justify-between select-none",
         className
       )}
     >
@@ -56,48 +48,30 @@ export function BottomNav({ className, opsBadgeCount = 0 }: BottomNavProps) {
         const isOps = item.id === 'operations';
 
         return (
-          <motion.button
+          <button
             key={item.id}
             type="button"
             onClick={() => navigate(item.path)}
             aria-label={item.label}
             aria-current={isActive ? 'page' : undefined}
-            layout
-            initial={false}
-            animate={{
-              backgroundColor: isActive ? 'var(--c-primary-soft)' : 'transparent',
-              color: isActive ? 'var(--c-primary)' : 'var(--c-text-secondary)',
-            }}
-            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
             className={cn(
-              "relative flex items-center justify-center min-h-[44px] cursor-pointer rounded-xl font-semibold select-none transition-colors",
-              isActive
-                ? "px-3.5 py-2 gap-2 shadow-xs"
-                : "p-2.5 hover:text-[var(--c-text-primary)] hover:bg-[var(--c-sunken)]/50"
+              "relative flex flex-col items-center justify-center min-h-[48px] flex-1 cursor-pointer rounded-xl transition-all duration-200",
+              isActive ? "text-primary" : "text-ink-muted hover:text-ink-secondary hover:bg-border-light"
             )}
           >
-            <Icon className="w-5 h-5 shrink-0" />
-            
-            <AnimatePresence mode="wait">
-              {isActive && (
-                <motion.span
-                  initial={{ opacity: 0, width: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, width: 'auto', scale: 1 }}
-                  exit={{ opacity: 0, width: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="text-xs font-bold whitespace-nowrap overflow-hidden"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <div className={cn("p-1 rounded-lg transition-colors", isActive && "bg-primary-soft")}>
+              <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            <span className={cn("text-[10px] mt-0.5 font-medium transition-all", isActive ? "font-bold" : "")}>
+              {item.label}
+            </span>
 
-            {isOps && opsBadgeCount > 0 && !isActive && (
-              <span className="absolute -top-1 -left-1 min-w-[16px] h-4 px-1 rounded-full bg-[var(--c-danger)] text-white text-[10px] font-bold font-mono flex items-center justify-center leading-none">
-                {Math.min(99, opsBadgeCount).toLocaleString('fa-IR')}
+            {isOps && opsBadgeCount > 0 && (
+              <span className="absolute top-1 right-1/4 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[9px] font-bold font-mono flex items-center justify-center tabular-nums shadow-sm">
+                {opsBadgeCount > 99 ? '99+' : opsBadgeCount}
               </span>
             )}
-          </motion.button>
+          </button>
         );
       })}
     </nav>

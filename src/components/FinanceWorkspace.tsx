@@ -1,15 +1,11 @@
-import { guard } from '../hooks/useCan';
-import { useCan } from '../hooks/useCan';
-import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { guard, useCan } from '../hooks/useCan';
+import React, { useState } from 'react';
 import { AppState, Cheque, Payment, Invoice, CreditNote, CreditNoteRequest } from '../types';
 import { reconcileReceivables } from '../lib/receivableReconciliation';
 import { Card } from './ui/Card';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { DataSourceStatus } from './ui/DataSourceStatus';
 import { checkFinanceRequest, buildFinanceRequest, decideFinanceRequest, FINANCE_KIND_LABEL, FINANCE_STATUS_LABEL, FinanceRequestKind } from '../lib/financeRequests';
 import { FINANCE_REQUEST_SCHEMA } from '../services/dynamicFormEngine';
 import { DocumentField, DocFile } from './shared/DocumentField';
@@ -19,7 +15,7 @@ import {
   Plus, CheckCircle2, DollarSign, CreditCard, ShieldAlert, PhoneCall,
   CalendarCheck, AlertTriangle, ArrowUpRight, ShieldCheck, Check
 } from 'lucide-react';
-import { generateId, formatAppDate, nextSequenceNumber, cleanNumericInput } from '../lib/utils';
+import { generateId, formatAppDate, nextSequenceNumber } from '../lib/utils';
 import { CustomDatePicker } from './ui/CustomDatePicker';
 import { 
   evaluateAllCustomerCollections, 
@@ -27,6 +23,7 @@ import {
   CustomerCollectionProfile 
 } from '../services/collectionEngine';
 import { checkReceipt, buildReceiptPayment, approveAndAllocate, markNeedsFix, transferToErp, RECEIPT_STATUS_LABEL } from '../lib/receiptFlow';
+import { DynamicFormRenderer } from './shared/DynamicFormRenderer';
 import { COLLECTION_PROMISE_SCHEMA, createInvoiceFormSchema, createPaymentReceiptFormSchema, createChequeFormSchema } from '../services/dynamicFormEngine';
 
 interface FinanceWorkspaceProps {
@@ -36,29 +33,7 @@ interface FinanceWorkspaceProps {
 
 export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) {
   const { can, canOn, denied } = useCan(state, updateState);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const validTabs = ['overview', 'invoices', 'payments', 'cheques', 'collection', 'requests', 'expenses', 'treasury', 'credits'] as const;
-  type FinanceTab = typeof validTabs[number];
-  const rawTab = searchParams.get('tab');
-  const tabFromUrl = (rawTab === 'checks' ? 'cheques' : rawTab) as FinanceTab | null;
-  const [activeTab, setLocalTabState] = useState<FinanceTab>(() => {
-    return tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'overview';
-  });
-
-  const setLocalTab = (tab: FinanceTab) => {
-    setLocalTabState(tab);
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.set('tab', tab);
-      return next;
-    }, { replace: true });
-  };
-
-  useEffect(() => {
-    if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
-      setLocalTabState(tabFromUrl);
-    }
-  }, [tabFromUrl]);
+  const [activeTab, setLocalTab] = useState<'overview' | 'invoices' | 'payments' | 'cheques' | 'collection' | 'requests' | 'expenses' | 'treasury' | 'credits'>('overview');
   const [notice, setNotice] = useState<string | null>(null);
   const [creditInvoiceId, setCreditInvoiceId] = useState('');
   const [creditAmount, setCreditAmount] = useState('');
@@ -102,11 +77,21 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
   // New Cheque Modal
   const [showChequeModal, setShowChequeModal] = useState(false);
 
+  // Scope is applied before calculations, not only at render time.
   const invoices = (state.invoices || []).filter(invoice => canOn('finance', 'VIEW', getFinanceRecordScope(invoice)));
   const payments = (state.payments || []).filter(payment => canOn('payments', 'VIEW', getFinanceRecordScope(payment)));
   const mirroredCreditNotes: CreditNote[] = (state.creditNotes || []).filter(note => !note.isVoided && canOn('finance', 'VIEW', getFinanceRecordScope(note)));
   const creditNotes: CreditNoteRequest[] = (state.creditNoteRequests || []).filter(note => canOn('finance', 'VIEW', getFinanceRecordScope(note)));
-  const receivableReconciliation = reconcileReceivables(state.invoices || [], state.payments || [], state.paymentAllocations || [], state.creditNoteSourceStatus === 'CONNECTED' ? (state.creditNotes || []) : undefined, new Date());
+  const visibleInvoiceIds = new Set(invoices.map(item => item.id));
+  const visiblePaymentIds = new Set(payments.map(item => item.id));
+  const scopedAllocations = (state.paymentAllocations || []).filter(item => visibleInvoiceIds.has(item.invoiceId) && visiblePaymentIds.has(item.paymentId));
+  const receivableReconciliation = reconcileReceivables(
+    invoices,
+    payments,
+    scopedAllocations,
+    state.creditNoteSourceStatus === 'CONNECTED' ? mirroredCreditNotes : undefined,
+    new Date()
+  );
   const createCreditNote = () => {
     if (!can('finance', 'CREATE')) return denied('ثبت درخواست بستانکاری');
     if (!updateState) return;
@@ -128,40 +113,21 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
   const cheques: Cheque[] = (state.cheques || []).filter(cheque => canOn('finance', 'VIEW', getFinanceRecordScope(cheque)));
   const expenses: any[] = ((state as any).expenses || []).filter((expense: any) => !expense.deletedAt && canOn('finance', 'VIEW', getFinanceRecordScope(expense)));
   const [expenseStatusFilter, setExpenseStatusFilter] = useState('ALL');
-  const today = new Date().toISOString().split('T')[0];
-
-  let totalReceivables = 0;
-  let totalOverdue = 0;
-  let totalCredit = 0;
-
-  const aging = {
-    current: 0,
-    days30: 0,
-    days60: 0,
-    days90: 0,
-    days90Plus: 0
-  };
-
-  const recMap = new Map(receivableReconciliation.invoices.map(r => [r.invoiceId, r]));
-  invoices.forEach(inv => {
-    const reconciled = recMap.get(inv.id);
-    const balance = reconciled ? reconciled.outstandingAmount : Math.max(0, inv.totalAmount - (inv.paidAmount || 0));
-    if (balance > 0) {
-      totalReceivables += balance;
-      const days = reconciled ? reconciled.daysOverdue : (inv.dueDate && inv.dueDate < today ? Math.ceil(Math.abs(new Date(today).getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24)) : 0);
-      if (days > 0) {
-        totalOverdue += balance;
-        if (days <= 30) aging.days30 += balance;
-        else if (days <= 60) aging.days60 += balance;
-        else if (days <= 90) aging.days90 += balance;
-        else aging.days90Plus += balance;
-      } else {
-        aging.current += balance;
-      }
-    } else if (balance < 0) {
-      totalCredit += Math.abs(balance);
-    }
-  });
+  const today = new Date().toISOString().slice(0, 10);
+  const totalReceivables = receivableReconciliation.totalOutstanding;
+  const totalOverdue = receivableReconciliation.invoices
+    .filter(row => row.daysOverdue > 0)
+    .reduce((sum, row) => sum + row.outstandingAmount, 0);
+  // Credit balances are intentionally not inferred from invoice balances; the current model has no independent ERP prepayment balance source.
+  const aging = { current: 0, days30: 0, days60: 0, days90: 0, days90Plus: 0 };
+  for (const row of receivableReconciliation.invoices) {
+    if (row.outstandingAmount <= 0) continue;
+    if (row.daysOverdue <= 0) aging.current += row.outstandingAmount;
+    else if (row.daysOverdue <= 30) aging.days30 += row.outstandingAmount;
+    else if (row.daysOverdue <= 60) aging.days60 += row.outstandingAmount;
+    else if (row.daysOverdue <= 90) aging.days90 += row.outstandingAmount;
+    else aging.days90Plus += row.outstandingAmount;
+  }
 
   const openCheques = cheques.filter(c => ['PENDING', 'RECEIVED', 'DEPOSITED'].includes(c.status));
   const receivableCheques = cheques.filter(c => c.direction !== 'PAYABLE');
@@ -253,14 +219,23 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
   };
 
   const handleCreateInvoice = (values: Record<string, any>) => {
-    if (!can('finance', 'CREATE')) return denied('ثبت فاکتور');
+    if (!can('finance', 'CREATE')) return denied('ثبت ورودی مالی دستی');
+    if (!manualEntry) {
+      setNotice('صدور فاکتور رسمی در ERP انجام می‌شود. ورود دستی فاکتور در تنظیمات سازمان فعال نیست؛ از مسیر تحویل Quote به ERP استفاده کنید.');
+      return;
+    }
     if (!updateState) return;
     const fromQuote = values.source === 'FROM_QUOTE';
     const selectedQuote = fromQuote ? state.quotes?.find(q => q.id === values.quoteId) : undefined;
-    if (fromQuote && !selectedQuote) return;
-    const accountId: string = fromQuote ? (selectedQuote!.accountId || '') : values.accountId;
-    const amountNum = fromQuote ? Number(selectedQuote!.totalAmount) || 0 : Number(values.totalAmount) || 0;
-    if (!accountId || amountNum <= 0) return;
+    if (fromQuote && (!selectedQuote || selectedQuote.status !== 'ACCEPTED' || (selectedQuote as any).invoicedId)) {
+      setNotice('فقط Quote پذیرفته‌شده و فاقد ثبت مالی قبلی قابل استفاده است.');
+      return;
+    }
+    const accountId: string = fromQuote ? (selectedQuote!.accountId || '') : String(values.accountId || '');
+    const account = (state.accounts || []).find(item => item.id === accountId);
+    if (!account || !canOn('finance', 'CREATE', getFinanceRecordScope({ accountId }))) return denied('ثبت مالی برای این مشتری');
+    const amountNum = fromQuote ? Number(selectedQuote!.totalAmount) : Number(values.totalAmount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) { setNotice('مبلغ باید عددی معتبر و بزرگ‌تر از صفر باشد.'); return; }
     const invNum = String(values.invoiceNumber || '').trim() || nextSequenceNumber('INV-', (state.invoices || []).map(i => i.invoiceNumber), 1);
 
     const invoiceItems = fromQuote && selectedQuote!.lines.length > 0
@@ -279,71 +254,74 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
     updateState(draft => {
       if (!draft.invoices) draft.invoices = [];
       draft.invoices.unshift(newInvoice);
-      const acc = (draft.accounts || []).find(a => a.id === accountId);
-      if (acc) {
-        acc.balance = (acc.balance || 0) + amountNum;
-        acc.totalRevenue = (acc.totalRevenue || 0) + amountNum;
-      }
       if (selectedQuote) {
         const q = draft.quotes?.find(item => item.id === selectedQuote.id);
         if (q) { q.status = 'ACCEPTED'; (q as any).invoicedId = newInvoice.id; }
       }
       if (!draft.auditLogs) draft.auditLogs = [];
       draft.auditLogs.push({
-        id: generateId(), action: 'INVOICE_ISSUED', entityType: 'INVOICE', entityId: newInvoice.id,
-        details: `فاکتور ${invNum} به مبلغ ${amountNum.toLocaleString('fa-IR')} ریال صادر شد`,
+        id: generateId(), action: 'MANUAL_FINANCE_ENTRY_CREATED', entityType: 'INVOICE', entityId: newInvoice.id,
+        details: `ورودی مالی دستی ${invNum} به مبلغ ${amountNum.toLocaleString('fa-IR')} ریال ثبت شد؛ این رکورد تأیید صدور فاکتور رسمی ERP نیست.`,
         actor: draft.users?.find(u => u.id === draft.currentUserId)?.name || 'System', createdAt: new Date().toISOString()
       } as any);
     });
 
     setShowInvoiceModal(false);
-    setNotice(`فاکتور رسمی جدید ${invNum} به مبلغ ${amountNum.toLocaleString()} ریال صادر گردید.`);
+    setNotice(`ورودی مالی دستی ${invNum} ثبت شد؛ این اقدام به معنی صدور فاکتور رسمی در ERP نیست.`);
     setTimeout(() => setNotice(null), 4000);
   };
 
   const handleCreateCheque = (values: Record<string, any>) => {
-    if (!can('finance', 'CREATE')) return denied('ثبت چک');
+    if (!can('finance', 'CREATE')) return denied('ثبت اطلاعات چک');
+    if (!manualEntry) { setNotice('ثبت دستی چک در تنظیمات سازمان فعال نیست؛ اطلاعات رسمی چک باید از ERP دریافت شود.'); return; }
     if (!updateState) return;
     const num = String(values.chequeNumber || '').trim();
-    const cleanNum = cleanNumericInput(num);
-    if (cleanNum.length !== 16) {
-      setNotice('شناسه صیادی چک باید دقیقاً ۱۶ رقم عددی باشد.');
-      setTimeout(() => setNotice(null), 5000);
-      return;
+    const amountNum = Number(values.amount);
+    const account = (state.accounts || []).find(item => item.id === values.accountId);
+    if (!account || !canOn('finance', 'CREATE', getFinanceRecordScope({ accountId: values.accountId })) || !num || !Number.isFinite(amountNum) || amountNum <= 0 || !values.dueDate) {
+      setNotice('مشتری مجاز، شناسه چک، مبلغ مثبت و تاریخ سررسید معتبر الزامی است.'); return;
     }
-    const amountNum = Number(values.amount) || 0;
-    if (!values.accountId || !num || amountNum <= 0) return;
-    if ((state.cheques || []).some(c => c.chequeNumber === cleanNum)) {
+    if ((state.cheques || []).some(c => c.chequeNumber === num)) {
       setNotice('چک دیگری با همین شناسه صیاد قبلاً ثبت شده است.'); setTimeout(() => setNotice(null), 5000); return;
     }
 
     const newCheque: Cheque = {
-      id: generateId(), chequeNumber: cleanNum, bankName: values.bankName, amount: amountNum, dueDate: values.dueDate,
+      id: generateId(), chequeNumber: num, bankName: values.bankName, amount: amountNum, dueDate: values.dueDate,
       status: 'RECEIVED', customerId: values.accountId, accountId: values.accountId
     };
 
     updateState(draft => {
       if (!draft.cheques) draft.cheques = [];
-      if (draft.cheques.some(c => c.chequeNumber === cleanNum)) return;
+      if (draft.cheques.some(c => c.chequeNumber === num)) return;
       draft.cheques.unshift(newCheque);
     });
 
     setShowChequeModal(false);
-    setNotice(`چک صیادی شماره ${cleanNum} به مبلغ ${amountNum.toLocaleString()} ریال ثبت گردید.`);
+    setNotice(`چک صیادی شماره ${num} به مبلغ ${amountNum.toLocaleString()} ریال ثبت گردید.`);
     setTimeout(() => setNotice(null), 4000);
   };
 
-  const collectionData = evaluateAllCustomerCollections(state);
+  const collectionScopeState = {
+    ...state,
+    accounts: (state.accounts || []).filter(account => canOn('finance', 'VIEW', getFinanceRecordScope({ accountId: account.id }))),
+    invoices,
+    payments,
+    cheques
+  } as AppState;
+  const collectionData = evaluateAllCustomerCollections(collectionScopeState);
 
   const handleSavePromise = (formValues: Record<string, any>) => {
     if (!can('finance', 'EDIT')) return denied('ثبت تعهد وصول');
     if (!selectedProfileForPromise || !updateState) return;
     const targetAccount = state.accounts?.find(a => a.id === selectedProfileForPromise.accountId);
-    if (!targetAccount) return;
+    if (!targetAccount || !canOn('finance', 'EDIT', getFinanceRecordScope(targetAccount))) return denied('ثبت تعهد برای این مشتری');
 
     const promiseId = generateId();
-    const promisedAmountNum = Number(formValues.promisedAmount) || 0;
-    const promisedDateStr = formValues.promisedDate || new Date().toISOString().split('T')[0];
+    const promisedAmountNum = Number(formValues.promisedAmount);
+    const promisedDateStr = String(formValues.promisedDate || '');
+    if (!Number.isFinite(promisedAmountNum) || promisedAmountNum <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(promisedDateStr)) {
+      setNotice('مبلغ تعهد باید مثبت و تاریخ تعهد معتبر باشد.'); return;
+    }
 
     updateState(draft => {
       if (!(draft as any).collectionPromises) (draft as any).collectionPromises = [];
@@ -405,7 +383,8 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
     if (!guard(state, updateState, 'tasks', 'CREATE', 'ایجاد وظیفه وصول')) return;
     if (!selectedProfileForTask || !updateState) return;
     const targetAccount = state.accounts?.find(a => a.id === selectedProfileForTask.accountId);
-    if (!targetAccount) return;
+    if (!targetAccount || !canOn('finance', 'VIEW', getFinanceRecordScope(targetAccount))) return denied('دسترسی به مشتری برای پیگیری وصول');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(autoTaskDueDate)) { setNotice('تاریخ پیگیری معتبر نیست.'); return; }
 
     updateState(draft => {
       if (!draft.tasks) draft.tasks = [];
@@ -438,7 +417,7 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
   };
 
   return (
-    <div className="w-full space-y-5 px-1 py-1 sm:px-3 sm:py-3 pb-32 font-premium" dir="rtl">
+    <div className="flex-1 overflow-y-auto bg-transparent p-5 sm:p-8 space-y-6 pb-32" dir="rtl">
       {notice && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-2xl flex items-center gap-2 font-bold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -463,31 +442,28 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
             >
               <Plus size={14} /> ثبت دریافتی / حواله
             </button>
-            <button 
-              onClick={() => {
-                setShowInvoiceModal(true);
-              }}
+            {manualEntry && <button
+              onClick={() => setShowInvoiceModal(true)}
               className="px-3.5 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
             >
-              <Plus size={14} /> صدور فاکتور جدید
-            </button>
-            <button 
-              onClick={() => {
-                setShowChequeModal(true);
-              }}
+              <Plus size={14} /> ثبت ورودی مالی
+            </button>}
+            {manualEntry && <button
+              onClick={() => setShowChequeModal(true)}
               className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
             >
               <Plus size={14} /> ثبت چک صیادی
-            </button>
+            </button>}
           </div>
         )}
       </div>
 
-      <DataSourceStatus 
-        source="ERP" 
-        sourceName="آینه مالی سپیدار / راهکاران ERP" 
-        isAuthoritative={receivableReconciliation.authoritative}
-      />
+      {!receivableReconciliation.authoritative && (
+        <div className="p-3 rounded-xl border border-warning-line bg-warning-soft/50 text-warning text-xs leading-6" role="status">
+          <strong>تطبیق مالی غیرقطعی است.</strong> {receivableReconciliation.blockedReason || 'منبع داده مالی کامل نیست.'}
+          {receivableReconciliation.issues.length > 0 && <span> تعداد مغایرت‌ها: {receivableReconciliation.issues.length.toLocaleString('fa-IR')}</span>}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card padding="md" className="bg-surface border border-border/80 shadow-subtle rounded-3xl p-5">
@@ -507,9 +483,9 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
         <Card padding="md" className="bg-surface border border-border/80 shadow-subtle rounded-3xl p-5">
           <div className="flex items-center gap-2.5 mb-2 text-success">
             <TrendingUp size={16} />
-            <span className="text-xs font-bold">بستانکاری مشتریان</span>
+            <span className="text-xs font-bold">بستانکاری تأییدشده</span>
           </div>
-          <div className="text-lg font-black text-success font-mono">{totalCredit.toLocaleString()}</div>
+          <div className="text-lg font-black text-text-secondary font-mono">—</div>
         </Card>
         <Card padding="md" className="bg-surface border border-border/80 shadow-subtle rounded-3xl p-5">
           <div className="flex items-center gap-2.5 mb-2 text-warning">
@@ -635,7 +611,10 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
       {activeTab === 'invoices' && (
         <div className="space-y-3">
           {invoices.map(inv => {
-            const acc = (state.accounts || []).find(a => a.id === (inv as any).accountId);
+            const acc = (state.accounts || []).find(a => a.id === (inv as any).accountId || a.id === inv.customerId);
+            const reconciled = receivableReconciliation.invoices.find(row => row.invoiceId === inv.id);
+            const outstanding = reconciled?.outstandingAmount ?? Math.max(0, Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0));
+            const displayStatus = outstanding <= 0 ? 'PAID' : (reconciled?.daysOverdue || 0) > 0 ? 'OVERDUE' : 'OPEN';
             return (
               <Card key={inv.id} padding="md" className="bg-surface border border-border/80 shadow-subtle rounded-3xl flex justify-between items-center p-5">
                 <div>
@@ -645,8 +624,9 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-bold text-text-main font-mono">{inv.totalAmount.toLocaleString()} ریال</div>
-                  <div className={`text-xs font-bold mt-1 ${inv.status === 'PAID' ? 'text-success' : inv.status === 'OVERDUE' ? 'text-danger' : 'text-warning'}`}>
-                    {inv.status === 'PAID' ? 'پرداخت شده' : inv.status === 'OVERDUE' ? 'معوق' : 'باز'}
+                  <div className="text-xs font-bold mt-1">
+                    <span className={displayStatus === 'PAID' ? 'text-success' : displayStatus === 'OVERDUE' ? 'text-danger' : 'text-warning'}>{displayStatus === 'PAID' ? 'تسویه‌شده طبق تطبیق' : displayStatus === 'OVERDUE' ? 'معوق طبق تطبیق' : 'باز'}</span>
+                    <span className="block mt-1 text-text-secondary font-mono">مانده تطبیق‌شده: {outstanding.toLocaleString('fa-IR')} ریال</span>
                   </div>
                 </div>
               </Card>
@@ -754,49 +734,6 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
 
       {activeTab === 'expenses' && (
         <div className="space-y-4">
-          {/* کارت هوشمند بررسی هزینه‌های مشکوک (D58) */}
-          {expenses.some(e => Number(e.amount) >= 50000000 || e.isSuspicious) && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-bold text-xs text-amber-800">
-                  <AlertTriangle size={16} className="text-amber-600" />
-                  <span>هشدار هزینه نامتعارف / مشکوک به مغایرت</span>
-                </div>
-                <span className="text-[10px] font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">نیاز به بازبینی مالی</span>
-              </div>
-              <p className="text-xs text-amber-800/90 leading-relaxed">
-                یک یا چند قلم هزینه با مبالغ درشت یا بدون فاکتور ضمیمه شناسایی شده است که نیازمند تأیید مدیر مالی و انطباق با اسناد ERP است.
-              </p>
-              <div className="pt-1 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (updateState) {
-                      updateState(draft => {
-                        if (!draft.tasks) draft.tasks = [];
-                        draft.tasks.unshift({
-                          id: generateId(),
-                          title: 'بررسی و ممیزی هزینه نامتعارف در دفتر هزینه‌ها',
-                          description: 'بررسی هزینه‌های مشکوک با مبالغ بالای ۵۰ میلیون ریال و ثبت سند تطبیق با حسابداری.',
-                          status: 'OPEN',
-                          priority: 'HIGH',
-                          dueDate: new Date().toISOString().split('T')[0],
-                          slaStatus: 'ON_TRACK',
-                          createdAt: new Date().toISOString()
-                        });
-                      });
-                      setNotice('تسک ارجاع و بازبینی به کارتابل حسابدار افزوده شد.');
-                      setTimeout(() => setNotice(null), 4000);
-                    }
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                >
-                  <Plus size={13} /> ارجاع تسک به حسابدار
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card padding="md" className="rounded-2xl"><div className="text-[11px] text-text-secondary">کل هزینه پرداخت‌شده</div><div className="text-base font-black font-mono mt-2">{paidExpenses.toLocaleString('fa-IR')} ریال</div></Card>
             <Card padding="md" className="rounded-2xl"><div className="text-[11px] text-text-secondary">هزینه‌های سررسید/پرداخت‌نشده</div><div className="text-base font-black font-mono mt-2 text-warning">{dueExpenses.toLocaleString('fa-IR')} ریال</div></Card>
@@ -1005,18 +942,18 @@ export function FinanceWorkspace({ state, updateState }: FinanceWorkspaceProps) 
       )}
 
       {showInvoiceModal && (
-        <Modal isOpen={showInvoiceModal} onClose={() => setShowInvoiceModal(false)} title="صدور فاکتور رسمی جدید">
+        <Modal isOpen={showInvoiceModal} onClose={() => setShowInvoiceModal(false)} title="ثبت ورودی مالی دستی">
           <DynamicFormRenderer
             schema={createInvoiceFormSchema(
               state.accounts || [],
               (state.quotes || []).filter(q => !(q as any).invoicedId).map(q => {
                 const acc = state.accounts?.find(a => a.id === q.accountId);
-                return { id: q.id, value: q.id, label: `${q.quoteNumber} | ${acc?.name || 'مشتری نامشخص'} | ${Number(q.totalAmount).toLocaleString()} ریال` };
+                return { value: q.id, label: `${q.quoteNumber} | ${acc?.name || 'مشتری نامشخص'} | ${Number(q.totalAmount).toLocaleString()} ریال` };
               })
             )}
             onSubmit={handleCreateInvoice}
             onCancel={() => setShowInvoiceModal(false)}
-            submitLabel="صدور و ثبت فاکتور"
+            submitLabel="ثبت ورودی مالی"
           />
         </Modal>
       )}

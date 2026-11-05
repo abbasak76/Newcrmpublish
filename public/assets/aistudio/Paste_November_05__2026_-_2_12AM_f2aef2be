@@ -1,0 +1,671 @@
+
+
+### 📊 BATCH B0: INVENTORY & BASELINE REPORT
+**وضعیت:** `PASS` (تکمیل و قفل شد)
+* **ممیزی قابلیت‌ها:** تمام ۲۱ ماژول (از داشبورد تا هوش مکانی و فرم‌های پویا) شناسایی شدند. هیچ قابلیتی حذف نخواهد شد.
+* **ممیزی رنگ‌ها:** پالت‌های قدیمی (Plum, Coral, Gold, Sage) شناسایی شدند و در معماری جدید به طور کامل با پالت سازمانی (Executive Navy, Analytical Cobalt, Strategic Copper, ...) جایگزین می‌شوند.
+* **ممیزی تایپوگرافی:** مقیاس جدید (Display 32px تا Caption 11px) با فونت‌های `Urbanist` و `Vazirmatn` روی کل سیستم اعمال خواهد شد.
+
+---
+
+### 🎨 BATCH B1: DESIGN SYSTEM & SHELL REENGINEERING
+**وضعیت:** `EXECUTING`
+**هدف:** استقرار پالت رنگی جدید، تایپوگرافی سازمانی، هدر شناور استاندارد، نوار ناوبری ۵ مقصدی و دراور آکاردئونی.
+
+در ادامه ۵ فایل بنیادین سیستم طراحی و پوسته (Shell) به صورت **کامل و نهایی** ارائه می‌شود. لطفاً این فایل‌ها را دقیقاً جایگزین فایل‌های قبلی کنید.
+
+#### File 01 — `src/theme/colors.css`
+این فایل قلب تپنده هویت بصری جدید است. تمام رنگ‌های فانتزی حذف و با هویت مقتدر سازمانی جایگزین شده‌اند.
+
+```css
+/**
+ * AKHAVAN CRM — Enterprise Design System 2026-2027
+ * Identity: Solar Forest × Executive Navy
+ */
+
+:root {
+  /* --- Neutral & Surfaces (Reporting-First Clarity) --- */
+  --c-white: #FFFFFF;
+  --c-mist: #F4F6F8;
+  --c-canvas: #F0F2F5;
+  --c-surface: #FFFFFF;
+  --c-surface-glass: rgba(255, 255, 255, 0.85);
+  --c-sunken: #F8FAFC;
+  
+  --c-border-light: rgba(38, 58, 80, 0.08);
+  --c-border: rgba(38, 58, 80, 0.15);
+  --c-border-strong: rgba(38, 58, 80, 0.3);
+
+  /* --- Typography & Ink --- */
+  --c-ink-main: #1A2634; /* Deepest Navy for text */
+  --c-ink-secondary: #4A5C70;
+  --c-ink-muted: #8295A9;
+
+  /* --- Core Brand Identity --- */
+  /* Executive Navy: Structure, Authority, Headers */
+  --c-navy-light: #3A5370;
+  --c-navy: #263A50;
+  --c-navy-dark: #152233;
+
+  /* Analytical Cobalt: Interaction, Links, Active States, Data */
+  --c-cobalt-light: #4A7ACF;
+  --c-cobalt: #315EAA;
+  --c-cobalt-dark: #20427D;
+
+  /* Forest Slate: Complementary Brand Details */
+  --c-forest-light: #4B6E67;
+  --c-forest: #344F49;
+  --c-forest-dark: #1E302C;
+
+  /* --- Semantic & Status Tokens --- */
+  /* Success Green: Real success, cleared payments, completed ops */
+  --c-success-soft: #E6F3EB;
+  --c-success-border: #99CBAE;
+  --c-success: #246B45;
+
+  /* Strategic Copper: Opportunities, Priority, Next Best Action */
+  --c-copper-soft: #F6EBE5;
+  --c-copper-border: #DFA98B;
+  --c-copper: #B97850;
+
+  /* Burgundy Risk: Bounced cheques, critical overdue, hard errors */
+  --c-burgundy-soft: #F2E6EA;
+  --c-burgundy-border: #B88B9C;
+  --c-burgundy: #71364B;
+
+  /* --- System Aliases (Mapping to components) --- */
+  --c-primary: var(--c-cobalt);
+  --c-primary-hover: var(--c-cobalt-dark);
+  --c-primary-pressed: #173263;
+  --c-primary-soft: #EAF0F8;
+
+  --c-accent: var(--c-copper);
+  --c-on-accent: var(--c-white);
+
+  --c-text-primary: var(--c-ink-main);
+  --c-text-secondary: var(--c-ink-secondary);
+  
+  --c-warning: var(--c-copper);
+  --c-warning-soft: var(--c-copper-soft);
+  --c-warning-border: var(--c-copper-border);
+  
+  --c-danger: var(--c-burgundy);
+  --c-danger-soft: var(--c-burgundy-soft);
+  --c-danger-border: var(--c-burgundy-border);
+
+  /* --- Shadows & Elevation (Enterprise Flat/Subtle) --- */
+  --shadow-sm: 0 1px 2px 0 rgba(38, 58, 80, 0.05);
+  --shadow-card: 0 4px 12px -2px rgba(38, 58, 80, 0.08), 0 1px 3px -1px rgba(38, 58, 80, 0.04);
+  --shadow-floating: 0 12px 32px -8px rgba(38, 58, 80, 0.15), 0 4px 12px -4px rgba(38, 58, 80, 0.08);
+  --shadow-modal: 0 24px 48px -12px rgba(38, 58, 80, 0.25);
+}
+
+[data-theme="dark"],
+html.dark {
+  /* Dark mode mappings (Preserving Navy/Cobalt identity but inverted for readability) */
+  --c-canvas: #0D141C;
+  --c-surface: #15202B;
+  --c-surface-glass: rgba(21, 32, 43, 0.85);
+  --c-sunken: #1A2736;
+  
+  --c-border-light: rgba(255, 255, 255, 0.05);
+  --c-border: rgba(255, 255, 255, 0.1);
+  --c-border-strong: rgba(255, 255, 255, 0.2);
+
+  --c-ink-main: #F4F6F8;
+  --c-ink-secondary: #A3B1C2;
+  --c-ink-muted: #6B7D91;
+
+  --c-primary: #4A7ACF;
+  --c-primary-hover: #6B94DF;
+  --c-primary-soft: rgba(49, 94, 170, 0.2);
+
+  --c-success-soft: rgba(36, 107, 69, 0.2);
+  --c-copper-soft: rgba(185, 120, 80, 0.2);
+  --c-burgundy-soft: rgba(113, 54, 75, 0.2);
+
+  --shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+}
+```
+
+#### File 02 — `src/index.css`
+تایپوگرافی دقیق، حذف استایل‌های فانتزی (نئون/هاله‌های غیرضروری) و استانداردسازی کارت‌ها و فرم‌ها.
+
+```css
+@import "tailwindcss";
+@import "./theme/colors.css";
+
+/* Fonts: Vazirmatn (RTL) & Urbanist (LTR/Numbers) */
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Vazirmatn"; src: url("/fonts/webfonts/Vazirmatn-UI-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+
+@theme {
+  --color-primary: var(--c-primary);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-soft: var(--c-primary-soft);
+  
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning); /* Mapped to Copper */
+  --color-danger: var(--c-danger);   /* Mapped to Burgundy */
+  --color-info: var(--c-cobalt);
+
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-border: var(--c-border);
+  
+  --color-text-main: var(--c-ink-main);
+  --color-text-secondary: var(--c-ink-secondary);
+
+  /* Radius System */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  --font-sans: "Urbanist", "Vazirmatn", system-ui, sans-serif;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html { direction: rtl; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; 
+  font-family: var(--font-sans); 
+  background: var(--c-canvas); 
+  color: var(--c-ink-main);
+  line-height: 1.6; 
+  -webkit-font-smoothing: antialiased; 
+  overflow-x: hidden;
+}
+
+/* iOS Input Zoom Fix (min 16px) */
+input, select, textarea { font-size: 16px !important; }
+@media (min-width: 768px) {
+  input, select, textarea { font-size: inherit !important; }
+}
+
+/* Tabular Numbers for Financial Data */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* --- Enterprise Typography Scale (v4.0) --- */
+.se-display { font-size: 32px; font-weight: 700; line-height: 40px; letter-spacing: -0.02em; }
+.se-h1 { font-size: 24px; font-weight: 600; line-height: 32px; letter-spacing: -0.01em; }
+.se-h2 { font-size: 20px; font-weight: 600; line-height: 28px; letter-spacing: 0; }
+.se-title { font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0; }
+.se-body { font-size: 14px; font-weight: 400; line-height: 20px; letter-spacing: 0; }
+.se-body-sm { font-size: 12px; font-weight: 400; line-height: 16px; letter-spacing: 0.01em; }
+.se-caption { font-size: 11px; font-weight: 500; line-height: 14px; letter-spacing: 0.02em; color: var(--c-ink-secondary); }
+
+/* --- Enterprise Components --- */
+.se-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Floating Header (Clean, Glassy, No Overlap) */
+.se-floating-header {
+  background: var(--c-surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Main Content Safe Area */
+.main-content-scroll {
+  padding-top: calc(var(--safe-top) + 72px) !important;
+  padding-bottom: calc(var(--safe-bottom) + 90px) !important;
+}
+
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Clean Atmosphere (Removing heavy neon/glows, keeping subtle enterprise feel) */
+.se-atmosphere-root { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--c-canvas); }
+```
+
+#### File 03 — `src/components/Layout.tsx`
+بازطراحی کامل پوسته. هدر سراسری تمیز شده، تله‌های اسکرول رفع شده و ساختار یکپارچه شده است.
+
+```tsx
+import React, { useState, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Search, Bell, PanelLeftClose, PanelLeft, Sun, Moon, Menu, ChevronRight } from 'lucide-react';
+import { cn } from '../lib/utils';
+import { AppState } from '../types';
+import { NavigationDrawer } from './NavigationDrawer';
+import { Sidebar } from './Sidebar';
+import { BottomNav } from './BottomNav';
+import { RBACService } from '../lib/rbac';
+import { useTheme } from '../theme/ThemeProvider';
+import { AtmosphereLayer } from './AtmosphereLayer';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  onOpenSearch?: () => void;
+  unreadNotificationsCount?: number;
+  onOpenNotifications?: () => void;
+  state?: AppState;
+  updateState?: (updater: (draft: AppState) => AppState | void) => void;
+}
+
+export function Layout({
+  children,
+  onOpenSearch,
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
+  state,
+  updateState
+}: LayoutProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
+  const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
+  const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
+
+  const isDetailPage = /^\/(customers|accounts|tasks|quotes|operations_control|finance)\/.+/.test(location.pathname);
+  const inChat = location.pathname.startsWith('/groups');
+
+  // Dynamic Title Resolution
+  const activePageLabel = useMemo(() => {
+    if (isDetailPage) return 'جزئیات رکورد';
+    const p = location.pathname;
+    const s = new URLSearchParams(location.search);
+    const tab = s.get('tab');
+
+    if (p === '/') return 'داشبورد سازمانی';
+    if (p === '/command') return 'مرکز فرماندهی مدیریتی';
+    if (p === '/dashboard') return 'داشبورد تحلیلی';
+    if (p.startsWith('/accounts') || p.startsWith('/customers')) return 'مشتریان ۳۶۰';
+    if (p.startsWith('/leads')) return 'سرنخ‌های فروش';
+    if (p.startsWith('/opportunities')) return 'فرصت‌های مذاکره';
+    if (p.startsWith('/quotes')) return 'پیش‌فاکتورها (CPQ)';
+    if (p.startsWith('/tasks')) return 'پیگیری و کارتابل';
+    if (p.startsWith('/operations')) return tab === 'returns' ? 'مرجوعی کالا' : 'مرکز عملیات و پخش';
+    if (p.startsWith('/geo-intelligence')) return 'هوش مکانی';
+    if (p.startsWith('/finance')) return tab === 'cheques' ? 'چک‌های صیادی' : 'امور مالی و خزانه‌داری';
+    if (p.startsWith('/reports')) return 'گزارش‌های تحلیلی';
+    if (p.startsWith('/groups')) return 'پیام‌ها و گفتگوها';
+    if (p.startsWith('/calendar')) return 'تقویم کاری';
+    if (p.startsWith('/settings')) return 'تنظیمات سامانه';
+    return 'AKHAVAN CRM';
+  }, [location.pathname, location.search, isDetailPage]);
+
+  const opsBadgeCount = useMemo(() => {
+    return (state?.tasks || []).filter((t: any) => t.status !== 'COMPLETED' && (t.priority === 'HIGH' || t.slaStatus === 'BREACHED')).length;
+  }, [state?.tasks]);
+
+  return (
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-canvas font-sans select-none" dir="rtl">
+      <AtmosphereLayer />
+
+      <div className="relative z-10 flex h-full w-full overflow-hidden">
+        <Sidebar
+          sections={[]}
+          user={currentUser}
+          roleName={currentRole?.name}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+
+        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+          {/* Enterprise Floating Header */}
+          <header className="se-floating-header fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between transition-all md:static md:bg-transparent md:border-none md:backdrop-filter-none md:shadow-none md:pt-4">
+            
+            <div className="flex items-center gap-2 shrink-0">
+              {isDetailPage ? (
+                <button onClick={() => navigate(-1)} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="بازگشت">
+                  <ChevronRight size={20} />
+                </button>
+              ) : (
+                <button onClick={() => setNavDrawerOpen(true)} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer md:hidden" aria-label="منو">
+                  <Menu size={20} />
+                </button>
+              )}
+              <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="hidden md:flex p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer" aria-label="سایدبار">
+                {sidebarCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+              </button>
+            </div>
+
+            <div className="flex-1 flex justify-center px-2">
+              <h1 className="text-sm md:text-base font-bold text-ink-main truncate max-w-[200px] sm:max-w-md text-center">
+                {activePageLabel}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <div className="hidden md:flex items-center gap-2 h-9 w-64 px-3 rounded-lg border border-border bg-surface text-ink-secondary focus-within:border-primary transition-colors cursor-text" onClick={onOpenSearch}>
+                <Search size={16} />
+                <span className="text-xs">جستجوی سراسری...</span>
+              </div>
+              <button onClick={onOpenSearch} className="md:hidden p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+                <Search size={18} />
+              </button>
+              <button onClick={toggleTheme} className="p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+                {theme === 'dark' ? <Sun size={18} className="text-warning" /> : <Moon size={18} />}
+              </button>
+              <button onClick={onOpenNotifications} className="relative p-2 rounded-lg text-ink-secondary hover:bg-border transition-colors cursor-pointer">
+                <Bell size={18} />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger ring-2 ring-surface animate-pulse" />
+                )}
+              </button>
+            </div>
+          </header>
+
+          <main id="main-scroll-container" className="w-full flex-1 overflow-y-auto main-content-scroll no-scrollbar md:!pt-2">
+            <div className="mx-auto min-h-full w-full max-w-7xl pb-6">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        {!inChat && <BottomNav opsBadgeCount={opsBadgeCount} className="md:hidden" />}
+      </div>
+
+      <NavigationDrawer
+        isOpen={navDrawerOpen}
+        onClose={() => setNavDrawerOpen(false)}
+        state={state}
+      />
+    </div>
+  );
+}
+```
+
+#### File 04 — `src/components/BottomNav.tsx`
+نوار ناوبری پایین با دقیقاً ۵ مقصد کلیدی، رنگ‌بندی Cobalt برای حالت فعال، و رعایت ارتفاع لمسی استاندارد.
+
+```tsx
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, Users, TrendingUp, CheckSquare, LayoutGrid } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+export const NAV_ITEMS = [
+  { id: 'home', path: '/', label: 'خانه', icon: Home },
+  { id: 'accounts', path: '/customers', label: 'مشتریان', icon: Users },
+  { id: 'sales', path: '/quotes', label: 'فروش', icon: TrendingUp },
+  { id: 'tasks', path: '/tasks', label: 'پیگیری', icon: CheckSquare },
+  { id: 'operations', path: '/operations_control', label: 'عملیات', icon: LayoutGrid },
+] as const;
+
+interface BottomNavProps {
+  className?: string;
+  opsBadgeCount?: number;
+}
+
+export function BottomNav({ className, opsBadgeCount = 0 }: BottomNavProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getActiveTabId = (pathname: string) => {
+    if (pathname === '/') return 'home';
+    if (pathname.startsWith('/customers') || pathname.startsWith('/accounts')) return 'accounts';
+    if (pathname.startsWith('/quotes') || pathname.startsWith('/opportunities') || pathname.startsWith('/leads')) return 'sales';
+    if (pathname.startsWith('/tasks')) return 'tasks';
+    if (pathname.startsWith('/operations') || p.startsWith('/geo-intelligence')) return 'operations';
+    return '';
+  };
+
+  const activeTabId = getActiveTabId(location.pathname);
+
+  return (
+    <nav
+      aria-label="ناوبری اصلی"
+      dir="rtl"
+      className={cn(
+        "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md",
+        "bg-surface-glass backdrop-blur-xl border border-border shadow-floating rounded-2xl",
+        "p-1.5 flex items-center justify-between select-none",
+        className
+      )}
+    >
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const isActive = activeTabId === item.id;
+        const isOps = item.id === 'operations';
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => navigate(item.path)}
+            aria-label={item.label}
+            aria-current={isActive ? 'page' : undefined}
+            className={cn(
+              "relative flex flex-col items-center justify-center min-h-[48px] flex-1 cursor-pointer rounded-xl transition-all duration-200",
+              isActive ? "text-primary" : "text-ink-muted hover:text-ink-secondary hover:bg-border-light"
+            )}
+          >
+            <div className={cn("p-1 rounded-lg transition-colors", isActive && "bg-primary-soft")}>
+              <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            <span className={cn("text-[10px] mt-0.5 font-medium transition-all", isActive ? "font-bold" : "")}>
+              {item.label}
+            </span>
+
+            {isOps && opsBadgeCount > 0 && (
+              <span className="absolute top-1 right-1/4 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[9px] font-bold font-mono flex items-center justify-center tabular-nums shadow-sm">
+                {opsBadgeCount > 99 ? '99+' : opsBadgeCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+```
+
+#### File 05 — `src/components/NavigationDrawer.tsx`
+دراور آکاردئونی سازمانی با گروه‌بندی‌های مصوب و پالت Executive Navy.
+
+```tsx
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Gauge, Users, UserPlus, TrendingUp, FileSpreadsheet,
+  Truck, MapPinned, CheckSquare, Calendar, Activity, RotateCcw,
+  Wallet, CreditCard, PieChart, FolderKanban, ShieldCheck, UserCheck,
+  Cpu, Sparkles, Settings, HelpCircle, LogOut, X, ChevronDown
+} from 'lucide-react';
+import { RBACService } from '../lib/rbac';
+import { APP_VERSION_LABEL } from '../lib/version';
+import { cn } from '../lib/utils';
+import { Avatar } from './ui/Avatar';
+
+interface NavigationDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  state?: any;
+}
+
+export function NavigationDrawer({ isOpen, onClose, state }: NavigationDrawerProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    sales: true, ops: true, finance: false, knowledge_org: false,
+  });
+
+  const currentUser = state?.users?.find((u: any) => u.id === state?.currentUserId);
+  const currentRole = state?.roles?.find((r: any) => r.id === currentUser?.roleId);
+  const rbac = useMemo(() => (state ? new RBACService(state) : null), [state]);
+  
+  const canAccess = (perm: string) => {
+    if (!rbac) return true;
+    if (['groups', 'command', 'profile'].includes(perm)) return true;
+    return rbac.canAccessWorkspace(perm as any);
+  };
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  const toggleSection = (key: string) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  const go = (path: string) => { navigate(path); onClose(); };
+
+  const sections = [
+    {
+      id: 'sales', title: 'فروش و مشتریان',
+      items: [
+        { label: 'مرکز فرماندهی مدیریتی', icon: Gauge, path: '/command', perm: 'command' },
+        { label: 'مشتریان و Customer 360', icon: Users, path: '/accounts', perm: 'accounts' },
+        { label: 'سرنخ‌های فروش', icon: UserPlus, path: '/leads', perm: 'leads' },
+        { label: 'فرصت‌های مذاکره', icon: TrendingUp, path: '/opportunities', perm: 'quotes' },
+        { label: 'پیش‌فاکتورها و فروش (CPQ)', icon: FileSpreadsheet, path: '/quotes', perm: 'quotes' },
+      ],
+    },
+    {
+      id: 'ops', title: 'توزیع، عملیات و پیگیری',
+      items: [
+        { label: 'مرکز عملیات فروش و پخش', icon: Truck, path: '/operations', perm: 'operations_control' },
+        { label: 'هوش مکانی و مدیریت زون‌ها', icon: MapPinned, path: '/geo-intelligence', perm: 'geo_intelligence' },
+        { label: 'پیگیری و تسک‌ها', icon: CheckSquare, path: '/tasks', perm: 'tasks' },
+        { label: 'تقویم کاری و جلسات', icon: Calendar, path: '/calendar', perm: 'calendar' },
+        { label: 'تاریخچه فعالیت‌ها', icon: Activity, path: '/activities', perm: 'activities' },
+        { label: 'مرجوعی و بازگشت کالا', icon: RotateCcw, path: '/operations?tab=returns', perm: 'operations_control' },
+      ],
+    },
+    {
+      id: 'finance', title: 'امور مالی و خزانه‌داری',
+      items: [
+        { label: 'دریافت و پرداخت', icon: Wallet, path: '/finance', perm: 'finance' },
+        { label: 'چک و تعهدات', icon: CreditCard, path: '/finance?tab=cheques', perm: 'finance' },
+        { label: 'گزارش‌های مالی و تحلیلی', icon: PieChart, path: '/reports', perm: 'reports' },
+      ],
+    },
+    {
+      id: 'knowledge_org', title: 'دانش، سازمان و پشتیبانی',
+      items: [
+        { label: 'پایگاه دانش', icon: FolderKanban, path: '/knowledge', perm: 'knowledge' },
+        { label: 'تیکت‌ها و پشتیبانی', icon: ShieldCheck, path: '/cases', perm: 'cases' },
+        { label: 'پرونده پرسنلی و استخدام', icon: UserCheck, path: '/onboarding', perm: 'onboarding' },
+        { label: 'اتوماسیون و درخواست‌ها', icon: Cpu, path: '/internal_automation', perm: 'internal_automation' },
+        { label: 'کمپین‌ها و بازاریابی', icon: Sparkles, path: '/marketing', perm: 'marketing' },
+        { label: 'تیم‌ها و گروه‌های سازمانی', icon: Users, path: '/groups', perm: 'groups' },
+      ],
+    },
+  ];
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex" dir="rtl">
+      <div className="fixed inset-0 bg-ink-main/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      
+      <aside className="relative w-[85vw] max-w-[340px] h-full bg-surface border-l border-border shadow-modal flex flex-col animate-in slide-in-from-right duration-300 ease-out">
+        {/* Header: Executive Navy Theme */}
+        <div className="bg-[#263A50] text-white p-5 flex flex-col gap-4 shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-black text-lg border border-white/20">A</div>
+              <span className="font-bold tracking-wide">AKHAVAN CRM</span>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer text-white/70 hover:text-white">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-3 cursor-pointer p-2 -mx-2 rounded-xl hover:bg-white/5 transition-colors" onClick={() => go('/profile')}>
+            <Avatar name={currentUser?.name || 'کاربر'} src={currentUser?.avatar} size="md" className="ring-2 ring-white/20" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold truncate">{currentUser?.name || 'کاربر سیستم'}</div>
+              <div className="text-xs text-white/60 truncate">{currentRole?.name || 'مدیر'}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Menu */}
+        <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-3 space-y-1">
+          {sections.map(section => {
+            const visibleItems = section.items.filter(item => canAccess(item.perm));
+            if (visibleItems.length === 0) return null;
+            const isSectionOpen = openSections[section.id];
+
+            return (
+              <div key={section.id} className="mb-2">
+                <button
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-ink-secondary hover:text-ink-main transition-colors cursor-pointer"
+                >
+                  <span>{section.title}</span>
+                  <ChevronDown size={14} className={cn("transition-transform duration-200", isSectionOpen && "rotate-180")} />
+                </button>
+
+                {isSectionOpen && (
+                  <div className="space-y-0.5 mt-1">
+                    {visibleItems.map(item => {
+                      const isActive = currentPath === item.path || (item.path !== '/' && currentPath.startsWith(item.path));
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.path}
+                          onClick={() => go(item.path)}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer",
+                            isActive ? "bg-primary-soft text-primary font-bold" : "text-ink-main hover:bg-canvas"
+                          )}
+                        >
+                          <Icon size={18} className={isActive ? "text-primary" : "text-ink-muted"} />
+                          <span className="truncate">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="h-px bg-border my-2 mx-3" />
+
+          {/* Settings & Footer Links */}
+          {canAccess('settings') && (
+            <button onClick={() => go('/settings')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-main hover:bg-canvas transition-colors cursor-pointer">
+              <Settings size={18} className="text-ink-muted" />
+              <span>تنظیمات سامانه</span>
+            </button>
+          )}
+          <button onClick={() => go('/login')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-danger hover:bg-danger-soft transition-colors cursor-pointer mt-2">
+            <LogOut size={18} />
+            <span>خروج از حساب</span>
+          </button>
+        </div>
+
+        <div className="p-4 border-t border-border bg-canvas shrink-0 text-center">
+          <span className="text-[10px] text-ink-muted font-mono" dir="ltr">{APP_VERSION_LABEL}</span>
+        </div>
+      </aside>
+    </div>
+  );
+}
+```
+
+---
+
+### 🚀 گام بعدی (Next Batch: B2 & B4)
+فایل‌های پایه پوسته و دیزاین سیستم با موفقیت تولید شدند.
+در بچ بعدی، **داشبورد مدیریتی (DashboardWorkspace)، مرکز فرماندهی (CommandCenterWorkspace) و صفحه خانه (HomeWorkspace)** را با تمرکز بر چارت‌های تحلیلی، رنگ‌بندی Cobalt/Copper و ساختار Reporting-First بازمهندسی خواهم کرد.
+
+آیا آماده دریافت بچ بعدی هستید؟

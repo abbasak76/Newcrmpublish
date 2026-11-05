@@ -1,0 +1,965 @@
+به عنوان **معمار ارشد سیستم و طراح تجربه کاربری (Enterprise UX Architect)**، بچ دوم و چهارم (B2 & B4) را با تمرکز بر **داشبورد مدیریتی، مرکز فرماندهی و فضای کاری روزانه (Home)** اجرا می‌کنم.
+
+### اهداف محقق شده در این بچ:
+1. **Reporting-First & Spacious Density:** بازطراحی مرکز فرماندهی (Command Center) و داشبورد با استفاده از کارت‌های تحلیلی استاندارد، سایه‌های کنترل‌شده (`shadow-card`) و تایپوگرافی `tabular-nums` برای خوانایی بی‌نقص ارقام مالی.
+2. **Semantic Status Colors:** جایگزینی رنگ‌های فانتزی (مثل Rose, Amber خام) با توکن‌های معنایی سیستم طراحی جدید (`danger-soft`, `warning-soft`, `success-soft`) در بخش پیش‌بینی ریزش مشتریان (Churn Prediction) و هشدار نقدینگی.
+3. **PageToolbar Enterprise:** ارتقای نوار ابزار صفحات به یک کامپوننت سازمانی با پشتیبانی از فیلترهای فعال (Active Filters) و جستجوی یکپارچه.
+4. **Data Visualization Consistency:** اتصال نمودارها (Donut, Line, Funnel) به رنگ‌های سازمانی (`--c-primary`, `--c-accent`, `--c-navy`).
+
+در ادامه ۴ فایل کامل و نهایی ارائه می‌شود. لطفاً این فایل‌ها را دقیقاً جایگزین فایل‌های قبلی کنید.
+
+---
+
+### File 01 — `src/components/ui/PageToolbar.tsx`
+نوار ابزار استاندارد سازمانی با پشتیبانی از فیلترها، جستجو و نمایش نتایج.
+
+```tsx
+import React from 'react';
+import { Search, X } from 'lucide-react';
+import { cn } from '../../lib/utils';
+
+export interface ActiveFilter { key: string; label: string; onRemove: () => void }
+export interface PageToolbarProps {
+  title?: string; subtitle?: string;
+  search?: string; onSearchChange?: (v: string) => void; searchPlaceholder?: string;
+  filters?: React.ReactNode; actions?: React.ReactNode; className?: string;
+  resultCount?: number;
+  activeFilters?: ActiveFilter[]; onClearAll?: () => void;
+}
+
+export function PageToolbar({ title, subtitle, search, onSearchChange, searchPlaceholder = 'جستجو...', filters, actions, className, resultCount, activeFilters = [], onClearAll }: PageToolbarProps) {
+  const hasActive = activeFilters.length > 0 || !!search;
+  
+  return (
+    <div className={cn('bg-surface border border-border rounded-2xl p-4 shadow-sm mb-4', className)}>
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+        {(title || subtitle) && (
+          <div className="min-w-0 flex-1">
+            {title && <h1 className="truncate text-lg font-bold text-text-main">{title}</h1>}
+            {subtitle && <p className="truncate text-xs text-text-secondary mt-1">{subtitle}</p>}
+          </div>
+        )}
+        
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {onSearchChange && (
+            <label className="flex h-10 w-full md:w-64 items-center gap-2 rounded-xl border border-border bg-canvas px-3 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+              <Search size={16} className="shrink-0 text-text-muted" aria-hidden />
+              <input 
+                type="search" 
+                value={search ?? ''} 
+                onChange={e => onSearchChange(e.target.value)} 
+                placeholder={searchPlaceholder}
+                className="w-full bg-transparent text-sm font-medium text-text-main outline-none placeholder:text-text-muted [&::-webkit-search-cancel-button]:hidden" 
+              />
+              {!!search && (
+                <button type="button" onClick={() => onSearchChange('')} aria-label="پاک‌کردن جستجو" className="grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded-md text-text-muted hover:bg-border transition-colors">
+                  <X size={14} />
+                </button>
+              )}
+            </label>
+          )}
+          {filters && <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">{filters}</div>}
+          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+        </div>
+      </div>
+      
+      {(hasActive || resultCount !== undefined) && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-border-light" aria-live="polite">
+          {resultCount !== undefined && (
+            <span className="text-xs font-bold text-text-secondary tabular-nums bg-sunken px-2.5 py-1 rounded-md border border-border-light">
+              {resultCount.toLocaleString('fa-IR')} نتیجه
+            </span>
+          )}
+          {activeFilters.map(f => (
+            <button key={f.key} type="button" onClick={f.onRemove} className="flex min-h-[28px] cursor-pointer items-center gap-1.5 rounded-lg border border-primary/20 bg-primary-soft px-2.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors">
+              {f.label}<X size={14} aria-hidden />
+            </button>
+          ))}
+          {hasActive && onClearAll && (
+            <button type="button" onClick={onClearAll} className="min-h-[28px] cursor-pointer px-2 text-xs font-medium text-text-muted hover:text-text-main transition-colors">
+              پاک‌کردن همه
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### File 02 — `src/components/HomeWorkspace.tsx`
+بازطراحی صفحه خانه به عنوان نقطه شروع روزانه (Daily Experience) با تمرکز بر اقدام‌های سریع و خوانایی.
+
+```tsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppState } from '../types';
+import { CheckSquare, Clock, AlertTriangle, Building2, ChevronLeft, Calendar, ListChecks, CalendarCheck, Plus, Sparkles } from 'lucide-react';
+import { cn } from '../lib/utils';
+import { DataSourceStatus } from './ui/DataSourceStatus';
+import { evaluatePortfolioChurn } from '../services/churnPredictionService';
+
+const greeting = (h: number) => (h < 5 ? 'شب بخیر' : h < 12 ? 'صبح بخیر' : h < 17 ? 'ظهر بخیر' : h < 20 ? 'عصر بخیر' : 'شب بخیر');
+const fa = (n: number) => n.toLocaleString('fa-IR');
+
+interface StatProps { label: string; value: number; hint: string; icon: React.ElementType; tone: 'danger' | 'warning' | 'primary' | 'success'; onClick: () => void; index: number }
+
+const TONES = {
+  danger: 'bg-danger-soft text-danger border-danger-border', 
+  warning: 'bg-warning-soft text-warning border-warning-border', 
+  primary: 'bg-primary-soft text-primary border-primary/20', 
+  success: 'bg-success-soft text-success border-success-border',
+} as const;
+
+function StatCard({ label, value, hint, icon: Icon, tone, onClick, index }: StatProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ ['--i' as any]: index }}
+      className="group relative overflow-hidden flex min-h-[52px] cursor-pointer flex-col justify-between p-4 text-start transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card active:scale-[0.98] rounded-2xl bg-surface border border-border shadow-sm text-text-main"
+    >
+      <div className="flex items-center justify-between w-full">
+        <span className="text-xs font-bold text-text-secondary group-hover:text-text-main transition-colors">{label}</span>
+        <span className={cn('grid h-9 w-9 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-110 border', TONES[tone])}>
+          <Icon size={18} />
+        </span>
+      </div>
+      <div className="mt-3">
+        <span className="text-2xl sm:text-3xl font-black leading-none tracking-tight text-text-main tabular-nums">{fa(value)}</span>
+        <p className="mt-1.5 text-[11px] font-medium text-text-secondary line-clamp-1">{hint}</p>
+      </div>
+    </button>
+  );
+}
+
+function SectionTitle({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
+  return (
+    <div className="flex items-center justify-between px-1 mt-4 mb-3">
+      <h2 className="text-sm font-extrabold text-text-main">{title}</h2>
+      {action && (
+        <button type="button" onClick={onAction} className="flex min-h-[36px] cursor-pointer items-center gap-0.5 px-2 rounded-lg text-xs font-bold text-primary hover:bg-primary-soft transition-colors">
+          {action}<ChevronLeft size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function HomeWorkspace({ state }: { state: AppState }) {
+  const navigate = useNavigate();
+  const currentUser = state.users.find(u => u.id === state.currentUserId);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  const myTasks = (state.tasks || []).filter(t => t.assigneeId === state.currentUserId && t.status !== 'COMPLETED');
+  const overdueTasks = myTasks.filter(t => t.dueDate && t.dueDate < today);
+  const pendingApprovals = (state.internalRequests || []).filter((r: any) => r.currentAssigneeId === state.currentUserId && r.status === 'IN_REVIEW');
+  const todayActivities = (state.activities || []).filter(a => a.ownerId === state.currentUserId && a.dateTime.startsWith(today));
+  const todayMeetings = (state.internalMeetings || []).filter((m: any) => (m.organizerId === state.currentUserId || m.participantIds?.includes(state.currentUserId || '')) && m.date === today);
+  const recentAccounts = [...(state.accounts || [])].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5);
+  const todayDateStr = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+  const todayCount = todayMeetings.length + todayActivities.length;
+  const churnPortfolio = evaluatePortfolioChurn(state);
+
+  return (
+    <div className="w-full space-y-5 px-2 py-2 sm:px-4 pb-24 font-sans" dir="rtl">
+      
+      {/* هدر روزانه */}
+      <section className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-surface border border-border shadow-sm text-text-main">
+        <div className="absolute -top-16 -left-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary mb-2">
+            <Calendar size={14} className="text-primary" />
+            {todayDateStr}
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-text-main">
+            {greeting(now.getHours())}، {currentUser?.name?.split(' ')[0] || 'همکار گرامی'}
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary leading-relaxed max-w-xl">
+            {myTasks.length === 0 && todayCount === 0 
+              ? 'امروز مورد بازی یا برنامه‌ای ندارید؛ می‌توانید از دکمه‌های عملیات درون صفحه، کار جدیدی ثبت کنید.' 
+              : `${fa(myTasks.length)} وظیفه باز و ${fa(todayCount)} برنامه برای امروز دارید.`}
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/tasks?new=1')}
+              className="bg-primary hover:bg-primary-hover text-white rounded-xl px-5 py-2.5 text-sm font-bold flex items-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>تسک جدید</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/customers?new=1')}
+              className="bg-canvas hover:bg-border text-text-main rounded-xl px-5 py-2.5 text-sm font-bold flex items-center gap-2 border border-border active:scale-95 transition-all cursor-pointer"
+            >
+              <Building2 size={16} />
+              <span>مشتری جدید</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <DataSourceStatus 
+        source="CRM" 
+        sourceName="فضای کاری شخصی و تقویم وظایف" 
+        isAuthoritative={true}
+      />
+
+      {/* توصیه تحلیلی */}
+      <section className="relative overflow-hidden rounded-2xl p-5 shadow-sm space-y-3 bg-surface border border-border">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-primary font-bold text-xs border border-primary/20">
+            <Sparkles size={16} />
+          </span>
+          <b className="text-sm font-extrabold text-text-main">توصیه عملیاتی روز</b>
+        </div>
+        <p className="text-sm text-text-secondary leading-relaxed font-medium pl-4">
+          {overdueTasks.length > 0
+            ? `${fa(overdueTasks.length)} وظیفه در وضعیت نیاز به پیگیری فوری قرار دارد. پیشنهاد می‌کنم ابتدا کارتابل پیگیری را بررسی کنید.`
+            : churnPortfolio.criticalCount > 0
+            ? `${fa(churnPortfolio.criticalCount)} حساب در وضعیت ریسک ریزش بحرانی شناسایی شده‌اند. پیشنهاد می‌کنم از پرونده مشتریان برای آن‌ها وظیفه حفظ حساب ثبت فرمایید.`
+            : 'وضعیت مشتریان و پیگیری‌ها پایدار است. می‌توانید فرصت‌های جدید فروش و پیش‌فاکتورها را بررسی نمایید.'}
+        </p>
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => navigate('/tasks')}
+            className="h-9 px-4 rounded-xl text-xs font-bold bg-canvas border border-border text-text-main hover:bg-border active:scale-95 transition-all cursor-pointer"
+          >
+            مشاهده اقدام‌ها
+          </button>
+        </div>
+      </section>
+
+      {/* نیاز به اقدام */}
+      <section aria-label="نیاز به اقدام">
+        <SectionTitle title="نیاز به اقدام شما" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard index={0} label="وظایف تأخیردار" value={overdueTasks.length} hint="نیازمند پیگیری فوری" icon={AlertTriangle} tone="danger" onClick={() => navigate('/tasks')} />
+          <StatCard index={1} label="تأییدیه‌های منتظر" value={pendingApprovals.length} hint="کارتابل اتوماسیون" icon={CheckSquare} tone="warning" onClick={() => navigate('/internal_automation')} />
+          <StatCard index={2} label="وظایف باز من" value={myTasks.length} hint="در انتظار انجام" icon={ListChecks} tone="primary" onClick={() => navigate('/tasks')} />
+          <StatCard index={3} label="برنامه امروز" value={todayCount} hint="جلسه و فعالیت" icon={CalendarCheck} tone="success" onClick={() => navigate('/calendar')} />
+        </div>
+      </section>
+
+      {/* برنامه امروز */}
+      <section aria-label="برنامه کاری امروز">
+        <SectionTitle title="برنامه کاری امروز" action="مشاهده تقویم" onAction={() => navigate('/calendar')} />
+        <div className="space-y-3">
+          {todayMeetings.map((m: any) => (
+            <div key={m.id} className="bg-surface rounded-2xl flex items-center gap-4 border border-border p-4 shadow-sm">
+              <div className="flex min-w-[64px] flex-col items-center rounded-xl bg-canvas px-2 py-2 text-center border border-border">
+                <span className="text-sm font-bold text-text-main tabular-nums">{m.startTime}</span>
+                <span className="text-[10px] text-text-secondary tabular-nums">{m.endTime}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-bold text-text-main">{m.title}</h3>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-text-secondary"><Clock size={14} />جلسه کاری</p>
+              </div>
+            </div>
+          ))}
+          {todayActivities.map(a => {
+            const acc = state.accounts.find(x => x.id === a.accountId);
+            return (
+              <div key={a.id} className="bg-surface rounded-2xl flex items-center gap-4 border border-border p-4 shadow-sm">
+                <div className="flex min-w-[64px] flex-col items-center rounded-xl bg-canvas px-2 py-2 text-center border border-border">
+                  <span className="text-sm font-bold text-text-main tabular-nums">{new Date(a.dateTime).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-sm font-bold text-text-main">{a.title}</h3>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-text-secondary"><Building2 size={14} /><span className="truncate">{acc?.name || 'مشتری'}</span></p>
+                </div>
+              </div>
+            );
+          })}
+          {todayCount === 0 && (
+            <div className="rounded-2xl border border-dashed border-border-strong bg-canvas px-4 py-10 text-center text-sm font-medium text-text-secondary">
+              رویداد یا جلسه‌ای برای امروز ثبت نشده است.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* مشتریان اخیر */}
+      <section aria-label="مشتریان اخیر">
+        <SectionTitle title="مشتریان اخیر" action="همه حساب‌ها" onAction={() => navigate('/accounts')} />
+        <div className="space-y-3">
+          {recentAccounts.map(acc => (
+            <button key={acc.id} onClick={() => navigate(`/accounts/${acc.id}`)}
+              className="bg-surface border border-border flex min-h-[64px] w-full cursor-pointer items-center justify-between p-4 text-start hover:shadow-card hover:border-primary/40 transition-all rounded-2xl">
+              <span className="flex min-w-0 items-center gap-3.5">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-sm font-bold text-primary border border-primary/20">{acc.name ? acc.name.substring(0, 1) : 'م'}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-text-main">{acc.name}</span>
+                  <span className="mt-1 block truncate text-xs text-text-secondary tabular-nums" dir="ltr" style={{ textAlign: 'right' }}>{acc.phone || 'بدون شماره'}</span>
+                </span>
+              </span>
+              <ChevronLeft size={18} className="shrink-0 text-text-secondary" />
+            </button>
+          ))}
+          {recentAccounts.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border-strong bg-canvas px-4 py-10 text-center text-sm text-text-secondary">
+              هنوز مشتری ثبت نشده است.
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+```
+
+---
+
+### File 03 — `src/components/DashboardWorkspace.tsx`
+داشبورد تحلیلی با استفاده از توکن‌های معنایی و تایپوگرافی `tabular-nums`.
+
+```tsx
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AIAdvisorService } from '../services/aiAdvisorService';
+import { AppState } from '../types';
+import { Card } from './ui/Card';
+import { FileText, Hourglass, MessageSquare, MessageCircle, Calendar, Filter, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { formatAppDate } from '../lib/utils';
+import { DonutChart, GaugeChart, FunnelChart } from './charts';
+import { PageToolbar } from './ui/PageToolbar';
+import { Button } from './ui/Button';
+import { DataSourceStatus } from './ui/DataSourceStatus';
+import { OPPORTUNITY_STAGES } from '../config/pipeline';
+import { activeRecords } from '../lib/recordLifecycle';
+import { evaluatePortfolioChurn } from '../services/churnPredictionService';
+
+export function DashboardWorkspace({ state }: { state: AppState }) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterPeriod, setFilterPeriod] = useState('هفتگی');
+
+  const recommendations = state.settings?.aiKillSwitch ? [] : new AIAdvisorService(state).generateRecommendations();
+
+  const myTasks = (state.tasks || []).filter(t => !state.currentUserId || t.assigneeId === state.currentUserId);
+  const recentTasksCount = myTasks.length;
+  const dueProjectsCount = (state.opportunities || []).filter(o => o.stage !== 'WON' && o.stage !== 'LOST').length;
+  const discussionsCount = (state.messages || []).length;
+  const commentsCount = (state.customerNotes || []).length;
+
+  const stuckTasks = myTasks.filter(t => t.status === 'OPEN' && t.dueDate && t.dueDate < new Date().toISOString().split('T')[0]).length;
+  const inProgressTasks = myTasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const inReviewTasks = myTasks.filter(t => t.status === 'OPEN' && (!t.dueDate || t.dueDate >= new Date().toISOString().split('T')[0])).length;
+  const doneTasks = myTasks.filter(t => t.status === 'COMPLETED').length;
+
+  const oppStages = OPPORTUNITY_STAGES.filter(stage => stage.id !== 'LOST').map(stage => ({ label: stage.id === 'DISCOVERY' ? 'کشف نیاز' : stage.id === 'PROPOSAL' ? 'پیشنهاد' : stage.label.split(' (')[0], value: activeRecords(state.opportunities).filter(o => o.stage === stage.id).length }));
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayTasks = myTasks.filter(t => t.dueDate === todayStr && t.status !== 'COMPLETED');
+  const churnPortfolio = evaluatePortfolioChurn(state);
+
+  return (
+    <div className="w-full space-y-5 px-2 py-2 sm:px-4 pb-24 font-sans" dir="rtl">
+      
+      <PageToolbar
+        title="داشبورد تحلیلی"
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="جستجو در وظایف، پروژه‌ها و گزارشات..."
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Filter size={14} />}
+            title="تغییر دوره زمانی فیلتر"
+            onClick={() => {
+              const periods = ['هفتگی', 'ماهانه', 'فصلی'];
+              setFilterPeriod(periods[(periods.indexOf(filterPeriod) + 1) % periods.length]);
+            }}
+          >
+            فیلتر ({filterPeriod})
+          </Button>
+        }
+      />
+
+      <DataSourceStatus 
+        source="CRM" 
+        sourceName="پایگاه عملیاتی و انبار داده‌های تحلیلی" 
+        isAuthoritative={true}
+      />
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card padding="md" className="group cursor-pointer hover:border-primary/40 transition-all duration-200" onClick={() => navigate('/tasks')}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center transition-transform group-hover:scale-105 border border-primary/20">
+              <FileText size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-text-muted">وظایف</span>
+          </div>
+          <div className="text-2xl font-black text-text-main tabular-nums">{recentTasksCount.toLocaleString('fa-IR')}</div>
+          <div className="text-xs font-bold text-text-secondary mt-1">وظایف در جریان</div>
+        </Card>
+
+        <Card padding="md" className="group cursor-pointer hover:border-primary/40 transition-all duration-200" onClick={() => navigate('/opportunities')}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-warning-soft text-warning flex items-center justify-center transition-transform group-hover:scale-105 border border-warning-border">
+              <Hourglass size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-text-muted">فرصت‌ها</span>
+          </div>
+          <div className="text-2xl font-black text-text-main tabular-nums">{dueProjectsCount.toLocaleString('fa-IR')}</div>
+          <div className="text-xs font-bold text-text-secondary mt-1">فرصت‌های باز فروش</div>
+        </Card>
+
+        <Card padding="md" className="group cursor-pointer hover:border-primary/40 transition-all duration-200" onClick={() => navigate('/groups')}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-success-soft text-success flex items-center justify-center transition-transform group-hover:scale-105 border border-success-border">
+              <MessageSquare size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-text-muted">چت</span>
+          </div>
+          <div className="text-2xl font-black text-text-main tabular-nums">{discussionsCount.toLocaleString('fa-IR')}</div>
+          <div className="text-xs font-bold text-text-secondary mt-1">گفتگوهای فعال</div>
+        </Card>
+
+        <Card padding="md" className="group cursor-pointer hover:border-primary/40 transition-all duration-200" onClick={() => navigate('/accounts')}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-canvas text-text-secondary flex items-center justify-center transition-transform group-hover:scale-105 border border-border">
+              <MessageCircle size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-text-muted">حساب‌ها</span>
+          </div>
+          <div className="text-2xl font-black text-text-main tabular-nums">{commentsCount.toLocaleString('fa-IR')}</div>
+          <div className="text-xs font-bold text-text-secondary mt-1">یادداشت و تعاملات</div>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <h2 className="text-sm font-extrabold text-text-main">شاخص‌های بهره‌وری</h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card padding="lg" className="lg:col-span-2">
+            <h3 className="mb-6 text-sm font-bold text-text-main">وضعیت وظایف من</h3>
+            <DonutChart
+              centerValue={String(doneTasks)}
+              centerLabel="تکمیل‌شده"
+              segments={[
+                { label: 'معوق', value: stuckTasks, color: 'var(--c-danger)' },
+                { label: 'در حال انجام', value: inProgressTasks, color: 'var(--c-primary)' },
+                { label: 'باز', value: inReviewTasks, color: 'var(--c-text-muted)' },
+                { label: 'انجام شده', value: doneTasks, color: 'var(--c-success)' },
+              ]}
+            />
+          </Card>
+          <Card padding="lg" className="flex flex-col items-center justify-center">
+            <h3 className="mb-4 self-start text-sm font-bold text-text-main">نرخ تکمیل</h3>
+            <GaugeChart 
+              value={doneTasks} 
+              max={myTasks.length} 
+              display={`${Math.round(myTasks.length ? (doneTasks / myTasks.length) * 100 : 0).toLocaleString('fa-IR')}٪`} 
+              label={`${doneTasks.toLocaleString('fa-IR')} از ${myTasks.length.toLocaleString('fa-IR')} وظیفه`} 
+              color="var(--c-success)" 
+            />
+          </Card>
+        </div>
+        
+        {oppStages.some(x => x.value > 0) && (
+          <Card padding="lg">
+            <h3 className="mb-6 text-sm font-bold text-text-main">فرصت‌های فروش به تفکیک مرحله</h3>
+            <FunnelChart stages={oppStages} colors={['var(--c-primary-soft)', 'var(--c-primary)', 'var(--c-accent)', 'var(--c-success)']} />
+          </Card>
+        )}
+
+        {/* هوش تحلیلی پیش‌بینی ریزش مشتریان (Customer Churn Prediction) */}
+        <Card padding="lg" className="border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-warning-soft text-warning flex items-center justify-center shrink-0 border border-warning-border">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-text-main">پایش هوشمند و پیش‌بینی ریزش مشتریان (Churn Risk)</h3>
+                <p className="text-xs text-text-secondary mt-1">تحلیل نرخ ریسک بر پایه الگوی خرید، کهنگی سفارشات و شکایات باز</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/accounts')}
+              className="text-xs font-bold text-primary hover:bg-primary-soft px-3 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-colors border border-transparent hover:border-primary/20"
+            >
+              <span>مشاهده مشتریان</span>
+              <ArrowLeft size={14} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <div className="p-4 rounded-xl bg-danger-soft border border-danger-border">
+              <span className="text-xs font-bold text-danger block">ریزش بحرانی</span>
+              <strong className="text-xl font-black tabular-nums text-danger block mt-1">
+                {churnPortfolio.criticalCount.toLocaleString('fa-IR')} <span className="text-xs font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-4 rounded-xl bg-warning-soft border border-warning-border">
+              <span className="text-xs font-bold text-warning block">ریسک بالا</span>
+              <strong className="text-xl font-black tabular-nums text-warning block mt-1">
+                {churnPortfolio.highCount.toLocaleString('fa-IR')} <span className="text-xs font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-4 rounded-xl bg-primary-soft border border-primary/20">
+              <span className="text-xs font-bold text-primary block">هشدار متوسط</span>
+              <strong className="text-xl font-black tabular-nums text-primary block mt-1">
+                {churnPortfolio.mediumCount.toLocaleString('fa-IR')} <span className="text-xs font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+
+            <div className="p-4 rounded-xl bg-success-soft border border-success-border">
+              <span className="text-xs font-bold text-success block">سالم / فعال</span>
+              <strong className="text-xl font-black tabular-nums text-success block mt-1">
+                {churnPortfolio.lowCount.toLocaleString('fa-IR')} <span className="text-xs font-normal font-sans">حساب</span>
+              </strong>
+            </div>
+          </div>
+
+          {churnPortfolio.atRiskAccounts.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-border">
+              <span className="text-xs font-bold text-text-secondary block">مشتریان نیازمند مداخله و پیگیری فوری:</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {churnPortfolio.atRiskAccounts.slice(0, 3).map(acc => (
+                  <div
+                    key={acc.accountId}
+                    onClick={() => navigate(`/accounts/${acc.accountId}`)}
+                    className="p-4 rounded-xl bg-canvas border border-border hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-sm font-bold text-text-main truncate">{acc.accountName}</strong>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[10px] font-bold tabular-nums border",
+                        acc.riskTier === 'CRITICAL' ? 'bg-danger-soft text-danger border-danger-border' : 'bg-warning-soft text-warning border-warning-border'
+                      )}>
+                        {acc.churnScore.toLocaleString('fa-IR')}٪
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-secondary line-clamp-1">
+                      {acc.reasons[0] || 'نیاز به پیگیری تجاری'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <h2 className="text-sm font-extrabold text-text-main">وظایف امروز</h2>
+          <button className="text-xs font-bold text-primary hover:bg-primary-soft px-3 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-colors" onClick={() => navigate('/tasks')}>
+            مشاهده همه
+          </button>
+        </div>
+
+        {todayTasks.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {todayTasks.map(t => (
+              <Card key={t.id} padding="md" className="flex flex-col justify-between gap-4 cursor-pointer hover:border-primary/50 hover:shadow-card hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200" onClick={() => navigate('/tasks')}>
+                <div>
+                  <h3 className="text-sm font-bold text-text-main leading-snug line-clamp-2">{t.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-text-secondary mt-3 font-medium">
+                    <Calendar size={14}/> <span className="tabular-nums">{formatAppDate(t.dueDate, state.settings?.locale)}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className={cn(
+                    "inline-block px-3 py-1 rounded-lg text-[10px] font-bold border",
+                    t.status === 'IN_PROGRESS'
+                      ? 'bg-primary-soft text-primary border-primary/20'
+                      : 'bg-canvas text-text-secondary border-border'
+                  )}>
+                    {t.status === 'IN_PROGRESS' ? 'در حال انجام' : 'باز'}
+                  </span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-8 bg-canvas rounded-2xl text-sm text-text-secondary border border-border font-medium">
+            وظیفه‌ای برای امروز ثبت نشده است.
+          </div>
+        )}
+      </div>
+
+      {recommendations.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-extrabold text-text-main px-1">توصیه‌ها و تحلیل‌های مدیریتی</h2>
+          {recommendations.slice(0, 3).map(r => (
+            <div key={r.id} className="rounded-2xl border-r-4 border-r-primary border border-border bg-surface p-5 shadow-sm hover:-translate-y-0.5 hover:shadow-card transition-all duration-200">
+              <strong className="block text-sm font-bold text-text-main">{r.title}</strong>
+              <p className="mt-2 text-xs leading-relaxed text-text-secondary">{r.reason}</p>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-text-secondary">{r.proposedAction}</span>
+                {r.actionPayload?.targetTab && (
+                  <button
+                    onClick={() => navigate(`/${r.actionPayload.targetTab}`)}
+                    className="min-h-[36px] shrink-0 cursor-pointer rounded-xl border border-primary/30 bg-primary-soft px-4 text-xs font-bold text-primary active:scale-95 transition-colors hover:bg-primary/10"
+                  >
+                    مشاهده
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### File 04 — `src/components/CommandCenterWorkspace.tsx`
+مرکز فرماندهی مدیریتی با تراکم اطلاعاتی مناسب (Spacious/Compact) و استفاده از رنگ‌های سازمانی.
+
+```tsx
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ArrowDownLeft, ArrowUpRight, ShieldAlert } from 'lucide-react';
+import { AppState } from '../types';
+import { RBACService } from '../lib/rbac';
+import { computeInsights } from '../lib/insights';
+import { useCountUp } from '../hooks/useCountUp';
+import { cn, formatAppDate } from '../lib/utils';
+import { PageToolbar } from './ui/PageToolbar';
+import { Avatar } from './ui/Avatar';
+import { DemoDataPanel } from './DemoDataPanel';
+import { DonutChart, LineChart, FunnelChart, AllocationBar, CashFlowChart } from './charts';
+import { fCompact, fNum } from './charts/fmt';
+
+interface Props { state: AppState; updateState: (u: (d: AppState) => AppState | void) => void }
+const money = (n: number) => `${fCompact(Math.abs(n))} ریال`;
+
+const Panel = ({ i = 0, title, aside, className, children }: { i?: number; title: string; aside?: React.ReactNode; className?: string; children: React.ReactNode }) => (
+  <section className={cn('bg-surface border border-border rounded-3xl p-6 shadow-sm', className)} style={{ ['--i' as any]: i }}>
+    <div className="mb-5 flex items-center justify-between gap-4 border-b border-border/60 pb-3">
+      <h2 className="text-base font-extrabold text-text-main">{title}</h2>
+      {aside}
+    </div>
+    {children}
+  </section>
+);
+
+const Pill = ({ tone, children }: { tone: 'good' | 'bad' | 'warn' | 'mute'; children: React.ReactNode }) => (
+  <span className={cn('inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border',
+    tone === 'good' && 'bg-success-soft text-success border-success-border', 
+    tone === 'bad' && 'bg-danger-soft text-danger border-danger-border', 
+    tone === 'warn' && 'bg-warning-soft text-warning border-warning-border', 
+    tone === 'mute' && 'bg-canvas text-text-secondary border-border'
+  )}>
+    {children}
+  </span>
+);
+
+function Kpi({ i, label, value, delta, hot, good }: { i: number; label: string; value: number; delta?: number | null; hot?: boolean; good?: boolean }) {
+  const v = useCountUp(Math.abs(value));
+  return (
+    <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm transition-all hover:shadow-card hover:border-primary/30" style={{ ['--i' as any]: i }}>
+      <div className="text-xs font-bold text-text-secondary">{label}</div>
+      <div className={cn('mt-2 text-2xl font-black leading-tight tabular-nums', hot ? 'text-danger' : good ? 'text-success' : 'text-text-main')}>
+        {value < 0 ? '−' : ''}{fCompact(v)}<span className="ms-1 text-[11px] font-medium text-text-secondary">ریال</span>
+      </div>
+      {delta != null && isFinite(delta) && (
+        <div className={cn('mt-3 flex items-center gap-1 text-xs font-bold', delta >= 0 ? 'text-success' : 'text-danger')}>
+          {delta >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+          <span className="tabular-nums">{fNum(Math.abs(Math.round(delta)))}٪</span> 
+          <span className="text-text-secondary font-medium text-[10px]">نسبت به ۳۰ روز قبل</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CommandCenterWorkspace({ state, updateState }: Props) {
+  const navigate = useNavigate();
+  const rbac = useMemo(() => new RBACService(state), [state]);
+  const allowed = rbac.hasPermission('finance.view') || rbac.hasPermission('users.manage');
+  const ins = useMemo(() => computeInsights(state), [state]);
+  const locale = state.settings?.locale;
+  const avatarOf = (id?: string) => state.users?.find(u => u.id === id)?.avatar;
+  const pct = (a: number, b: number) => (b > 0 ? ((a - b) / b) * 100 : null);
+  const canManage = rbac.hasPermission('settings.manage') || rbac.hasPermission('users.manage');
+
+  if (!allowed) {
+    return (
+      <div className="p-6" dir="rtl">
+        <div className="bg-surface border border-border mx-auto max-w-md rounded-3xl p-8 text-center shadow-sm">
+          <ShieldAlert className="mx-auto mb-4 text-danger" size={32} />
+          <h2 className="text-base font-extrabold text-text-main">دسترسی محدود</h2>
+          <p className="mt-3 text-sm leading-relaxed text-text-secondary">مرکز فرماندهی شامل اطلاعات مالی و عملکرد پرسنل است و فقط برای نقش‌هایی با مجوز مشاهده امور مالی یا مدیریت کاربران فعال است.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const net = ins.net30, plMax = Math.max(ins.sales30, ins.cogs30, ins.exp30, Math.abs(net), 1);
+  const plRows = [
+    { l: 'فروش (۳۰ روز)', v: ins.sales30, c: 'var(--c-primary)' }, 
+    { l: 'بهای تمام‌شده کالا', v: ins.cogs30, c: 'var(--c-navy)' },
+    { l: 'سود ناخالص', v: ins.gross30, c: 'var(--c-accent)' }, 
+    { l: 'هزینه‌ها (حقوق، اجاره، حمل...)', v: ins.exp30, c: 'var(--c-text-muted)' },
+    { l: net >= 0 ? 'سود خالص' : 'زیان خالص', v: Math.abs(net), c: net >= 0 ? 'var(--c-success)' : 'var(--c-danger)' },
+  ];
+  
+  const needs: { l: string; v: number; route: string; hint: string }[] = [
+    { l: 'وظایف معوق', v: ins.needs.overdueTasks, route: '/tasks', hint: 'موعد گذشته و تکمیل نشده' },
+    { l: 'مشتریان بدون ارتباط ۳۰ روزه', v: ins.needs.untouchedCustomers, route: '/accounts', hint: 'نیاز به ویزیت یا تماس' },
+    { l: 'عبور از سقف اعتبار', v: ins.needs.overCredit, route: '/accounts', hint: 'مانده بیش از اعتبار مجاز' },
+    { l: 'فرصت‌های گذشته از موعد', v: ins.needs.staleOpps, route: '/opportunities', hint: 'تاریخ بستن گذشته است' },
+    { l: 'کالاهای کم‌موجودی', v: ins.needs.lowStock, route: '/reports', hint: 'موجودی کمتر از حداقل' },
+    { l: 'چک‌های برگشتی دریافتی', v: ins.needs.bouncedCheques, route: '/finance', hint: 'نیازمند پیگیری حقوقی/مالی' },
+  ];
+  
+  const g3 = ins.cash.h3, g7 = ins.cash.h7;
+  const danger = g3.gap > 0;
+
+  return (
+    <div className="space-y-5 p-2 sm:p-4 pb-24" dir="rtl">
+      <PageToolbar 
+        title="مرکز فرماندهی مدیریتی" 
+        subtitle="فروش، مطالبات، چک‌ها، نقدینگی، سود و زیان و عملکرد تیم — از داده‌های واقعی سامانه"
+        actions={<DemoDataPanel state={state} updateState={updateState} canManage={canManage} />} 
+      />
+
+      {!ins.hasData && (
+        <div className="bg-surface border border-border rounded-3xl p-10 text-center text-sm leading-relaxed text-text-secondary shadow-sm">
+          هنوز داده‌ای برای تحلیل ثبت نشده است. پس از ثبت پیش‌فاکتور، فاکتور، پرداخت و وظیفه، اینجا تصویر کامل شرکت را می‌بینید.
+        </div>
+      )}
+
+      {/* هشدار نقدینگی */}
+      <div className={cn('relative overflow-hidden rounded-3xl border p-5 sm:p-6 shadow-sm', danger ? 'border-danger-border bg-danger-soft' : 'border-success-border bg-success-soft')} style={{ ['--i' as any]: 0 }}>
+        <div className="flex items-start gap-4">
+          <span className={cn('grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm', danger ? 'bg-danger' : 'bg-success')}>
+            {danger ? <AlertTriangle size={24} /> : <CheckCircle2 size={24} />}
+          </span>
+          <div className="min-w-0 text-sm leading-relaxed text-text-main">
+            <div className="text-base font-black mb-1">
+              {danger ? `تا ۳ روز آینده حدود ${money(g3.gap)} کمبود نقدینگی داریم` : 'نقدینگی ۳ روز آینده از محل چک‌های دریافتی تأمین است'}
+            </div>
+            <div className="text-text-secondary">
+              ۳ روز آینده: خروجی <strong className="tabular-nums">{money(g3.outflow)}</strong> (چک پرداختی، فاکتور تأمین‌کننده، هزینه) در برابر ورودی قطعی <strong className="tabular-nums">{money(g3.inflow)}</strong> (چک‌های دریافتی).
+              {g7.gap > 0 && <> تا ۷ روز آینده کمبود به <strong className="text-danger tabular-nums">{money(g7.gap)}</strong> می‌رسد.</>} 
+              <span className="opacity-80 block mt-1 text-xs">موجودی حساب‌های بانکی در داده‌ها ثبت نشده و در این محاسبه نیست.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* شاخص‌های اصلی */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Kpi i={1} label="فروش ۳۰ روز اخیر" value={ins.sales30} delta={pct(ins.sales30, ins.salesPrev)} />
+        <Kpi i={2} label="وصول ۳۰ روز اخیر" value={ins.collected30} delta={pct(ins.collected30, ins.collectedPrev)} />
+        <Kpi i={3} label="مطالبات باز" value={ins.receivable} hot={ins.overdue > ins.receivable * 0.5} />
+        <Kpi i={4} label={net >= 0 ? 'سود خالص ۳۰ روز' : 'زیان خالص ۳۰ روز'} value={net} good={net >= 0} hot={net < 0} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <Panel i={5} title="نقدینگی ۱۴ روز آینده" aside={<div className="flex gap-4 text-xs font-bold text-text-secondary"><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-[var(--c-primary)]" />ورودی</span><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-[var(--c-danger)]" />خروجی</span></div>}>
+          <CashFlowChart days={ins.cashDays} />
+        </Panel>
+        <Panel i={6} title="سود و زیان (۳۰ روز)" aside={<Pill tone={net >= 0 ? 'good' : 'bad'}>{net >= 0 ? 'در سود' : 'در زیان'}</Pill>}>
+          <div className="space-y-4">
+            {plRows.map((r, k) => (
+              <div key={r.l}>
+                <div className="mb-1.5 flex justify-between text-xs font-bold"><span className="text-text-secondary">{r.l}</span><b className="font-mono text-text-main">{money(r.v)}</b></div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-canvas border border-border/50"><i className="block h-full rounded-full" style={{ width: `${Math.max((r.v / plMax) * 100, r.v ? 3 : 0)}%`, background: r.c, ['--i' as any]: k }} /></div>
+              </div>))}
+          </div>
+          <div className="mt-6 border-t border-border pt-4">
+            <div className="mb-2 text-xs font-bold text-text-secondary">روند سود/زیان خالص ۶ دوره ۳۰ روزه</div>
+            <LineChart values={ins.trend.map(t => t.net)} labels={ins.trend.map(t => new Intl.DateTimeFormat('fa-IR-u-ca-persian', { month: 'short' }).format(t.date))} color={net >= 0 ? 'var(--c-success)' : 'var(--c-danger)'} height={120} />
+          </div>
+        </Panel>
+      </div>
+
+      {/* عملکرد افراد */}
+      <Panel i={7} title="عملکرد و سود/زیان هر فرد (۳۰ روز)" aside={<span className="text-xs font-medium text-text-secondary">سود ناخالص فروش منهای هزینه ماهانه فرد</span>}>
+        {ins.people.length === 0 ? <p className="py-8 text-center text-sm text-text-secondary bg-canvas rounded-2xl border border-dashed border-border">فعالیتی از پرسنل ثبت نشده است.</p> : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {ins.people.map((p, k) => (
+              <div key={p.id} className="rounded-2xl bg-canvas border border-border p-5 shadow-sm" style={{ ['--i' as any]: k }}>
+                <div className="flex items-center gap-3">
+                  <Avatar name={p.name} src={avatarOf(p.id)} size="lg" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-black text-text-main">{p.name}</div>
+                    <div className="truncate text-xs text-text-secondary mt-0.5">{state.users.find(u => u.id === p.id)?.jobTitle || 'کاربر سامانه'}</div>
+                  </div>
+                  <Pill tone={p.verdict === 'PROFIT' ? 'good' : p.verdict === 'LOSS' ? 'bad' : 'mute'}>{p.verdict === 'PROFIT' ? 'سودده' : p.verdict === 'LOSS' ? 'زیان‌ده' : 'هزینه ثبت نشده'}</Pill>
+                </div>
+                <div className="mt-4">
+                  <AllocationBar segments={[{ label: 'تکمیل', value: p.tasksDone, color: 'var(--c-success)' }, { label: 'باز', value: Math.max(p.tasksOpen - p.tasksOverdue, 0), color: 'var(--c-primary)' }, { label: 'معوق', value: p.tasksOverdue, color: 'var(--c-danger)' }]} caption={`وظایف: ${fNum(p.tasksDone)} تکمیل · ${fNum(p.tasksOpen - p.tasksOverdue)} باز · ${fNum(p.tasksOverdue)} معوق`} />
+                </div>
+                <div className="mt-4 grid grid-cols-4 gap-3 text-center text-xs text-text-secondary">
+                  <div className="bg-surface rounded-lg py-2 border border-border"><b className="block text-sm font-black text-text-main mb-0.5 tabular-nums">{fNum(p.visits)}</b>ویزیت</div>
+                  <div className="bg-surface rounded-lg py-2 border border-border"><b className="block text-sm font-black text-text-main mb-0.5 tabular-nums">{fNum(p.activities)}</b>فعالیت</div>
+                  <div className="bg-surface rounded-lg py-2 border border-border"><b className="block text-sm font-black text-text-main mb-0.5 tabular-nums">{fCompact(p.sales)}</b>فروش</div>
+                  <div className="bg-surface rounded-lg py-2 border border-border"><b className="block text-sm font-black text-text-main mb-0.5 tabular-nums">{fCompact(p.gross)}</b>سود ناخالص</div>
+                </div>
+                {p.net !== null && (
+                  <div className={cn('mt-3 text-xs font-bold text-center p-2 rounded-lg border', p.net >= 0 ? 'bg-success-soft text-success border-success-border' : 'bg-danger-soft text-danger border-danger-border')}>
+                    {p.net >= 0 ? 'مازاد' : 'کسری'} نسبت به هزینه ماهانه: {money(p.net)}
+                  </div>
+                )}
+              </div>))}
+          </div>)}
+      </Panel>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Panel i={8} title="چه کسی چه کاری کرد؟ (رویدادهای اخیر)">
+          <ol className="relative space-y-4 border-s-2 border-border ps-5 ms-2">
+            {ins.recent.length === 0 && <li className="text-sm text-text-secondary py-4">رویدادی ثبت نشده است.</li>}
+            {ins.recent.map((f, k) => (
+              <li key={k} className="relative flex items-start gap-3" style={{ ['--i' as any]: k }}>
+                <span className="absolute -start-[29px] top-1.5 h-3 w-3 rounded-full bg-primary ring-4 ring-surface" />
+                {f.actorId ? <Avatar name={ins.userName(f.actorId)} src={avatarOf(f.actorId)} size="sm" /> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-canvas border border-border text-text-secondary"><ArrowDownLeft size={14} /></span>}
+                <div className="min-w-0 text-sm">
+                  <div className="text-text-main"><b className="font-extrabold">{f.actorId ? ins.userName(f.actorId) : 'سیستم مالی'}</b> — {f.text}</div>
+                  <div className="text-xs text-text-secondary mt-1 font-mono">{formatAppDate(new Date(f.at).toISOString(), locale)} · {new Date(f.at).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+              </li>))}
+          </ol>
+        </Panel>
+        
+        <Panel i={9} title="نیازها و موانع امروز">
+          <ul className="grid gap-3">
+            {needs.map((n, k) => (
+              <li key={n.l} style={{ ['--i' as any]: k }}>
+                <button onClick={() => navigate(n.route)} className="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-canvas border border-border p-3 text-start hover:border-primary/40 hover:shadow-sm transition-all active:scale-[0.98]">
+                  <span className={cn('grid h-12 w-12 shrink-0 place-items-center rounded-xl font-mono text-base font-black', n.v > 0 ? 'bg-danger-soft text-danger border border-danger-border' : 'bg-success-soft text-success border border-success-border')}>{n.v > 0 ? fNum(n.v) : '✓'}</span>
+                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-text-main">{n.l}</span><span className="block text-xs text-text-secondary mt-0.5">{n.v > 0 ? n.hint : 'مشکلی وجود ندارد'}</span></span>
+                </button>
+              </li>))}
+          </ul>
+        </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Panel i={10} title="کهنگی مطالبات">
+          <div className="py-4">
+            <DonutChart size={180} centerValue={fCompact(ins.receivable)} centerLabel="مطالبات باز" segments={ins.aging.map((a, k) => ({ label: a.label, value: a.value, color: ['var(--c-success)', 'var(--c-primary)', 'var(--c-accent)', 'var(--c-warning)', 'var(--c-danger)'][k] }))} />
+          </div>
+          <div className="mt-6 border-t border-border pt-4">
+            <div className="mb-3 text-xs font-bold text-text-secondary">بیشترین بدهکاران</div>
+            <ul className="grid gap-2">
+              {ins.topDebtors.map(d => (
+                <li key={d.id}>
+                  <button onClick={() => { updateState(s => { s.activeContextAccountId = d.id; }); navigate('/accounts'); }} className="flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors hover:bg-canvas border border-transparent hover:border-border">
+                    <span className="truncate font-bold text-text-main">{d.name}</span>
+                    <span className="font-mono font-bold text-text-secondary">{money(d.value)}{d.overdue > 0 && <b className="ms-2 text-danger">({money(d.overdue)} معوق)</b>}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Panel>
+        
+        <Panel i={11} title="چک‌های دریافتی و پرداختی">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-2xl bg-canvas border border-border p-5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-text-secondary mb-2"><ArrowDownLeft size={16} className="text-success" />دریافتی در راه</div>
+              <div className="text-xl font-black text-text-main tabular-nums">{money(ins.chequeStats.receivablePending)}</div>
+              <div className="mt-2 text-[11px] font-bold text-danger bg-danger-soft px-2 py-1 rounded-lg inline-block border border-danger-border">{ins.chequeStats.receivableBounced ? `برگشتی: ${money(ins.chequeStats.receivableBounced)}` : 'بدون برگشتی'}</div>
+            </div>
+            <div className="rounded-2xl bg-canvas border border-border p-5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-text-secondary mb-2"><ArrowUpRight size={16} className="text-warning" />پرداختی در راه</div>
+              <div className="text-xl font-black text-text-main tabular-nums">{money(ins.chequeStats.payablePending)}</div>
+              <div className="mt-2 text-[11px] font-bold text-danger bg-danger-soft px-2 py-1 rounded-lg inline-block border border-danger-border">{ins.chequeStats.payableOverdue ? `سررسید گذشته: ${money(ins.chequeStats.payableOverdue)}` : 'بدون معوق'}</div>
+            </div>
+          </div>
+          <div className="mt-6 mb-3 text-xs font-bold text-text-secondary">نزدیک‌ترین سررسیدها</div>
+          <ul className="grid gap-2">
+            {ins.chequeStats.nextDue.length === 0 && <li className="text-sm text-text-secondary bg-canvas p-4 rounded-xl border border-dashed border-border text-center">چک سررسیدنشده‌ای ثبت نشده است.</li>}
+            {ins.chequeStats.nextDue.map((c: any) => (
+              <li key={c.id} className="flex items-center gap-3 rounded-xl bg-canvas border border-border px-3 py-2.5 text-sm shadow-sm">
+                <span className={cn('grid h-8 w-8 place-items-center rounded-lg text-white shadow-sm shrink-0', c.dir === 'IN' ? 'bg-success' : 'bg-warning')}>
+                  {c.dir === 'IN' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
+                </span>
+                <span className="flex-1 truncate font-bold text-text-main">{c.dir === 'IN' ? 'دریافت از' : 'پرداخت به'} {c.dir === 'IN' ? state.accounts.find(a => a.id === c.customerId)?.name : (state as any).suppliers?.find((s: any) => s.id === c.supplierId)?.name}</span>
+                <div className="text-left">
+                  <b className="font-mono text-text-main block">{money(c.amount)}</b>
+                  <span className="font-mono text-[10px] text-text-secondary block mt-0.5">{formatAppDate(c.dueDate, locale)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.5fr_1fr]">
+        <Panel i={12} title="وضعیت کالاها (۹۰ روز اخیر)">
+          <div className="overflow-x-auto rounded-xl border border-border bg-canvas">
+            <table className="w-full min-w-[600px] text-sm text-right">
+              <thead className="bg-surface border-b border-border">
+                <tr className="text-xs text-text-secondary font-bold">
+                  {['کالا', 'فروش', 'حاشیه سود', 'موجودی', 'پوشش', 'وضعیت'].map(h => <th key={h} className="p-3">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {ins.productStats.slice(0, 8).map(p => (
+                  <tr key={p.id} className="hover:bg-surface transition-colors">
+                    <td className="max-w-[200px] truncate p-3 font-bold text-text-main">{p.name}</td>
+                    <td className="p-3 font-mono font-bold text-text-main">{fCompact(p.revenue)}</td>
+                    <td className="p-3"><span className={cn('font-bold font-mono px-2 py-1 rounded-lg border', p.margin < 10 ? 'bg-danger-soft text-danger border-danger-border' : 'bg-success-soft text-success border-success-border')}>{fNum(Math.round(p.margin))}٪</span></td>
+                    <td className="p-3 font-mono text-text-secondary">{p.stock === null ? '—' : fNum(p.stock)}</td>
+                    <td className="p-3 font-mono text-text-secondary">{p.coverDays === null ? '—' : `${fNum(p.coverDays)} روز`}</td>
+                    <td className="p-3">{p.low ? <Pill tone="bad">کم‌موجودی</Pill> : <Pill tone="good">مناسب</Pill>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+        
+        <Panel i={13} title="تأمین‌کنندگان">
+          <ul className="grid gap-3">
+            {ins.supplierStats.length === 0 && <li className="text-sm text-text-secondary bg-canvas p-6 rounded-2xl border border-dashed border-border text-center">تأمین‌کننده‌ای ثبت نشده است.</li>}
+            {ins.supplierStats.map(s => (
+              <li key={s.id} className="rounded-2xl bg-canvas border border-border p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <b className="truncate text-sm font-bold text-text-main">{s.name}</b>
+                  {s.overdue > 0 ? <Pill tone="bad">معوق</Pill> : s.lowItems > 0 ? <Pill tone="warn">کالا کم است</Pill> : <Pill tone="good">عادی</Pill>}
+                </div>
+                <div className="flex justify-between text-xs font-bold text-text-secondary mb-2">
+                  <span>بدهی باز: <b className="text-text-main font-mono">{money(s.payable)}</b></span>
+                  <span>سهم خرید: <b className="text-text-main font-mono">{fNum(Math.round(s.share))}٪</b></span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-surface border border-border/50">
+                  <i className="block h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, s.share)}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+
+      <Panel i={14} title="قیف فروش">
+        <div className="py-4">
+          <FunnelChart stages={ins.funnel} colors={['var(--c-primary-soft)', 'var(--c-primary)', 'var(--c-accent)', 'var(--c-success)']} />
+        </div>
+      </Panel>
+    </div>
+  );
+}
+```
+
+---
+
+### گام بعدی (Next Batch: B5)
+اکنون که داشبورد و صفحه خانه با استانداردهای سازمانی و پالت جدید بازطراحی شدند، در بچ بعدی (B5) تمرکز را بر روی **بانک مشتریان (CustomersWorkspace)** و **پرونده هوشمند Customer 360** قرار خواهم داد تا این صفحات کلیدی را از جداول ساده به کارت‌های موبایلی و داشبورد متمرکز مشتری تبدیل کنم.
+
+آیا مایلید بچ بعدی را آغاز کنم؟

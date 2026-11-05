@@ -1,5 +1,5 @@
 import { canEditQuoteLines } from '../lib/cpqEngine';
-import { useCan } from '../hooks/useCan';
+import { useCan, requireActiveUser } from '../hooks/useCan';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppState, Quote, QuoteLine, ID, ExternalProduct, PriceWaterfallBreakdown } from '../types';
@@ -14,7 +14,29 @@ import { FileText, Send, CheckCircle2, AlertTriangle, Plus, Trash2, ArrowRight, 
 import { CustomerInvoicePrint } from './PrintLayouts';
 import { ProfitModal } from './ProfitModal';
 import { QuoteWizardModal } from './QuoteWizardModal';
-import { DataSourceStatus } from './ui/DataSourceStatus';
+
+
+/** Recompute persisted Quote totals from line-level source values in one place. */
+function recalculateQuoteFinancials(quote: Quote): void {
+  const lines = Array.isArray(quote.lines) ? quote.lines : [];
+  const totalAmount = lines.reduce((sum, line) => {
+    const lineTotal = Number.isFinite(line.lineTotal) ? line.lineTotal : line.unitPrice * line.quantity;
+    return sum + (Number.isFinite(lineTotal) && lineTotal >= 0 ? lineTotal : 0);
+  }, 0);
+  const knownCostLines = lines.filter(line => Number.isFinite(line.costPrice) && line.costPrice > 0);
+  const costsComplete = lines.length > 0 && knownCostLines.length === lines.length;
+  const totalCost = knownCostLines.reduce((sum, line) => sum + line.costPrice * line.quantity, 0);
+  quote.totalAmount = totalAmount;
+  quote.marginPercent = costsComplete && totalAmount > 0
+    ? Math.round(((totalAmount - totalCost) / totalAmount) * 1000) / 10
+    : 0;
+  quote.marginCompleteness = costsComplete ? 'KNOWN' : knownCostLines.length > 0 ? 'PARTIAL' : 'UNKNOWN';
+  quote.updatedAt = new Date().toISOString();
+}
+
+function quoteScope(quote: Quote) {
+  return { ownerId: quote.ownerId, branchId: quote.branchId, territoryId: quote.territoryId, teamId: quote.teamId, tenantId: quote.tenantId };
+}
 
 interface QuotesWorkspaceProps {
   state: AppState;
@@ -74,17 +96,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
       if (!quote || quote.status !== 'DRAFT') return;
       const beforeAmount = quote.totalAmount;
       quote.lines = scenario.lines.map(line => ({ ...line }));
-      quote.totalAmount = quote.lines.reduce((sum, line) => sum + (Number.isFinite(line.lineTotal) ? line.lineTotal : line.unitPrice * line.quantity), 0);
-      const costKnown = quote.lines.every(line => Number.isFinite(line.costPrice) && line.costPrice > 0);
-      if (costKnown) {
-        const cost = quote.lines.reduce((sum, line) => sum + line.costPrice * line.quantity, 0);
-        quote.marginPercent = quote.totalAmount > 0 ? Math.round(((quote.totalAmount - cost) / quote.totalAmount) * 1000) / 10 : 0;
-        quote.marginCompleteness = 'KNOWN';
-      } else {
-        quote.marginPercent = 0;
-        quote.marginCompleteness = quote.lines.some(line => Number.isFinite(line.costPrice) && line.costPrice > 0) ? 'PARTIAL' : 'UNKNOWN';
-      }
-      quote.updatedAt = new Date().toISOString();
+      recalculateQuoteFinancials(quote);
       if (!draft.auditLogs) draft.auditLogs = [];
       draft.auditLogs.push({
         id: generateId(), action: 'QUOTE_NEGOTIATION_SCENARIO_APPLIED', entityType: 'QUOTE', entityId: quote.id,
@@ -149,13 +161,24 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
   const handleAddLine = () => {
     if (!activeQuote) return;
     { const g = canEditQuoteLines(activeQuote); if (!g.ok) return denied(g.reason || 'ویرایش اقلام پیش‌فاکتور'); }
+    if (!canOn('quotes', 'EDIT', quoteScope(activeQuote))) return denied('ویرایش این پیش‌فاکتور خارج از محدوده مجاز');
     const prod = state.externalProducts.find(p => p.id === selectedProductId);
     if (!prod) return;
 
-    const unitPrice = parsePersianNumber(linePrice) || prod.basePrice;
-    const quantity = Math.max(1, parsePersianNumber(lineQuantity) || 1);
+    const parsedPrice = parsePersianNumber(linePrice);
+    const parsedQuantity = parsePersianNumber(lineQuantity);
+    const unitPrice = Number.isFinite(parsedPrice) ? parsedPrice : NaN;
+    const quantity = Number.isFinite(parsedQuantity) ? parsedQuantity : NaN;
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0 || !Number.isSafeInteger(quantity) || quantity <= 0) {
+      updateState(draft => {
+        if (!draft.notifications) draft.notifications = [];
+        draft.notifications.push({ id: generateId(), title: 'اطلاعات قلم نامعتبر است', message: 'قیمت واحد باید بزرگ‌تر از صفر و تعداد باید عدد صحیح مثبت باشد. قیمت پایه به‌صورت خودکار جایگزین نشد.', type: 'WARNING', read: false, createdAt: new Date().toISOString(), linkTab: 'quotes', entityId: activeQuote.id });
+      });
+      return;
+    }
     const costPrice = prod.costPrice;
     const lineTotal = unitPrice * quantity;
+    if (!Number.isFinite(lineTotal)) return;
 
     updateState(draft => {
       const q = draft.quotes.find(item => item.id === activeQuote.id);
@@ -171,17 +194,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
       };
       q.lines.push(newLine);
 
-      const totalAmount = q.lines.reduce((sum, l) => sum + l.lineTotal, 0);
-      const knownCostLines = q.lines.filter(l => Number.isFinite(l.costPrice) && l.costPrice > 0);
-      const costsComplete = q.lines.length > 0 && knownCostLines.length === q.lines.length;
-      const totalCost = knownCostLines.reduce((sum, l) => sum + (l.costPrice * l.quantity), 0);
-      const totalProfit = totalAmount - totalCost;
-      const marginPercent = costsComplete && totalAmount > 0 ? Math.round((totalProfit / totalAmount) * 1000) / 10 : 0;
-
-      q.totalAmount = totalAmount;
-      q.marginPercent = marginPercent;
-      q.marginCompleteness = costsComplete ? 'KNOWN' : knownCostLines.length ? 'PARTIAL' : 'UNKNOWN';
-      q.updatedAt = new Date().toISOString();
+      recalculateQuoteFinancials(q);
     });
 
     setIsAddModalOpen(false);
@@ -190,8 +203,14 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
   const handleAddBundle = (bundleId: ID) => {
     if (!activeQuote) return;
     { const g = canEditQuoteLines(activeQuote); if (!g.ok) return denied(g.reason || 'ویرایش اقلام پیش‌فاکتور'); }
+    if (!canOn('quotes', 'EDIT', quoteScope(activeQuote))) return denied('ویرایش این پیش‌فاکتور خارج از محدوده مجاز');
     const bundle = (state.productBundles || []).find((b: any) => b.id === bundleId);
     if (!bundle) return;
+    const discountPercent = Number(bundle.discountPercent);
+    if (!Array.isArray(bundle.productIds) || !bundle.productIds.length || !Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+      updateState(draft => { if (!draft.notifications) draft.notifications = []; draft.notifications.push({ id: generateId(), title: 'تعریف بسته نامعتبر است', message: 'بسته باید حداقل یک محصول و تخفیف بین صفر تا صد درصد داشته باشد.', type: 'WARNING', read: false, createdAt: new Date().toISOString(), linkTab: 'quotes', entityId: activeQuote.id }); });
+      return;
+    }
 
     updateState(draft => {
       const q = draft.quotes.find(item => item.id === activeQuote.id);
@@ -200,7 +219,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
       bundle.productIds.forEach((prodId: string) => {
         const prod = state.externalProducts.find(p => p.id === prodId);
         if (prod) {
-          const discountMultiplier = (100 - bundle.discountPercent) / 100;
+          const discountMultiplier = (100 - discountPercent) / 100;
           const discountedPrice = Math.round(prod.basePrice * discountMultiplier);
           q.lines.push({
             id: generateId(),
@@ -214,17 +233,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
         }
       });
 
-      const totalAmount = q.lines.reduce((sum, l) => sum + l.lineTotal, 0);
-      const knownCostLines = q.lines.filter(l => Number.isFinite(l.costPrice) && l.costPrice > 0);
-      const costsComplete = q.lines.length > 0 && knownCostLines.length === q.lines.length;
-      const totalCost = knownCostLines.reduce((sum, l) => sum + (l.costPrice * l.quantity), 0);
-      const totalProfit = totalAmount - totalCost;
-      const marginPercent = costsComplete && totalAmount > 0 ? Math.round((totalProfit / totalAmount) * 1000) / 10 : 0;
-
-      q.totalAmount = totalAmount;
-      q.marginPercent = marginPercent;
-      q.marginCompleteness = costsComplete ? 'KNOWN' : knownCostLines.length ? 'PARTIAL' : 'UNKNOWN';
-      q.updatedAt = new Date().toISOString();
+      recalculateQuoteFinancials(q);
     });
 
     setIsBundleModalOpen(false);
@@ -263,6 +272,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
   const handleRemoveLine = (lineId: ID) => {
     if (!activeQuote) return;
     { const g = canEditQuoteLines(activeQuote); if (!g.ok) return denied(g.reason || 'ویرایش اقلام پیش‌فاکتور'); }
+    if (!canOn('quotes', 'EDIT', quoteScope(activeQuote))) return denied('ویرایش این پیش‌فاکتور خارج از محدوده مجاز');
     updateState(draft => {
       const q = draft.quotes.find(item => item.id === activeQuote.id);
       if (!q) return;
@@ -277,24 +287,23 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
         } as any);
       }
 
-      const totalAmount = q.lines.reduce((sum, l) => sum + l.lineTotal, 0);
-      const knownCostLines = q.lines.filter(l => Number.isFinite(l.costPrice) && l.costPrice > 0);
-      const costsComplete = q.lines.length > 0 && knownCostLines.length === q.lines.length;
-      const totalCost = knownCostLines.reduce((sum, l) => sum + (l.costPrice * l.quantity), 0);
-      const totalProfit = totalAmount - totalCost;
-      const marginPercent = costsComplete && totalAmount > 0 ? Math.round((totalProfit / totalAmount) * 1000) / 10 : 0;
-
-      q.totalAmount = totalAmount;
-      q.marginPercent = marginPercent;
-      q.marginCompleteness = costsComplete ? 'KNOWN' : knownCostLines.length ? 'PARTIAL' : 'UNKNOWN';
-      q.updatedAt = new Date().toISOString();
+      recalculateQuoteFinancials(q);
     });
   };
 
   const handleAction = (action: 'REQUEST_APPROVAL' | 'APPROVE' | 'ACCEPT' | 'REJECT' | 'HANDOFF') => {
     if (!can('quotes', action === 'APPROVE' || action === 'HANDOFF' ? 'APPROVE' : 'EDIT')) return denied(action === 'APPROVE' ? 'تایید پیش‌فاکتور' : 'تغییر وضعیت پیش‌فاکتور');
     if (!activeQuote) return;
-    if (!canOn('quotes', action === 'APPROVE' || action === 'HANDOFF' ? 'APPROVE' : 'EDIT', { ownerId: activeQuote.ownerId, branchId: activeQuote.branchId, territoryId: activeQuote.territoryId, teamId: activeQuote.teamId, tenantId: activeQuote.tenantId })) return denied('دسترسی به این پیش‌فاکتور');
+    if (action !== 'HANDOFF' && !requireActiveUser(state, updateState, 'تغییر وضعیت پیش‌فاکتور')) return;
+    if (!canOn('quotes', action === 'APPROVE' || action === 'HANDOFF' ? 'APPROVE' : 'EDIT', quoteScope(activeQuote))) return denied('دسترسی به این پیش‌فاکتور');
+    const allowedTransition: Record<typeof action, boolean> = {
+      REQUEST_APPROVAL: activeQuote.status === 'DRAFT' && activeQuote.lines.length > 0,
+      APPROVE: activeQuote.status === 'DRAFT' || activeQuote.status === 'PENDING_APPROVAL',
+      ACCEPT: activeQuote.status === 'APPROVED',
+      REJECT: activeQuote.status === 'PENDING_APPROVAL',
+      HANDOFF: activeQuote.status === 'ACCEPTED'
+    };
+    if (!allowedTransition[action]) return denied('انتقال وضعیت غیرمجاز پیش‌فاکتور');
     // هیچ API/Connector واقعی در این نسخه پیکربندی نشده است؛ شماره خارجی یا موفقیت ساختگی نساز.
     if (action === 'HANDOFF') {
       updateState(draft => {
@@ -374,6 +383,12 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
       }
 
       quote.updatedAt = new Date().toISOString();
+      if (!draft.auditLogs) draft.auditLogs = [];
+      draft.auditLogs.push({
+        id: generateId(), action: `QUOTE_${action}`, entityType: 'QUOTE', entityId: quote.id,
+        details: `عملیات ${action} روی پیش‌فاکتور ${quote.quoteNumber} انجام شد؛ وضعیت فعلی: ${quote.status}.`,
+        actor: draft.users?.find(user => user.id === draft.currentUserId)?.name || 'System', createdAt: quote.updatedAt
+      } as any);
     });
 
     if (action === 'APPROVE') {
@@ -384,7 +399,9 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
   const handleConvertToInvoice = () => {
     if (!can('quotes', 'EDIT') || !can('finance', 'CREATE')) return denied('تبدیل پیش‌فاکتور به فاکتور');
     if (!activeQuote) return;
-    if (!canOn('quotes', 'EDIT', { ownerId: activeQuote.ownerId, branchId: activeQuote.branchId, territoryId: activeQuote.territoryId, teamId: activeQuote.teamId, tenantId: activeQuote.tenantId })) return denied('دسترسی به این پیش‌فاکتور');
+    if (activeQuote.status !== 'ACCEPTED') return denied('ثبت فاکتور فقط برای پیش‌فاکتور پذیرفته‌شده مجاز است');
+    if (!canOn('quotes', 'EDIT', quoteScope(activeQuote))) return denied('دسترسی به این پیش‌فاکتور');
+    if (!requireActiveUser(state, updateState, 'ثبت فاکتور دستی')) return;
     const manualFinanceEntryEnabled = (state.settings as any)?.orgConfig?.allowManualFinanceEntry === true;
     if (!manualFinanceEntryEnabled) {
       updateState(draft => {
@@ -473,22 +490,20 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
 
   const getStatusBadge = (status: Quote['status']) => {
     switch (status) {
-      case 'DRAFT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-canvas text-text-secondary border border-border">پیش‌نویس (DRAFT)</span>;
-      case 'PENDING_APPROVAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 dark:bg-amber-950/40 text-warning dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">در انتظار تایید مدیریت</span>;
-      case 'APPROVED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-50 dark:bg-sky-950/40 text-info dark:text-sky-400 border border-sky-200/60 dark:border-sky-800/40">تایید شده توسط مدیریت</span>;
-      case 'SENT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 dark:bg-primary-950/40 text-primary dark:text-blue-400 border border-primary/20">ارسال به مشتری</span>;
-      case 'ACCEPTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-success-soft dark:bg-emerald-950/40 text-success dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">تایید نهایی مشتری</span>;
-      case 'REJECTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 dark:bg-rose-950/40 text-danger dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">رد شده</span>;
-      case 'CANCELLED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40">لغوشده</span>;
-      case 'PENDING_APPROVAL_ERP': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">در انتظار تأیید لغو در ERP</span>;
-      case 'HANDOFF_EXTERNAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/20 dark:bg-primary-950/60 text-primary-hover dark:text-blue-300 border border-primary/30">ارسال به ERP (تحویل نهایی)</span>;
-      default: return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-border">{status}</span>;
+      case 'DRAFT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-canvas text-text-secondary">پیش‌نویس (DRAFT)</span>;
+      case 'PENDING_APPROVAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-warning">در انتظار تایید مدیریت</span>;
+      case 'APPROVED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-sky-50 text-info">تایید شده توسط مدیریت</span>;
+      case 'SENT': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/10 text-primary">ارسال به مشتری</span>;
+      case 'ACCEPTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-success-soft text-success">تایید نهایی مشتری</span>;
+      case 'REJECTED': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 text-danger">رد شده</span>;
+      case 'HANDOFF_EXTERNAL': return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-primary/20 text-primary-hover">ارسال به ERP (تحویل نهایی)</span>;
+      default: return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">{status}</span>;
     }
   };
 
   return (
-    <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-32 font-premium" dir="rtl">
-      <Card padding="md" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-surface border-border/80">
+    <div className="flex-1 overflow-auto bg-transparent p-4 sm:p-6 space-y-4" dir="rtl">
+      <Card padding="md" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border-border">
         <div>
           <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" /> میز پیش‌فاکتورها و پروپوزال‌های تجاری (CPQ)
@@ -507,12 +522,6 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
         </div>
       </Card>
 
-      <DataSourceStatus 
-        source="CRM" 
-        sourceName="موتور قیمت‌گذاری و پیش‌فاکتور تجاری (CPQ)" 
-        isAuthoritative={false}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="space-y-3">
           <h3 className="text-xs font-bold text-text-secondary px-1">لیست پیش‌فاکتورها ({visibleQuotes.length})</h3>
@@ -525,7 +534,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                 key={q.id} 
                 padding="md" 
                 onClick={() => setActiveQuoteId(q.id)}
-                className={`cursor-pointer transition-all border ${isSelected ? 'border-primary/60 bg-surface shadow-md' : 'border-border/70 hover:bg-surface-secondary bg-surface'}`}
+                className={`cursor-pointer transition-all border ${isSelected ? 'border-border-strong bg-canvas shadow-sm' : 'border-transparent hover:bg-canvas bg-white'}`}
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -537,7 +546,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                   </div>
                   {getStatusBadge(q.status)}
                 </div>
-                <div className="flex justify-between items-center mt-3 pt-2 border-t border-border/70 text-xs">
+                <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-xs">
                   <span className="text-text-secondary">ارزش کل:</span>
                   <span className="font-bold font-mono text-text-main">{formatCurrency(q.totalAmount)} ریال</span>
                 </div>
@@ -548,7 +557,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
 
         <div className="lg:col-span-2 space-y-4">
           {activeQuote ? (
-            <Card padding="lg" className="space-y-4 bg-surface border-border/80">
+            <Card padding="lg" className="space-y-4 bg-white border-border">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-border gap-3">
                 <div>
                   <div className="flex items-center gap-2">
@@ -641,7 +650,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {negotiationScenarios.map(scenario => (
-                      <div key={scenario.key} className="rounded-xl border border-border bg-surface p-3 space-y-2">
+                      <div key={scenario.key} className="rounded-xl border border-border bg-white p-3 space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <strong className="text-xs text-text-main">{scenario.title}</strong>
                           <span className={`text-[10px] rounded-full px-2 py-1 font-bold ${scenario.creditRisk === 'CRITICAL' ? 'bg-danger-soft text-danger' : scenario.creditRisk === 'HIGH' ? 'bg-warning-soft text-warning' : scenario.creditRisk === 'LOW' ? 'bg-success-soft text-success' : 'bg-canvas text-text-secondary'}`}>
@@ -769,7 +778,7 @@ export function QuotesWorkspace({ state, updateState, setActiveTab }: QuotesWork
               </div>
             </Card>
           ) : (
-            <Card padding="lg" className="text-center text-text-secondary py-12 bg-surface border-border space-y-3">
+            <Card padding="lg" className="text-center text-text-secondary py-12 bg-white border-border space-y-3">
               <p className="text-xs">یک پیش‌فاکتور از فهرست انتخاب کنید یا پیش‌فاکتور جدید صادر نمایید.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="primary" size="sm" onClick={() => setIsWizardOpen(true)} icon={<Sparkles className="w-3.5 h-3.5" />}>

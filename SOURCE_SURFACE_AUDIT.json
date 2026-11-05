@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-04T19:18:00.718Z",
+  "generatedAt": "2026-11-05T13:46:02.175Z",
   "method": "static relative-import graph from src/main.tsx; dynamic/runtime registries, CSS references, tests and framework conventions may require manual review",
-  "sourceFiles": 134,
-  "reachableFiles": 125,
+  "sourceFiles": 135,
+  "reachableFiles": 126,
   "unreachableCandidates": 9,
   "unreachableCandidatesFiles": [
     "src/components/OnboardingTour.tsx",

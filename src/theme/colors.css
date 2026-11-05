@@ -1,161 +1,109 @@
 /**
- * AKHAVAN CRM — System-Wide Color Architecture (2026 Enterprise Palette)
- * Quantum Ultramarine (#2563EB) x Perlin Pearl (#F8FAFC) x Obsidian Crystal (#090D16)
+ * AKHAVAN CRM — Enterprise Design System 2026-2027
+ * Identity: Solar Forest × Executive Navy
  */
 
 :root {
-  /* Canvas & Surfaces (Light - Perlin Pearl & Spatial Glass) */
-  --c-canvas: #F8FAFC;
+  /* --- Neutral & Surfaces (Reporting-First Clarity) --- */
+  --c-white: #FFFFFF;
+  --c-mist: #F4F6F8;
+  --c-canvas: #F0F2F5;
   --c-surface: #FFFFFF;
-  --c-surface-glass: rgba(255, 255, 255, 0.75);
-  --c-sunken: #F1F5F9;
-  --c-border: rgba(226, 232, 240, 0.8);
-  --c-border-strong: #CBD5E1;
-
-  /* Typography & Ink */
-  --c-text-primary: #0F172A;
-  --c-text-secondary: #475569;
-  --c-text-muted: #94A3B8;
-
-  /* Primary Brand & Interaction (Quantum Ultramarine) */
-  --c-primary: #2563EB;
-  --c-primary-hover: #1D4ED8;
-  --c-primary-pressed: #1E40AF;
-  --c-primary-soft: #EFF6FF;
-
-  /* Accent & Highlights (Sunlit Warm Gold - Fills/Badges Only) */
-  --c-accent: #F59E0B;
-  --c-on-accent: #0F172A;
-
-  /* Semantic Status Tokens */
-  --c-success: #059669;
-  --c-success-soft: #ECFDF5;
-  --c-success-border: #A7F3D0;
+  --c-surface-glass: rgba(255, 255, 255, 0.85);
+  --c-sunken: #F8FAFC;
   
-  --c-warning: #D97706;
-  --c-warning-soft: #FFFBEB;
-  --c-warning-border: #FDE68A;
+  --c-border-light: rgba(38, 58, 80, 0.08);
+  --c-border: rgba(38, 58, 80, 0.15);
+  --c-border-strong: rgba(38, 58, 80, 0.3);
 
-  --c-danger: #E11D48;
-  --c-danger-soft: #FFF1F2;
-  --c-danger-border: #FECDD3;
+  /* --- Typography & Ink --- */
+  --c-ink-main: #1A2634; /* Deepest Navy for text */
+  --c-ink-secondary: #4A5C70;
+  --c-ink-muted: #8295A9;
 
-  /* Shadows & Spatial Glows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 8px 24px -4px rgba(37, 99, 235, 0.12);
+  /* --- Core Brand Identity --- */
+  /* Executive Navy: Structure, Authority, Headers */
+  --c-navy-light: #3A5370;
+  --c-navy: #263A50;
+  --c-navy-dark: #152233;
 
-  /* System aliases */
-  --c-text: var(--c-text-primary);
-  --c-text-2: var(--c-text-secondary);
-  --c-brand-deep: #0F172A;
-  --c-warning-text: var(--c-warning);
-  --c-success-text: var(--c-success);
-  --c-success-fill: var(--c-success-border);
+  /* Analytical Cobalt: Interaction, Links, Active States, Data */
+  --c-cobalt-light: #4A7ACF;
+  --c-cobalt: #315EAA;
+  --c-cobalt-dark: #20427D;
 
-  --color-canvas: var(--c-canvas);
-  --color-bg: var(--c-canvas);
-  --color-surface: var(--c-surface);
-  --color-card: var(--c-surface);
-  --color-surface-secondary: var(--c-sunken);
-  --color-surface-muted: var(--c-sunken);
-  --color-surface-elevated: var(--c-surface);
+  /* Forest Slate: Complementary Brand Details */
+  --c-forest-light: #4B6E67;
+  --c-forest: #344F49;
+  --c-forest-dark: #1E302C;
 
-  --color-ink: var(--c-text-primary);
-  --color-ink-soft: var(--c-text-secondary);
-  --color-text-main: var(--c-text-primary);
-  --color-text-secondary: var(--c-text-secondary);
-  --color-text-tertiary: var(--c-text-muted);
+  /* --- Semantic & Status Tokens --- */
+  /* Success Green: Real success, cleared payments, completed ops */
+  --c-success-soft: #E6F3EB;
+  --c-success-border: #99CBAE;
+  --c-success: #246B45;
 
-  --color-border: var(--c-border);
-  --color-border-subtle: var(--c-border);
-  --color-border-strong: var(--c-border-strong);
-  --color-divider: var(--c-border);
+  /* Strategic Copper: Opportunities, Priority, Next Best Action */
+  --c-copper-soft: #F6EBE5;
+  --c-copper-border: #DFA98B;
+  --c-copper: #B97850;
 
-  --color-primary: var(--c-primary);
-  --color-primary-hover: var(--c-primary-hover);
-  --color-primary-dark: var(--c-primary-pressed);
-  --color-brand: var(--c-primary);
-  --color-on-brand: #FFFFFF;
+  /* Burgundy Risk: Bounced cheques, critical overdue, hard errors */
+  --c-burgundy-soft: #F2E6EA;
+  --c-burgundy-border: #B88B9C;
+  --c-burgundy: #71364B;
 
-  --color-accent: var(--c-accent);
-  --color-on-accent: var(--c-on-accent);
+  /* --- System Aliases (Mapping to components) --- */
+  --c-primary: var(--c-cobalt);
+  --c-primary-hover: var(--c-cobalt-dark);
+  --c-primary-pressed: #173263;
+  --c-primary-soft: #EAF0F8;
 
-  --color-success: var(--c-success);
-  --color-success-soft: var(--c-success-soft);
-  --color-success-line: var(--c-success-border);
+  --c-accent: var(--c-copper);
+  --c-on-accent: var(--c-white);
 
-  --color-warning: var(--c-warning);
-  --color-warning-soft: var(--c-warning-soft);
-  --color-warning-line: var(--c-warning-border);
+  --c-text-primary: var(--c-ink-main);
+  --c-text-secondary: var(--c-ink-secondary);
+  
+  --c-warning: var(--c-copper);
+  --c-warning-soft: var(--c-copper-soft);
+  --c-warning-border: var(--c-copper-border);
+  
+  --c-danger: var(--c-burgundy);
+  --c-danger-soft: var(--c-burgundy-soft);
+  --c-danger-border: var(--c-burgundy-border);
 
-  --color-danger: var(--c-danger);
-  --color-danger-soft: var(--c-danger-soft);
-  --color-danger-line: var(--c-danger-border);
-
-  --color-info: var(--c-primary);
-  --color-info-soft: var(--c-primary-soft);
-  --color-info-line: #BFDBFE;
-
-  --color-status-healthy: var(--c-success);
-  --color-status-risk: var(--c-danger);
-  --color-status-warning: var(--c-warning);
-
-  /* Glassmorphism Layers */
-  --glass-bg: var(--c-surface-glass);
-  --glass-bg-strong: rgba(255, 255, 255, 0.95);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.70);
-  --glass-border: var(--c-border);
-  --glass-border-highlight: rgba(255, 255, 255, 0.9);
-  --glass-border-dark: var(--c-border-strong);
-
-  /* Shadows */
-  --shadow-subtle: var(--shadow-sm);
-  --shadow-floating: var(--shadow-glow);
-  --shadow-modal: 0 20px 48px -8px rgba(15, 23, 42, 0.22);
+  /* --- Shadows & Elevation (Enterprise Flat/Subtle) --- */
+  --shadow-sm: 0 1px 2px 0 rgba(38, 58, 80, 0.05);
+  --shadow-card: 0 4px 12px -2px rgba(38, 58, 80, 0.08), 0 1px 3px -1px rgba(38, 58, 80, 0.04);
+  --shadow-floating: 0 12px 32px -8px rgba(38, 58, 80, 0.15), 0 4px 12px -4px rgba(38, 58, 80, 0.08);
+  --shadow-modal: 0 24px 48px -12px rgba(38, 58, 80, 0.25);
 }
 
 [data-theme="dark"],
 html.dark {
-  /* Canvas & Surfaces (Dark - Obsidian Crystal & Deep Slate) */
-  --c-canvas: #090D16;
-  --c-surface: #111827;
-  --c-surface-glass: rgba(17, 24, 39, 0.75);
-  --c-sunken: #1F2937;
-  --c-border: rgba(255, 255, 255, 0.08);
-  --c-border-strong: rgba(255, 255, 255, 0.16);
+  /* Dark mode mappings (Preserving Navy/Cobalt identity but inverted for readability) */
+  --c-canvas: #0D141C;
+  --c-surface: #15202B;
+  --c-surface-glass: rgba(21, 32, 43, 0.85);
+  --c-sunken: #1A2736;
+  
+  --c-border-light: rgba(255, 255, 255, 0.05);
+  --c-border: rgba(255, 255, 255, 0.1);
+  --c-border-strong: rgba(255, 255, 255, 0.2);
 
-  /* Typography & Ink */
-  --c-text-primary: #F8FAFC;
-  --c-text-secondary: #94A3B8;
-  --c-text-muted: #64748B;
+  --c-ink-main: #F4F6F8;
+  --c-ink-secondary: #A3B1C2;
+  --c-ink-muted: #6B7D91;
 
-  /* Primary Brand & Interaction */
-  --c-primary: #3B82F6;
-  --c-primary-hover: #60A5FA;
-  --c-primary-pressed: #1D4ED8;
-  --c-primary-soft: #1E293B;
+  --c-primary: #4A7ACF;
+  --c-primary-hover: #6B94DF;
+  --c-primary-soft: rgba(49, 94, 170, 0.2);
 
-  /* Semantic Status Tokens (Dark) */
-  --c-success: #10B981;
-  --c-success-soft: #064E3B;
-  --c-success-border: #047857;
+  --c-success-soft: rgba(36, 107, 69, 0.2);
+  --c-copper-soft: rgba(185, 120, 80, 0.2);
+  --c-burgundy-soft: rgba(113, 54, 75, 0.2);
 
-  --c-warning: #F59E0B;
-  --c-warning-soft: #451A03;
-  --c-warning-border: #78350F;
-
-  --c-danger: #F43F5E;
-  --c-danger-soft: #4C0519;
-  --c-danger-border: #881337;
-
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 8px 24px -4px rgba(59, 130, 246, 0.2);
-
-  --c-text: var(--c-text-primary);
-  --c-text-2: var(--c-text-secondary);
-
-  --glass-bg: var(--c-surface-glass);
-  --glass-bg-strong: rgba(17, 24, 39, 0.95);
-  --glass-bg-subtle: rgba(17, 24, 39, 0.65);
+  --shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
 }

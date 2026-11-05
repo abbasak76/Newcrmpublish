@@ -60,12 +60,22 @@ export function NegotiationsWorkspace({ state, updateState }: { state: AppState;
     if (!requireActiveUser(state, updateState, 'ثبت فرصت تجاری')) return;
     const accountId = String(values.accountId || '');
     if (!visibleAccounts.some(account => account.id === accountId)) return denied('انتخاب حساب خارج از محدوده مجاز');
+    const title = String(values.title ?? '').trim();
+    const amount = Number(values.amount);
+    if (!title) {
+      updateState(draft => { draft.notifications = draft.notifications || []; draft.notifications.push({ id: generateId(), title: 'عنوان فرصت الزامی است', message: 'برای ثبت فرصت، عنوان معتبر وارد کنید.', type: 'WARNING', read: false, createdAt: new Date().toISOString() }); });
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      updateState(draft => { draft.notifications = draft.notifications || []; draft.notifications.push({ id: generateId(), title: 'ارزش فرصت نامعتبر است', message: 'ارزش فرصت باید عددی معتبر و بزرگ‌تر از صفر باشد.', type: 'WARNING', read: false, createdAt: new Date().toISOString() }); });
+      return;
+    }
     const creator = state.users.find(user => user.id === state.currentUserId);
     const newOpp: Opportunity = {
       id: generateId(),
       accountId,
-      title: String(values.title).trim(),
-      amount: Number(values.amount) || 0,
+      title,
+      amount,
       stage: (values.stage || 'DISCOVERY') as OpportunityStage,
       expectedCloseDate: values.expectedCloseDate,
       ownerId: state.currentUserId!,
@@ -94,16 +104,32 @@ export function NegotiationsWorkspace({ state, updateState }: { state: AppState;
 
   const handleUpdateStage = (oppId: ID, stage: OpportunityStage) => {
     if (!can('opportunities', 'EDIT')) return denied('تغییر مرحله فرصت');
+    if (!requireActiveUser(state, updateState, 'تغییر مرحله فرصت')) return;
+    const current = opportunities.find(item => item.id === oppId);
+    if (!current) return denied('دسترسی به فرصت تجاری');
+    if (!canOn('opportunities', 'EDIT', { ownerId: current.ownerId, branchId: current.branchId, territoryId: current.territoryId, teamId: current.teamId, tenantId: current.tenantId })) return denied('تغییر این فرصت خارج از محدوده مجاز');
+    if (current.stage === stage) return;
+    if (current.stage === 'WON' || current.stage === 'LOST') return denied('تغییر فرصت مختومه');
+    if (stage !== 'WON' && stage !== 'LOST') return denied('این عملیات فقط برای بستن فرصت به‌عنوان موفق یا ازدست‌رفته فعال است');
+    const at = new Date().toISOString();
     updateState(draft => {
       const opp = (draft.opportunities || []).find((o: any) => o.id === oppId);
-      if (opp) opp.stage = stage;
+      if (!opp || opp.stage === 'WON' || opp.stage === 'LOST') return;
+      const previousStage = opp.stage;
+      opp.stage = stage;
+      opp.updatedAt = at;
+      if (stage === 'WON') opp.closedAt = at;
+      if (stage === 'LOST') opp.closedAt = at;
+      if (!draft.auditLogs) draft.auditLogs = [];
+      draft.auditLogs.push({ id: generateId(), action: 'OPPORTUNITY_STAGE_CHANGED', entityType: 'OPPORTUNITY', entityId: opp.id, details: `مرحله فرصت «${opp.title}» از ${previousStage} به ${stage} تغییر کرد.`, actor: draft.users?.find(user => user.id === draft.currentUserId)?.name || 'System', createdAt: at });
     });
+    emitBusinessEvent('OPPORTUNITY_STAGE_CHANGED', 'OPPORTUNITY', current.id, { ...current, stage, previousStage: current.stage }, state, updateState);
   };
 
 
   return (
-    <div className="w-full space-y-4 px-1 py-1 sm:px-3 sm:py-3 pb-24 font-premium" dir="rtl">
-      <div className="space-y-4">
+    <div className="flex-1 flex flex-col bg-transparent" dir="rtl">
+      <div className="shrink-0 bg-canvas px-4 pt-4 pb-2 space-y-4 z-10">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xl font-extrabold text-text-main tracking-tight flex items-center gap-2">
@@ -133,7 +159,7 @@ export function NegotiationsWorkspace({ state, updateState }: { state: AppState;
         </div>
       </div>
 
-      <div className="space-y-3 pt-2">
+      <div className="flex-1 overflow-y-auto px-4 pb-24 space-y-3 pt-2">
         {filtered.length > 0 ? (
           filtered.map(opp => {
             const acc = visibleAccounts.find(a => a.id === opp.accountId);
@@ -148,12 +174,13 @@ export function NegotiationsWorkspace({ state, updateState }: { state: AppState;
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-text-secondary pt-1">
-                    <button 
-                      onClick={() => navigate(`/accounts/${opp.accountId}`)}
-                      className="flex items-center gap-1 font-medium text-text-main hover:text-primary transition-colors cursor-pointer"
-                    >
-                      <Building2 size={12} className="text-text-secondary" /> {acc?.name || 'حساب نامشخص'}
-                    </button>
+                    {acc ? (
+                      <button onClick={() => navigate(`/accounts/${opp.accountId}`)} className="flex items-center gap-1 font-medium text-text-main hover:text-primary transition-colors cursor-pointer">
+                        <Building2 size={12} className="text-text-secondary" /> {acc.name}
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-1 font-medium text-text-secondary"><Building2 size={12} /> حساب خارج از محدوده نمایش</span>
+                    )}
                     {opp.expectedCloseDate && (
                       <span className="flex items-center gap-1 font-mono text-[11px] text-text-secondary">
                         <Calendar size={12} /> تاریخ هدف: {formatAppDate(opp.expectedCloseDate, state.settings?.locale)}
@@ -207,7 +234,7 @@ export function NegotiationsWorkspace({ state, updateState }: { state: AppState;
         <DynamicFormRenderer
           schema={opportunitySchema}
           initialValues={{
-            accountId: state.activeContextAccountId || state.accounts?.[0]?.id || '',
+            accountId: visibleAccounts.some(a => a.id === state.activeContextAccountId) ? state.activeContextAccountId! : (visibleAccounts[0]?.id || ''),
             stage: 'DISCOVERY',
             expectedCloseDate: new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0]
           }}
